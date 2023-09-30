@@ -86,7 +86,7 @@ namespace FreePackages {
 		[SwaggerOperation (Summary = "Request a free license for given appids")]
 		[ProducesResponseType(typeof(GenericResponse<SteamApps.FreeLicenseCallback>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
-		public async Task<ActionResult<GenericResponse>> RequestFreeLicense(string botName, string appIDs) {
+		public async Task<ActionResult<GenericResponse>> RequestFreeAppLicense(string botName, string appIDs) {
 			if (string.IsNullOrEmpty(botName)) {
 				throw new ArgumentNullException(nameof(botName));
 			}
@@ -129,7 +129,7 @@ namespace FreePackages {
 		[SwaggerOperation (Summary = "Request a free license for given subid")]
 		[ProducesResponseType(typeof(GenericResponse<FreeSubResponse>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
-		public async Task<ActionResult<GenericResponse>> AddFreeLicense(string botName, uint subID) {
+		public async Task<ActionResult<GenericResponse>> RequestFreeSubLicense(string botName, uint subID) {
 			if (string.IsNullOrEmpty(botName)) {
 				throw new ArgumentNullException(nameof(botName));
 			}
@@ -183,34 +183,6 @@ namespace FreePackages {
 			}
 
 			return Ok(new GenericResponse<IEnumerable<uint>>(true, bot.OwnedPackageIDs.Keys));
-		}
-
-		[HttpGet("{botName:required}/GetOwnedApps")]
-		[SwaggerOperation (Summary = "Retrieves all apps owned by the given bot")]
-		[ProducesResponseType(typeof(GenericResponse<IEnumerable<uint>>), (int) HttpStatusCode.OK)]
-		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
-		public ActionResult<GenericResponse> GetOwnedApps(string botName) {
-			if (string.IsNullOrEmpty(botName)) {
-				throw new ArgumentNullException(nameof(botName));
-			}
-
-			Bot? bot = Bot.GetBot(botName);
-			if (bot == null) {
-				return BadRequest(new GenericResponse(false, String.Format(Strings.BotNotFound, botName)));
-			}
-
-			if (bot.OwnedPackageIDs.Count == 0) {
-				return BadRequest(new GenericResponse(false, "No apps found"));
-			}
-
-			if (ASF.GlobalDatabase == null) {
-				return BadRequest(new GenericResponse(false, String.Format(Strings.ErrorObjectIsNull, nameof(ASF.GlobalDatabase))));
-			}
-
-			var ownedPackageIDs = bot.OwnedPackageIDs.Keys.ToHashSet();
-			var ownedAppIDs = ASF.GlobalDatabase!.PackagesDataReadOnly.Where(x => ownedPackageIDs.Contains(x.Key) && x.Value.AppIDs != null).SelectMany(x => x.Value.AppIDs!).ToHashSet<uint>();
-
-			return Ok(new GenericResponse<IEnumerable<uint>>(true, ownedAppIDs));
 		}
 	}
 }
