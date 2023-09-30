@@ -62,6 +62,10 @@ namespace FreePackages {
 				return;
 			}
 
+			if (BotCache.Packages.Count == 0) {
+				return;
+			}
+
 			if (BotCache.NumActivationsPastHour() >= ActivationsPerHour) {
 				DateTime resumeTime = BotCache.Activations.Max().AddHours(1).AddMinutes(1);
 				Bot.ArchiLogger.LogGenericInfo(String.Format("Pausing free package activations until {0:T}", resumeTime));
@@ -72,10 +76,6 @@ namespace FreePackages {
 
 			Package? package = BotCache.GetNextPackage();
 			if (package == null) {
-				if (BotCache.Packages.Count == 0) {
-					return;
-				}
-
 				// There are packages to redeem, but they aren't active yet
 				UpdateTimer(DateTime.Now.AddMinutes(1));
 
@@ -97,7 +97,7 @@ namespace FreePackages {
 
 			if (result == EResult.OK || result == EResult.Invalid) {
 				BotCache.RemovePackage(package);
-			}			
+			}
 
 			if (BotCache.Packages.Count > 0) {
 				UpdateTimer(DateTime.Now.AddSeconds(DelayBetweenActivationsSeconds));
@@ -154,8 +154,6 @@ namespace FreePackages {
 
 				if (!success || !isFree || isComingSoon) {
 					Bot.ArchiLogger.LogGenericInfo(string.Format("ID: app/{0} | Status: {1}", appID, EResult.Invalid));
-					// App isn't available to us right now, ignore it for 24 hours
-					// BotCache.IgnoreUnredeemableApp(appID, DateTime.Now.AddDays(1));
 
 					return EResult.Invalid;
 				}
@@ -203,12 +201,12 @@ namespace FreePackages {
 				return EResult.RateLimitExceeded;
 			}
 
-			if (purchaseResult == EPurchaseResultDetail.InvalidPackage || purchaseResult == EPurchaseResultDetail.DoesNotOwnRequiredApp) {
-				return EResult.Invalid;
+			if (purchaseResult == EPurchaseResultDetail.Timeout) {
+				return EResult.Fail;
 			}
 
 			if (result != EResult.OK) {
-				return EResult.Fail;
+				return EResult.Invalid;
 			}
 
 			return EResult.OK;
