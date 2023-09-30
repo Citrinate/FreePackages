@@ -4,7 +4,7 @@
 
 This plugin discovers free packages on Steam and activates them on your account.
 
-This plugin works by listening for changes to Steam's [PICS](https://steamdb.info/faq/#pics).  It's possible to miss free packages if your bot is logged out as PICS will not show changes that happened before a certain time.  For any packages you do miss, you'll have to activate them using another tool, or wait for that package to appear again in a newer change.
+This plugin works by listening for changes to Steam's [PICS](https://steamdb.info/faq/#pics).  Since PICs doesn't show changes that happened before a certain time, the plugin may not discover all previously released free packages.  It's also possible to miss newly released free packages if your bot is logged out for extended periods of time.
 
 ## Installation
 
@@ -18,7 +18,7 @@ This plugin works by listening for changes to Steam's [PICS](https://steamdb.inf
 
 ### Enabling the plugin
 
-You can enable the plugin per individual bot by adding `EnableFreePackages` to that bot's config file with a value of `true`
+You can enable the plugin per individual bot by adding `EnableFreePackages` to that bot's config file.
 
 Example: `"EnableFreePackages": true,`
 
@@ -28,7 +28,9 @@ Example: `"EnableFreePackages": true,`
 
 ### Changing the hourly package limit
 
-A maximum of 50 free packages can be activated per hour.  By default, this plugin will use at most 40 of those hourly activations and will resume where it left off if it's ever interrupted.  40 is used as the default to give you the ability to redeem free packages manually without having to fight against the plugin.  You can control this limit by adding `FreePackagesPerHour` to your individual bot's config files.
+A maximum of 50 free packages can be activated per hour.  By default, this plugin will use at most 40 of those hourly activations and will resume where it left off if it's ever interrupted.  40 is used as the default to give you the ability to redeem free packages manually without having to fight against the plugin.
+
+You can control this limit by adding `FreePackagesPerHour` to your individual bot's config files.
 
 Example: `"FreePackagesPerHour": 42,`
 
@@ -240,7 +242,6 @@ Free weekend packages will be ignored if set to `true`.
 API | Method | Parameters | Description
 --- | --- | --- | ---
 `/Api/FreePackages/{botName}/GetChangesSince`|`GET`|`changeNumber`|Request changes for apps and packages since a given change number
-`/Api/FreePackages/{botName}/GetOwnedApps`|`GET`| |Retrieves all apps owned by the given bot
 `/Api/FreePackages/{botName}/GetOwnedPackages`|`GET`| |Retrieves all packages owned by the given bot
 `/Api/FreePackages/{botName}/GetProductInfo`|`GET`|`appIDs`, `packageIDs`|Request product information for a list of apps or packages
 `/Api/FreePackages/{botName}/RequestFreeAppLicense`|`GET`|`appIDs`|Request a free license for given appids
