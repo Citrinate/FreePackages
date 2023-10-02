@@ -59,7 +59,7 @@ namespace FreePackages {
 		internal async static Task<bool> IsReady(uint maxWaitTimeSeconds = 120) {
 			DateTime timeoutTime = DateTime.Now.AddSeconds(maxWaitTimeSeconds);
 			do {
-				bool ready = Handlers.Values.Where(x => !x.PackageFilter.Ready).Count() == 0;
+				bool ready = Handlers.Values.Where(x => x.Bot.IsConnectedAndLoggedOn && !x.PackageFilter.Ready).Count() == 0;
 				if (ready) {
 					return true;
 				}
@@ -114,6 +114,10 @@ namespace FreePackages {
 		}
 
 		private void HandleFreeApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app) {
+			if (!PackageFilter.Ready) {
+				return;
+			}
+			
 			if (!PackageFilter.IsRedeemableApp(app)) {
 				return;
 			}
@@ -194,6 +198,10 @@ namespace FreePackages {
 		}
 
 		private void HandleFreePackage(SteamApps.PICSProductInfoCallback.PICSProductInfo package, IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> apps) {
+			if (!PackageFilter.Ready) {
+				return;
+			}
+
 			if (!PackageFilter.IsRedeemablePackage(package)) {
 				return;
 			}
