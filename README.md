@@ -28,11 +28,11 @@ Example: `"EnableFreePackages": true,`
 
 ### Changing the hourly package limit
 
-A maximum of 50 free packages can be activated per hour.  By default, this plugin will use at most 40 of those hourly activations and will resume where it left off if it's ever interrupted.  40 is used as the default to give you the ability to redeem free packages manually without having to fight against the plugin.
-
-You can control this limit by adding `FreePackagesPerHour` to your individual bot's config files.
+A maximum of 50 free packages can be activated per hour.  By default, this plugin will use at most 40 of those hourly activations and will resume where it left off if it's ever interrupted.  You can control this limit by adding `FreePackagesPerHour` to your individual bot's config files.
 
 Example: `"FreePackagesPerHour": 42,`
+
+> Note: 40 is used as the default to give you the ability to redeem free packages manually without having to fight against the plugin.  It's also not always possible to the plugin to identify when it's being rate limited, and so it's better to just never get rate limited.  For these reasons, I don't recommend setting this to 50.
 
 > `uint` type with default value of 40.
 
