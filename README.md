@@ -4,7 +4,7 @@
 
 This plugin discovers free packages on Steam and activates them on your account.
 
-This plugin works by listening for changes to Steam's [PICS](https://steamdb.info/faq/#pics).  Since PICs doesn't show changes that happened before a certain time, the plugin may not discover all previously released free packages.  It's also possible to miss newly released free packages if your bot is logged out for extended periods of time.
+This plugin works by listening for [changes](https://steamdb.info/faq/#changenumber) to Steam's [PICS](https://steamdb.info/faq/#pics).  When using this plugin, a bot that remains logged on continually will rarely miss newly released free packages.  The limiting factor here is that PICS doesn't show changes that have aged beyond a certain point.  Usually, PICS will not show changes older than ~12-16 hours.  As a result, the plugin might not discover all previously released free packages, and if your bot is logged out for extended periods, it could also miss newly released free packages.
 
 ## Installation
 
@@ -32,7 +32,7 @@ A maximum of 50 free packages can be activated per hour.  By default, this plugi
 
 Example: `"FreePackagesPerHour": 42,`
 
-> Note: 40 is used as the default to give you the ability to redeem free packages manually without having to fight against the plugin.  It's also not always possible for the plugin to identify when it's being rate limited, and so it's better to just never get rate limited.  For these reasons, I don't recommend setting this to 50.
+> Note: 40 is used as the default to provide you with the ability to manually redeem free packages without having to contend with the plugin.  It's also not always possible for the plugin to identify when it's being rate-limited, so it's better to avoid getting rate-limited altogether.  For these reasons, I don't recommend setting this to 50.
 
 > `uint` type with default value of 40.
 
