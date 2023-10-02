@@ -32,7 +32,7 @@ A maximum of 50 free packages can be activated per hour.  By default, this plugi
 
 Example: `"FreePackagesPerHour": 42,`
 
-> Note: 40 is used as the default to give you the ability to redeem free packages manually without having to fight against the plugin.  It's also not always possible to the plugin to identify when it's being rate limited, and so it's better to just never get rate limited.  For these reasons, I don't recommend setting this to 50.
+> Note: 40 is used as the default to give you the ability to redeem free packages manually without having to fight against the plugin.  It's also not always possible for the plugin to identify when it's being rate limited, and so it's better to just never get rate limited.  For these reasons, I don't recommend setting this to 50.
 
 > `uint` type with default value of 40.
 
