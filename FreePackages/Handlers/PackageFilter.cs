@@ -61,7 +61,16 @@ namespace FreePackages {
 		}
 
 		internal static bool IsFreeApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app) {
-			KeyValue kv = app.KeyValues; 
+			KeyValue kv = app.KeyValues;
+
+			string? releaseState = kv["common"]["releasestate"].AsString();
+			if (releaseState != "released") {
+				// App not released yet
+				// Note: There's another seemingly relevant field: kv["common"]["steam_release_date"] 
+				// steam_release_date is not checked because an app can be "released", still have a future release date, and still be redeemed
+				// Example: https://steamdb.info/changelist/20505012/
+				return false;
+			}
 
 			if (kv["extended"]["isfreeapp"].AsBoolean()) {
 				return true;
@@ -241,7 +250,6 @@ namespace FreePackages {
 
 			if (UserData.OwnedPackages.Contains(package.ID)) {
 				// Already own this package
-				Bot.ArchiLogger.LogGenericInfo(String.Format("Already own package {0}", package.ID));
 				return false;
 			}
 
