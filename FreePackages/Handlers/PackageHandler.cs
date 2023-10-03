@@ -70,7 +70,7 @@ namespace FreePackages {
 			return false;
 		}
 
-		internal async static Task OnPICSChanges(uint currentChangeNumber, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> appChanges, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> packageChanges) {
+		internal async static Task OnPICSChanges(IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> appChanges, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> packageChanges) {
 			if (PackageHandler.Handlers.Count == 0) {
 				return;	
 			}
@@ -80,7 +80,43 @@ namespace FreePackages {
 			await HandlePackageUpdates(packageChanges).ConfigureAwait(false);
 		}
 
+		internal async static Task OnPICSRestart(uint oldChangeNumber) {
+			// ASF restarts PICS if either apps or packages needs an update.  Check the old change number, as one of them might still be good.
+			SteamApps.PICSChangesCallback picsChanges;
+			try {
+				Bot? refreshBot = GetRefreshBot();
+				if (refreshBot == null) {
+					return;
+				}
+
+				picsChanges = await refreshBot.SteamApps.PICSGetChangesSince(oldChangeNumber, true, true).ToLongRunningTask().ConfigureAwait(false);
+			} catch (Exception e) {
+				ASF.ArchiLogger.LogGenericWarningException(e);
+
+				return;
+			}
+
+			if (picsChanges.RequiresFullAppUpdate) {
+				ASF.ArchiLogger.LogGenericDebug("Possibly missed some free apps due to PICS restart");
+			}
+
+			if (picsChanges.RequiresFullPackageUpdate) {
+				ASF.ArchiLogger.LogGenericDebug("Possibly missed some free packages due to PICS restart");
+			}
+
+			if (picsChanges.RequiresFullAppUpdate && picsChanges.RequiresFullPackageUpdate) {
+				// No changes were recovered
+				return;
+			}
+
+			await PackageHandler.OnPICSChanges(picsChanges.AppChanges, picsChanges.PackageChanges).ConfigureAwait(false);
+		}
+
 		private async static Task HandleAppUpdates(IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> appChanges) {
+			if (appChanges.Count == 0) {
+				return;
+			}
+			
 			var appIDsToCheck = appChanges.Select(x => x.Key);			
 			for (int i = 0; i < Math.Ceiling((decimal) appIDsToCheck.Count() / AppInfosPerSingleRequest); i++) {
 				var appIDs = appIDsToCheck.Skip(i * AppInfosPerSingleRequest).Take(AppInfosPerSingleRequest);
@@ -137,6 +173,10 @@ namespace FreePackages {
 			packageIDsToCheck ??= new();
 			if (packageChanges != null) {
 				packageIDsToCheck.UnionWith(packageChanges.Select(x => x.Key));
+			}
+
+			if (packageIDsToCheck.Count == 0) {
+				return;
 			}
 
 			for (int i = 0; i < Math.Ceiling((decimal) packageIDsToCheck.Count() / AppInfosPerSingleRequest); i++) {

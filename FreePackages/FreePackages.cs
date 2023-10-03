@@ -64,7 +64,6 @@ namespace FreePackages {
 		}
 
 		public Task<uint> GetPreferredChangeNumberToStartFrom() {
-			ASF.ArchiLogger.LogGenericDebug("Change number");
 			return Task.FromResult(GlobalCache?.LastChangeNumber ?? 0);
 		}
 
@@ -73,18 +72,18 @@ namespace FreePackages {
 				throw new InvalidOperationException(nameof(GlobalCache));
 			}
 
-			await PackageHandler.OnPICSChanges(currentChangeNumber, appChanges, packageChanges).ConfigureAwait(false);
+			await PackageHandler.OnPICSChanges(appChanges, packageChanges).ConfigureAwait(false);
 			GlobalCache.UpdateChangeNumber(currentChangeNumber);
 		}
 
-		public Task OnPICSChangesRestart(uint currentChangeNumber) {
+		public async Task OnPICSChangesRestart(uint currentChangeNumber) {
 			if (GlobalCache == null) {
 				throw new InvalidOperationException(nameof(GlobalCache));
 			}
 
+			ASF.ArchiLogger.LogGenericDebug(String.Format("PICS restarted, skipping from change number {0} to {1}", GlobalCache.LastChangeNumber, currentChangeNumber));
+			await PackageHandler.OnPICSRestart(GlobalCache.LastChangeNumber).ConfigureAwait(false);
 			GlobalCache.UpdateChangeNumber(currentChangeNumber);
-
-			return Task.FromResult(0);
 		}
 
 		public Task OnBotSteamCallbacksInit(Bot bot, CallbackManager callbackManager) {
