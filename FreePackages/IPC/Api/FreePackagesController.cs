@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using SteamKit2;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace FreePackages {
+namespace FreePackages.IPC {
 	[Route("Api/FreePackages", Name = nameof(FreePackages))]
 	public sealed class FreePackagesController : ArchiController {
 		[HttpGet("{botName:required}/GetChangesSince/{changeNumber:required}")]

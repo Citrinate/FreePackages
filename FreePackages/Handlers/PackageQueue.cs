@@ -164,7 +164,7 @@ namespace FreePackages {
 					// Replace the app with the appropriate package and when we try to activate that we'll find out for sure if we're rate limited or not
 					// Note: This is mostly wishful thinking. /api/appdetails rarely shows the free packages for free apps
 					Bot.ArchiLogger.LogGenericInfo(string.Format("ID: app/{0} | Status: Replaced with {1}", appID, String.Join(", ", appDetails!.Data!.Packages.Select(x => $"sub/{x}"))));
-					await PackageHandler.HandlePackageUpdates(packageIDsToCheck: appDetails.Data.Packages).ConfigureAwait(false);
+					BotCache.AddChanges(packageIDs: appDetails.Data.Packages);
 
 					return EResult.OK;
 				}

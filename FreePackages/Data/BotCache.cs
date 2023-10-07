@@ -18,6 +18,12 @@ namespace FreePackages {
 		[JsonProperty(Required = Required.DisallowNull)]
 		internal ConcurrentHashSet<DateTime> Activations = new();
 
+		[JsonProperty(Required = Required.DisallowNull)]
+		internal ConcurrentHashSet<uint> ChangedApps = new();
+
+		[JsonProperty(Required = Required.DisallowNull)]
+		internal ConcurrentHashSet<uint> ChangedPackages = new();
+
 		[JsonConstructor]
 		private BotCache() { }
 
@@ -114,6 +120,32 @@ namespace FreePackages {
 
 		internal int NumActivationsPastHour() {
 			return Activations.Where(activation => activation > DateTime.Now.AddHours(-1)).Count();
+		}
+
+		internal void AddChanges(HashSet<uint>? appIDs = null, HashSet<uint>? packageIDs = null) {
+			if (appIDs != null) {
+				ChangedApps.UnionWith(appIDs);
+			}
+
+			if (packageIDs != null) {
+				ChangedPackages.UnionWith(packageIDs);
+			}
+
+			Utilities.InBackground(Save);
+		}
+
+		internal void RemoveChange(uint? appID = null, uint? packageID = null) {
+			if (appID != null) {
+				ChangedApps.Remove(appID.Value);
+			}
+
+			if (packageID != null) {
+				ChangedPackages.Remove(packageID.Value);
+			}
+		}
+
+		internal void SaveChanges() {
+			Utilities.InBackground(Save);
 		}
 	}
 }
