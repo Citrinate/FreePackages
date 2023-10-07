@@ -66,6 +66,10 @@ namespace FreePackages {
 				return FormatBotResponse(bot, Strings.BotNotConnected);
 			}
 
+			if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
+				return FormatBotResponse(bot, "Free Packages plugin not enabled");
+			}
+
 			return FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].ClearQueue());
 		}
 
@@ -96,6 +100,10 @@ namespace FreePackages {
 				return FormatBotResponse(bot, Strings.BotNotConnected);
 			}
 
+			if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
+				return FormatBotResponse(bot, "Free Packages plugin not enabled");
+			}
+
 			return FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].GetStatus());
 		}
 
@@ -124,6 +132,10 @@ namespace FreePackages {
 
 			if (!bot.IsConnectedAndLoggedOn) {
 				return FormatBotResponse(bot, Strings.BotNotConnected);
+			}
+
+			if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
+				return FormatBotResponse(bot, "Free Packages plugin not enabled");
 			}
 
 			// https://github.com/JustArchiNET/ArchiSteamFarm/blob/d972c93072dd8d2bf0f2cecda3561dc3ba77a9ed/ArchiSteamFarm/Steam/Interaction/Commands.cs#L626C3-L626C34
