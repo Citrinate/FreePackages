@@ -107,13 +107,15 @@ namespace FreePackages {
 			return Packages.FirstOrDefault(x => x.StartTime == null);
 		}
 
-		internal void AddActivation(DateTime activation) {
+		internal void AddActivation(DateTime activation, uint count = 1) {
 			var activationsToPrune = Activations.Where(activation => activation < DateTime.Now.AddHours(-1)).ToList();
 			if (activationsToPrune.Count > 0) {
 				activationsToPrune.ForEach(activation => Activations.Remove(activation));
 			}
 
-			Activations.Add(activation);
+			for (int i = 0; i < count; i++) {
+				Activations.Add(activation.AddSeconds(-1 * i));
+			}
 
 			Utilities.InBackground(Save);
 		}
@@ -145,6 +147,13 @@ namespace FreePackages {
 		}
 
 		internal void SaveChanges() {
+			Utilities.InBackground(Save);
+		}
+
+		internal void Clear() {
+			Packages.Clear();
+			ChangedApps.Clear();
+			ChangedPackages.Clear();
 			Utilities.InBackground(Save);
 		}
 	}

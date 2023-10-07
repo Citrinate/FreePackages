@@ -18,6 +18,7 @@ namespace FreePackages {
 		private readonly ConcurrentQueue<Package> Packages = new();
 		private const int DelayBetweenActivationsSeconds = 5;
 		private readonly uint ActivationsPerHour = 40;
+		private const uint MaxActivationsPerHour = 50; // Steam's imposed limit
 		internal static MethodInfo? AddFreeLicense;
 
 		static PackageQueue() {
@@ -32,7 +33,7 @@ namespace FreePackages {
 			BotCache = botCache;
 
 			if (packageLimit != null) {
-				ActivationsPerHour = Math.Min(packageLimit.Value, 50);
+				ActivationsPerHour = Math.Min(packageLimit.Value, MaxActivationsPerHour);
 			}
 
 			if (BotCache.Packages.Count > 0) {
@@ -85,6 +86,7 @@ namespace FreePackages {
 			EResult result = await ClaimPackage(package).ConfigureAwait(false);
 
 			if (result == EResult.RateLimitExceeded) {
+				BotCache.AddActivation(DateTime.Now, MaxActivationsPerHour); // However many activations we thought were made, we were wrong.  Correct for this by adding a bunch of fake times to our cache
 				DateTime resumeTime = DateTime.Now.AddHours(1).AddMinutes(1);
 				Bot.ArchiLogger.LogGenericInfo("Free Package rate limit exceeded");
 				Bot.ArchiLogger.LogGenericInfo(String.Format("Pausing free package activations until {0:T}", resumeTime));
@@ -97,6 +99,10 @@ namespace FreePackages {
 
 			if (result == EResult.OK || result == EResult.Invalid) {
 				BotCache.RemovePackage(package);
+			} else if (result == EResult.Timeout) {
+				UpdateTimer(DateTime.Now.AddMinutes(5));
+
+				return;
 			}
 
 			if (BotCache.Packages.Count > 0) {
@@ -204,7 +210,7 @@ namespace FreePackages {
 			}
 
 			if (purchaseResult == EPurchaseResultDetail.Timeout) {
-				return EResult.Fail;
+				return EResult.Timeout;
 			}
 
 			if (result != EResult.OK) {
@@ -212,6 +218,24 @@ namespace FreePackages {
 			}
 
 			return EResult.OK;
+		}
+
+		internal string GetStatus() {
+			HashSet<string> responses = new HashSet<string>();
+
+			int activationsPastHour = Math.Min(BotCache.NumActivationsPastHour(), (int) MaxActivationsPerHour);
+			responses.Add(String.Format("{0} free packages queued.  {1}/{2} hourly activations used.", BotCache.Packages.Count, activationsPastHour, ActivationsPerHour));
+
+			if (activationsPastHour >= ActivationsPerHour) {
+				DateTime resumeTime = BotCache.Activations.Max().AddHours(1).AddMinutes(1);
+				responses.Add(String.Format("Activations will resume at {0:T}.", resumeTime));
+			}
+
+			if (BotCache.ChangedApps.Count > 0 || BotCache.ChangedPackages.Count > 0) {
+				responses.Add(String.Format("{0} apps and {1} packages have been discovered but not processed yet.", BotCache.ChangedApps.Count, BotCache.ChangedPackages.Count));
+			}
+
+			return String.Join(" ", responses);;
 		}
 
 		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);

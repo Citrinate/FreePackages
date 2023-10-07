@@ -121,7 +121,7 @@ namespace FreePackages {
 			return false;
 		}
 
-		private async static Task HandleChanges() {
+		internal async static Task HandleChanges() {
 			if (!await ProcessChangesSemaphore.WaitAsync(0).ConfigureAwait(false)) {
 				return;
 			}
@@ -273,6 +273,10 @@ namespace FreePackages {
 		}
 
 		private void HandleFreeApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app) {
+			if (!BotCache.ChangedApps.Contains(app.ID)) {
+				return;
+			}
+
 			if (!PackageFilter.Ready) {
 				return;
 			}
@@ -297,6 +301,10 @@ namespace FreePackages {
 		}
 
 		private void HandleFreePackage(SteamApps.PICSProductInfoCallback.PICSProductInfo package, IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> apps) {
+			if (!BotCache.ChangedPackages.Contains(package.ID)) {
+				return;
+			}
+
 			if (!PackageFilter.Ready) {
 				return;
 			}
@@ -320,6 +328,58 @@ namespace FreePackages {
 				PackageQueue.AddPackage(new Package(EPackageType.Sub, package.ID, startTime), appIDs);
 			} finally {
 				BotCache.RemoveChange(packageID: package.ID);
+			}
+		}
+
+		internal string GetStatus() {
+			return PackageQueue.GetStatus();
+		}
+
+		internal string ClearQueue() {
+			int numPackages = BotCache.Packages.Count;
+			int numChangedApps = BotCache.ChangedApps.Count;
+			int numChangedPackages = BotCache.ChangedPackages.Count;
+
+			if (numPackages == 0 && numChangedApps == 0 && numChangedPackages == 0) {
+				return "Queue is empty";
+			}
+
+			BotCache.Clear();
+
+			HashSet<string> responses = new HashSet<string>();
+			
+			if (numPackages > 0) {
+				responses.Add(String.Format("{0} free packages removed.", numPackages));
+			}
+			if (numChangedApps > 0) {
+				responses.Add(String.Format("{0} discovered apps removed.", numChangedApps));
+			}
+			if (numChangedPackages > 0) {
+				responses.Add(String.Format("{0} discovered packages removed.", numChangedPackages));
+			}
+
+			return String.Join(" ", responses);
+		}
+
+		internal string AddPackage(EPackageType type, uint id, bool useFilter) {
+			if (useFilter) {
+				if (type == EPackageType.App) {
+					BotCache.AddChanges(appIDs: new HashSet<uint> {id});
+
+					return String.Format("Added app/{0} to discovered apps queue", id);
+				} else {
+					BotCache.AddChanges(packageIDs: new HashSet<uint> {id});
+
+					return String.Format("Added sub/{0} to discovered packages queue", id);
+				}
+			}
+
+			PackageQueue.AddPackage(new Package(type, id));
+
+			if (type == EPackageType.App) {
+				return String.Format("Added app/{0} to free packages queue", id);
+			} else {
+				return String.Format("Added sub/{0} to free packages queue", id);
 			}
 		}
 

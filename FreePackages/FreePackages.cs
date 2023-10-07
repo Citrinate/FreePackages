@@ -10,7 +10,7 @@ using SteamKit2;
 
 namespace FreePackages {
 	[Export(typeof(IPlugin))]
-	public sealed class FreePackages : IASF, IBotModules, ISteamPICSChanges, IBotSteamClient, IBotConnection {
+	public sealed class FreePackages : IASF, IBotModules, ISteamPICSChanges, IBotSteamClient, IBotConnection, IBotCommand2 {
 		public string Name => nameof(FreePackages);
 		public Version Version => typeof(FreePackages).Assembly.GetName().Version ?? new Version("0");
 		private static GlobalCache? GlobalCache;
@@ -19,6 +19,8 @@ namespace FreePackages {
 			ASF.ArchiLogger.LogGenericInfo("Free Packages ASF Plugin by Citrinate");
 			return Task.CompletedTask;
 		}
+
+		public Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0) => Task.FromResult(Commands.Response(bot, access, steamID, message, args));
 
 		public async Task OnASFInit(IReadOnlyDictionary<string, JToken>? additionalConfigProperties = null) {
 			if (GlobalCache == null) {
