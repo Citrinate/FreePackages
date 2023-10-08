@@ -2,9 +2,9 @@
 
 ## Introduction
 
-This plugin discovers free packages on Steam and activates them on your account.
+This plugin finds free packages on Steam and adds them to your account.
 
-This plugin works by listening for [changes](https://steamdb.info/faq/#changenumber) to Steam's [PICS](https://steamdb.info/faq/#pics).  When using this plugin, a bot that remains logged on continually will rarely miss newly released free packages.  The limiting factor here is that PICS doesn't show changes that have aged beyond a certain point.  Usually, PICS will not show changes older than ~12-16 hours.  As a result, the plugin might not discover all previously released free packages, and if your bot is logged out for extended periods, it could also miss newly released free packages.
+This plugin works by listening for [changes](https://steamdb.info/faq/#changenumber) to Steam's [PICS](https://steamdb.info/faq/#pics).  The plugin can discover new packages as they're released, but is limited due to PICS not showing all old changes.  As a result, the plugin can only discover packages that have changed recently, usually in the last ~12 hours.
 
 ## Installation
 
@@ -28,11 +28,11 @@ Example: `"EnableFreePackages": true,`
 
 ### Changing the hourly package limit
 
-A maximum of 50 free packages can be activated per hour.  By default, this plugin will use at most 40 of those hourly activations and will resume where it left off if it's ever interrupted.  You can control this limit by adding `FreePackagesPerHour` to your individual bot's config files.
+A maximum of 50 packages can be activated per hour.  By default, this plugin will use at most 40 of those hourly activations and will resume where it left off if it's ever interrupted.  You can control this limit by adding `FreePackagesPerHour` to your individual bot's config files.
 
 Example: `"FreePackagesPerHour": 42,`
 
-> Note: 40 is used as the default to provide you with the ability to manually redeem free packages without having to contend with the plugin.  It's also not always possible for the plugin to identify when it's being rate-limited, so it's better to avoid getting rate-limited altogether.  For these reasons, I don't recommend raising this value.
+> Note: The default is 40 to give you with the ability to manually redeem packages without having to contend with the plugin.  It's also not always possible for the plugin to identify when it's being rate-limited, so it's better to avoid getting rate-limited altogether.  For these reasons, I don't recommend raising this value.
 
 > `uint` type with default value of 40.
 
@@ -65,7 +65,7 @@ All filter options are explained below:
 
 Example: `"ImportStoreFilters": true,`
 
-If set to `true`, the plugin will use the ignored games, ignored tags, and ignored content descriptors settings you use on the Steam storefront, in addition to any other package filters you define.
+If set to `true`, the plugin will use the ignored games, ignored tags, and ignored content descriptor settings you use on the Steam storefront, in addition to any other package filters you define.
 
 > `bool` type with default value of `false`.
 
@@ -244,5 +244,5 @@ API | Method | Parameters | Description
 `/Api/FreePackages/{botName}/GetChangesSince`|`GET`|`changeNumber`|Request changes for apps and packages since a given change number
 `/Api/FreePackages/{botName}/GetOwnedPackages`|`GET`| |Retrieves all packages owned by the given bot
 `/Api/FreePackages/{botName}/GetProductInfo`|`GET`|`appIDs`, `packageIDs`|Request product information for a list of apps or packages
-`/Api/FreePackages/{botName}/RequestFreeAppLicense`|`GET`|`appIDs`|Request a free license for given appids
-`/Api/FreePackages/{botName}/RequestFreeSubLicense`|`GET`|`subID`|Request a free license for given subid
+`/Api/FreePackages/{botName}/RequestFreeAppLicense`|`GET`|`appIDs`|Request a free license for given appIDs
+`/Api/FreePackages/{botName}/RequestFreeSubLicense`|`GET`|`subID`|Request a free license for given subID
