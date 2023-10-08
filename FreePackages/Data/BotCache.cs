@@ -83,6 +83,18 @@ namespace FreePackages {
 			return true;
 		}
 
+		internal bool AddPackages(IEnumerable<Package> packages) {
+			if (!packages.Except(Packages).Any()) {
+				// There are no new packages to add
+				return false;
+			}
+
+			Packages.UnionWith(packages);
+			Utilities.InBackground(Save);
+
+			return true;
+		}
+
 		internal bool RemovePackage(Package package) {
 			Packages.Remove(package);
 			Utilities.InBackground(Save);

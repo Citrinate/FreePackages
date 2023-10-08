@@ -383,6 +383,24 @@ namespace FreePackages {
 			}
 		}
 
+		internal void AddPackages(HashSet<uint>? appIDs, HashSet<uint>? packageIDs, bool useFilter) {
+			if (useFilter) {
+				BotCache.AddChanges(appIDs, packageIDs);
+
+				return;
+			}
+
+			HashSet<Package> packages = new();
+			if (appIDs != null) {
+				packages.UnionWith(appIDs.Select(static id => new Package(EPackageType.App, id)));
+			}
+			if (packageIDs != null) {
+				packages.UnionWith(packageIDs.Select(static id => new Package(EPackageType.Sub, id)));
+			}
+
+			PackageQueue.AddPackages(packages);
+		}
+
 		private static Bot? GetRefreshBot() => Bot.BotsReadOnly?.Values.FirstOrDefault(static bot => bot.IsConnectedAndLoggedOn);
 	}
 }

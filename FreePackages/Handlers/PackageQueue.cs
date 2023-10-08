@@ -56,6 +56,16 @@ namespace FreePackages {
 			}
 		}
 
+		internal void AddPackages(IEnumerable<Package> packages) {
+			if (!BotCache.AddPackages(packages)) {
+				return;
+			}
+
+			if (Timer == null) {
+				Timer = new Timer(async e => await ProcessQueue().ConfigureAwait(false), null, 0, Timeout.Infinite);
+			}
+		}
+
 		private async Task ProcessQueue() {
 			if (!Bot.IsConnectedAndLoggedOn) {
 				UpdateTimer(DateTime.Now.AddMinutes(1));
@@ -232,7 +242,7 @@ namespace FreePackages {
 			}
 
 			if (BotCache.ChangedApps.Count > 0 || BotCache.ChangedPackages.Count > 0) {
-				responses.Add(String.Format("{0} apps and {1} packages have been discovered but not processed yet.", BotCache.ChangedApps.Count, BotCache.ChangedPackages.Count));
+				responses.Add(String.Format("{0} apps and {1} packages discovered but not processed yet.", BotCache.ChangedApps.Count, BotCache.ChangedPackages.Count));
 			}
 
 			return String.Join(" ", responses);;

@@ -184,5 +184,79 @@ namespace FreePackages.IPC {
 
 			return Ok(new GenericResponse<IEnumerable<uint>>(true, bot.OwnedPackageIDs.Keys));
 		}
+
+		[HttpGet("{botName:required}/GetOwnedApps")]
+		[SwaggerOperation (Summary = "Retrieves all apps owned by the given bot")]
+		[ProducesResponseType(typeof(GenericResponse<IEnumerable<uint>>), (int) HttpStatusCode.OK)]
+		[ProducesResponseType(typeof(GenericResponse<Dictionary<uint, string>>), (int) HttpStatusCode.OK)]
+		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
+		public async Task<ActionResult<GenericResponse>> GetOwnedApps(string botName, bool showNames = false) {
+			if (string.IsNullOrEmpty(botName)) {
+				throw new ArgumentNullException(nameof(botName));
+			}
+
+			Bot? bot = Bot.GetBot(botName);
+			if (bot == null) {
+				return BadRequest(new GenericResponse(false, String.Format(Strings.BotNotFound, botName)));
+			}
+
+			if (bot.OwnedPackageIDs.Count == 0) {
+				return BadRequest(new GenericResponse(false, "No apps found"));
+			}
+
+			if (ASF.GlobalDatabase == null) {
+				return BadRequest(new GenericResponse(false, String.Format(Strings.ErrorObjectIsNull, nameof(ASF.GlobalDatabase))));
+			}
+
+			var ownedPackageIDs = bot.OwnedPackageIDs.Keys.ToHashSet();
+			var ownedAppIDs = ASF.GlobalDatabase!.PackagesDataReadOnly.Where(x => ownedPackageIDs.Contains(x.Key) && x.Value.AppIDs != null).SelectMany(x => x.Value.AppIDs!).ToHashSet().ToList();
+			ownedAppIDs.Sort();
+
+			if (showNames) {
+				Dictionary<uint, string>? appList;
+				try {
+					appList = await WebRequest.GetAppList(bot).ConfigureAwait(false);
+					if (appList == null) {
+						return BadRequest(new GenericResponse(false, "Failed to get app list"));
+					}
+				} catch (Exception e) {
+					return BadRequest(new GenericResponse(false, e.Message));
+				}
+
+				return Ok(new GenericResponse<Dictionary<uint, string>>(true, ownedAppIDs.ToDictionary(x => x, x => appList.TryGetValue(x, out string? name) ? name : String.Format("Unknown App {0}", x))));
+			}
+
+			return Ok(new GenericResponse<IEnumerable<uint>>(true, ownedAppIDs));
+		}
+
+		[Consumes("application/json")]
+		[HttpPost("{botNames:required}/QueueLicenses")]
+		[SwaggerOperation (Summary = "Adds the provided appids and subids to the given bot's package queue")]
+		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.OK)]
+		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
+		public ActionResult<GenericResponse> QueueLicenses(string botNames, [FromBody] QueueLicensesRequest request) {
+			if (string.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+			if (bots == null || bots.Count == 0) {
+				return BadRequest(new GenericResponse(false, String.Format(Strings.BotNotFound, botNames)));
+			}
+
+			if (PackageHandler.Handlers.Keys.Union(bots.Select(x => x.BotName)).Count() == 0) {
+				return BadRequest(new GenericResponse(false, "Free Packages plugin not enabled"));
+			}
+
+			foreach (Bot bot in bots) {
+				if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
+					continue;
+				}
+
+				PackageHandler.Handlers[bot.BotName].AddPackages(request.AppIDs, request.PackageIDs, request.UseFilter);
+			}
+
+			return Ok(new GenericResponse(true));
+		}
 	}
 }

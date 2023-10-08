@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
@@ -7,6 +9,7 @@ using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Integration;
 using ArchiSteamFarm.Web.Responses;
 using Newtonsoft.Json.Linq;
+using SteamKit2;
 
 namespace FreePackages {
 	internal static class WebRequest {
@@ -36,6 +39,21 @@ namespace FreePackages {
 					}
 				);
 			}
+		}
+
+		internal static async Task<Dictionary<uint, string>?> GetAppList(Bot bot) {
+			WebAPI.AsyncInterface steamAppsService = bot.SteamConfiguration.GetAsyncWebAPIInterface("ISteamApps");
+			KeyValue? response = await steamAppsService.CallAsync(HttpMethod.Get, "GetAppList", 2).ConfigureAwait(false);
+			if (response == null) {
+				return null;
+			}
+
+			Dictionary<uint, string> appList = new();
+			foreach (var app in response["apps"].Children) {
+				appList.TryAdd(app["appid"].AsUnsignedInteger(), app["name"].AsString()!);
+			}
+
+			return appList;
 		}
 	}
 }
