@@ -143,7 +143,15 @@ namespace FreePackages {
 		}
 
 		private async Task<EResult> ClaimFreeApp(uint appID) {
-			SteamApps.FreeLicenseCallback response = await Bot.SteamApps.RequestFreeLicense(appID).ToLongRunningTask().ConfigureAwait(false);
+			SteamApps.FreeLicenseCallback response;
+			try {
+				response = await Bot.SteamApps.RequestFreeLicense(appID).ToLongRunningTask().ConfigureAwait(false);
+			} catch (Exception e) {
+				Bot.ArchiLogger.LogGenericException(e);
+
+				return EResult.Timeout;
+			}
+			
 
 			// The Result returned by RequestFreeLicense is useless and I've only ever seen it return EResult.OK
 			if (response.Result != EResult.OK) {
