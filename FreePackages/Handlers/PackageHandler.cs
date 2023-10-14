@@ -219,7 +219,7 @@ namespace FreePackages {
 					if (onFetchProductInfoCallback != null) {
 						await onFetchProductInfoCallback(partialProductInfo).ConfigureAwait(false);
 					} else {
-						productInfo.Concat(partialProductInfo);
+						productInfo = productInfo.Concat(partialProductInfo).ToList();
 					}
 				}
 			}
