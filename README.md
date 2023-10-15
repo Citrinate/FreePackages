@@ -261,7 +261,7 @@ Command | Alias |
 
 ### Userscript
 
-You can use the [Free Packages Importer userscript](https://github.com/Citrinate/FreePackages/tree/main/FreePackagesImporter) to transfer packages from SteamDB's [free packages tool](https://steamdb.info/freepackages/) to the plugin.
+You can use the [Free Packages Importer userscript](https://github.com/Citrinate/FreePackages/tree/main/FreePackagesImporter) to import packages from SteamDB's [free packages tool](https://steamdb.info/freepackages/).
 
 ---
 
