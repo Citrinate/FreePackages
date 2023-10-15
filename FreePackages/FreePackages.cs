@@ -7,6 +7,7 @@ using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Plugins.Interfaces;
 using Newtonsoft.Json.Linq;
 using SteamKit2;
+using Newtonsoft.Json;
 
 namespace FreePackages {
 	[Export(typeof(IPlugin))]
@@ -40,21 +41,22 @@ namespace FreePackages {
 			foreach (KeyValuePair<string, JToken> configProperty in additionalConfigProperties) {
 				switch (configProperty.Key) {
 					case "EnableFreePackages" when configProperty.Value.Type == JTokenType.Boolean: {
-						bot.ArchiLogger.LogGenericInfo("Enable Free Packages : " + configProperty.Value);
 						if (configProperty.Value.ToObject<bool>()) {
 							isEnabled = true;
 						}
+						bot.ArchiLogger.LogGenericInfo("Enable Free Packages : " + isEnabled.ToString());
 						break;
 					}
 
 					case "FreePackagesPerHour" when configProperty.Value.Type == JTokenType.Integer: {
-						bot.ArchiLogger.LogGenericInfo("Free Packages Per Hour : " + configProperty.Value);
 						packageLimit = configProperty.Value.ToObject<uint>();
+						bot.ArchiLogger.LogGenericInfo("Free Packages Per Hour : " + packageLimit.ToString());
 						break;
 					}
 
 					case "FreePackagesFilter": {
 						filter = configProperty.Value.ToObject<FilterConfig>();
+						bot.ArchiLogger.LogGenericInfo("Free Packages Filter : " + JsonConvert.SerializeObject(filter));
 						break;
 					}
 				}
