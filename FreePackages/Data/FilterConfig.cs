@@ -8,6 +8,9 @@ namespace FreePackages {
 		internal bool ImportStoreFilters = false;
 
 		[JsonProperty(Required = Required.Default)]
+		internal ImmutableHashSet<string> Types = ImmutableHashSet<string>.Empty;
+
+		[JsonProperty(Required = Required.Default)]
 		internal ImmutableHashSet<uint> Categories = ImmutableHashSet<uint>.Empty;
 
 		[JsonProperty(Required = Required.Default)]

@@ -144,6 +144,12 @@ namespace FreePackages {
 		internal bool IsWantedApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app) {
 			KeyValue kv = app.KeyValues;
 
+			EAppType type = kv["common"]["type"].AsEnum<EAppType>();
+			if (!FilterConfig.Types.Contains(type.ToString())) {
+				// App isn't a wanted type
+				return false;
+			}
+
 			if (FilterConfig.Categories.Count > 0) {
 				bool has_matching_category = kv["common"]["category"].Children.Any(category => UInt32.TryParse(category.Name?.Substring(9), out uint category_number) && FilterConfig.Categories.Contains(category_number)); // category numbers are stored in the name as "category_##"
 				if (!has_matching_category) {
