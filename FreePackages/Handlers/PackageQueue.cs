@@ -11,10 +11,10 @@ using ArchiSteamFarm.Steam.Integration;
 using SteamKit2;
 
 namespace FreePackages {
-	internal sealed class PackageQueue {
+	internal sealed class PackageQueue : IDisposable {
 		private readonly Bot Bot;
 		private readonly BotCache BotCache;
-		private Timer? Timer;
+		private Timer Timer;
 		private readonly ConcurrentQueue<Package> Packages = new();
 		private const int DelayBetweenActivationsSeconds = 5;
 		private readonly uint ActivationsPerHour = 40;
@@ -36,9 +36,11 @@ namespace FreePackages {
 				ActivationsPerHour = Math.Min(packageLimit.Value, MaxActivationsPerHour);
 			}
 
-			if (BotCache.Packages.Count > 0) {
-				Timer = new Timer(async e => await ProcessQueue().ConfigureAwait(false), null, 0, Timeout.Infinite);
-			}
+			Timer = new Timer(async e => await ProcessQueue().ConfigureAwait(false), null, 0, Timeout.Infinite);
+		}
+
+		public void Dispose() {
+			Timer.Dispose();
 		}
 
 		internal void AddPackage(Package package, HashSet<uint>? appIDsToRemove = null) {
@@ -50,19 +52,11 @@ namespace FreePackages {
 				// Remove duplicates.  Whenever we're trying to activate and app and also an package for that app, get rid of the app.  Because error messages for packages are more descriptive and useful.
 				BotCache.RemoveAppPackages(appIDsToRemove);
 			}
-
-			if (Timer == null) {
-				Timer = new Timer(async e => await ProcessQueue().ConfigureAwait(false), null, 0, Timeout.Infinite);
-			}
 		}
 
 		internal void AddPackages(IEnumerable<Package> packages) {
 			if (!BotCache.AddPackages(packages)) {
 				return;
-			}
-
-			if (Timer == null) {
-				Timer = new Timer(async e => await ProcessQueue().ConfigureAwait(false), null, 0, Timeout.Infinite);
 			}
 		}
 
@@ -74,6 +68,8 @@ namespace FreePackages {
 			}
 
 			if (BotCache.Packages.Count == 0) {
+				UpdateTimer(DateTime.Now.AddMinutes(1));
+
 				return;
 			}
 
@@ -121,8 +117,7 @@ namespace FreePackages {
 				return;
 			}
 
-			Timer?.Dispose();
-			Timer = null;
+			UpdateTimer(DateTime.Now.AddMinutes(1));
 		}
 
 		private async Task<EResult> ClaimPackage(Package package) {

@@ -10,7 +10,7 @@ using ArchiSteamFarm.Steam;
 using SteamKit2;
 
 namespace FreePackages {
-	internal sealed class PackageHandler {
+	internal sealed class PackageHandler : IDisposable {
 		internal readonly Bot Bot;
 		internal readonly BotCache BotCache;
 		private readonly PackageFilter PackageFilter;
@@ -29,8 +29,13 @@ namespace FreePackages {
 			PackageQueue = new PackageQueue(bot, botCache, packageLimit);
 		}
 
+		public void Dispose() {
+			PackageQueue.Dispose();
+		}
+
 		internal static async Task AddHandler(Bot bot, FilterConfig? filterConfig, uint? packageLimit) {
 			if (Handlers.ContainsKey(bot.BotName)) {
+				Handlers[bot.BotName].Dispose();
 				Handlers.TryRemove(bot.BotName, out PackageHandler? _);
 			}
 
