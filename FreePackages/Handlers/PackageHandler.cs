@@ -315,7 +315,7 @@ namespace FreePackages {
 			}
 
 			try {
-				if (!PackageFilter.IsRedeemablePackage(package)) {
+				if (!PackageFilter.IsRedeemablePackage(package, apps)) {
 					return;
 				}
 

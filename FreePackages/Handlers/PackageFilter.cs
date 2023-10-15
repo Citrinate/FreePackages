@@ -51,6 +51,7 @@ namespace FreePackages {
 				FilterConfig.IgnoredContentDescriptors.UnionWith(userData.ExcludedContentDescriptorIDs);
 			}
 
+			// Get all of the apps that are in each of the owned packages, and merge with explicitly owned apps
 			var ownedAppIDs = userData.OwnedApps;
 			var ownedPackageIDs = userData.OwnedPackages;
 			ownedAppIDs.UnionWith(ASF.GlobalDatabase!.PackagesDataReadOnly.Where(x => ownedPackageIDs.Contains(x.Key) && x.Value.AppIDs != null).SelectMany(x => x.Value.AppIDs!).ToHashSet<uint>());
@@ -235,7 +236,7 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsRedeemablePackage(SteamApps.PICSProductInfoCallback.PICSProductInfo package) {			
+		internal bool IsRedeemablePackage(SteamApps.PICSProductInfoCallback.PICSProductInfo package, IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> apps) {			
 			if (UserData == null) {
 				throw new InvalidOperationException(nameof(UserData));
 			}
@@ -250,6 +251,11 @@ namespace FreePackages {
 
 			if (UserData.OwnedPackages.Contains(package.ID)) {
 				// Already own this package
+				return false;
+			}
+
+			if (apps.All(x => OwnedAppIDs.Contains(x.ID))) {
+				// Already own all of the apps in this package
 				return false;
 			}
 
