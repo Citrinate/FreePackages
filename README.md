@@ -32,7 +32,7 @@ A maximum of 50 packages can be activated per hour.  By default, this plugin wil
 
 Example: `"FreePackagesPerHour": 42,`
 
-> Note: The default is 40 to give you with the ability to manually redeem packages without having to contend with the plugin.  It's also not always possible for the plugin to identify when it's being rate-limited, so it's better to avoid getting rate-limited altogether.  For these reasons, I don't recommend raising this value.
+> Note: I don't recommend raising this value.  The default is 40 to let you manually redeem packages without having to fight with the plugin.  It's also not always possible for the plugin to tell when it's being rate-limited, and so it's best to avoid ever getting rate-limited.
 
 > `uint` type with default value of 40.
 
@@ -65,7 +65,7 @@ All filter options are explained below:
 
 Example: `"ImportStoreFilters": true,`
 
-If set to `true`, the plugin will use the ignored games, ignored tags, and ignored content descriptor settings you use on the Steam storefront, in addition to any other package filters you define.
+If set to `true`, the plugin will use the ignored games, ignored tags, and ignored content descriptor settings you use on the Steam storefront, in addition to any other filters you define.
 
 > `bool` type with default value of `false`.
 
@@ -167,7 +167,7 @@ Example: `"IgnoredTypes": ["Demo", "Application"],`
 
 Packages containing apps with any of the `TypeNames` specified here will not be added to your account.
 
-The available types for filtering are: `Game`, `Application`, `Tool`, `Demo`, `DLC`, `Music`
+The available types for filtering are: `Game`, `Application`, `Tool`, `Demo`, `DLC`, `Music`, `Video`
 
 > `ImmutableHashSet<string>` type with default value of being empty.
 
@@ -237,12 +237,42 @@ Free weekend packages will be ignored if set to `true`.
 
 ---
 
+### Commands
+
+> Parameters in square brackets are sometimes `[Optional]`, parameters in angle brackets are always `<Required>`. Plural parameters such as `[Bots]` can accept multiple values separated by `,` such as `A,B,C`
+
+Command | Access | Description
+--- | --- | ---
+`queuestatus [Bots]`|`Master`|Prints the status of the given bot's packages queue
+`queuelicense [Bots] <Licenses>`|`Master`|Adds given `licenses`, explained [here](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Commands#addlicense-licenses), to the given bot's packages queue
+`queuelicense^ [Bots] <Licenses>`|`Master`|Adds given `licenses`, explained [here](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Commands#addlicense-licenses), to the given bot's packages queue using that bot's package filters
+`clearfreepackagesqueue [Bots]`|`Master`|Removes everything from the given bot's packages queue
+
+#### Command Aliases
+
+Command | Alias |
+--- | --- |
+`queuestatus`|`qstatus`
+`queuestatus asf`|`qsa`
+`queuelicense`|`queuelicence`, `qlicense`, `qlicence`
+`queuelicense^`|`queuelicence^`, `qlicense^`, `qlicence^`
+
+---
+
+### Userscript
+
+You can use the [Free Packages Importer userscript](https://github.com/Citrinate/FreePackages/tree/main/FreePackagesImporter) to transfer packages from SteamDB's [free packages tool](https://steamdb.info/freepackages/) to the plugin.
+
+---
+
 ## IPC Interface
 
 API | Method | Parameters | Description
 --- | --- | --- | ---
 `/Api/FreePackages/{botName}/GetChangesSince`|`GET`|`changeNumber`|Request changes for apps and packages since a given change number
+`/Api/FreePackages/{botName}/GetOwnedApps`|`GET`|`showNames`|Retrieves all apps owned by the given bot
 `/Api/FreePackages/{botName}/GetOwnedPackages`|`GET`| |Retrieves all packages owned by the given bot
 `/Api/FreePackages/{botName}/GetProductInfo`|`GET`|`appIDs`, `packageIDs`|Request product information for a list of apps or packages
+`/Api/FreePackages/{botNames}/QueueLicenses`|`POST`|`appIDs`, `packageIDs`, `useFilter`|Adds the given appIDs and packageIDs to the given bot's package queue
 `/Api/FreePackages/{botName}/RequestFreeAppLicense`|`GET`|`appIDs`|Request a free license for given appIDs
 `/Api/FreePackages/{botName}/RequestFreeSubLicense`|`GET`|`subID`|Request a free license for given subID
