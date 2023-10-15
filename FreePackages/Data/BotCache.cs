@@ -120,9 +120,9 @@ namespace FreePackages {
 		}
 
 		internal void AddActivation(DateTime activation, uint count = 1) {
-			var activationsToPrune = Activations.Where(activation => activation < DateTime.Now.AddHours(-1)).ToList();
+			var activationsToPrune = Activations.Where(x => x < DateTime.Now.AddHours(-1)).ToList();
 			if (activationsToPrune.Count > 0) {
-				activationsToPrune.ForEach(activation => Activations.Remove(activation));
+				activationsToPrune.ForEach(x => Activations.Remove(x));
 			}
 
 			for (int i = 0; i < count; i++) {

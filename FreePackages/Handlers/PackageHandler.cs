@@ -88,6 +88,7 @@ namespace FreePackages {
 			}
 
 			// ASF restarts PICS if either apps or packages needs a full update.  Check the old change number, as one of them might still be good.
+			// TODO: search for the smallest valid change number
 			SteamApps.PICSChangesCallback picsChanges;
 			try {
 				Bot? refreshBot = GetRefreshBot();
@@ -187,7 +188,7 @@ namespace FreePackages {
 					foreach (SteamApps.PICSProductInfoCallback.PICSProductInfo package in packages.Where(x => freePackageIDs.Contains(x.ID))) {
 						KeyValue kv = package.KeyValues;
 						var childAppIDs = kv["appids"].Children.Select(x => x.AsUnsignedInteger()).ToHashSet<uint>();
-						var childApps = relatedApps.Where(x => childAppIDs.Contains(x.ID));			
+						var childApps = relatedApps.Where(x => childAppIDs.Contains(x.ID));
 
 						Handlers.Values.ToList().ForEach(x => x.HandleFreePackage(package, childApps));
 					}
