@@ -15,10 +15,10 @@ This userscript lets you transfer packages from SteamDB's [free packages tool](h
 
 The userscript will add an additional element to SteamDB's [free packages tool](https://steamdb.info/freepackages/) where you can choose to send all of the packages shown on SteamDB to one or all of your ASF bots.
 
-![Interface](https://github.com/Citrinate/FreePackages/FreePackagesImporter/Screenshots/interface.png)
+![Interface](https://raw.githubusercontent.com/Citrinate/FreePackages/main/FreePackagesImporter/Screenshots/interface.png)
 
 If you use non-default IPC settings, you can click on "Settings" to change how the userscript connects to ASF.
 
 Here you can also control whether or not the packages sent to the plugin will be [filtered](https://github.com/Citrinate/FreePackages#enabling-package-filters).  If not filtered, the plugin will attempt to activate all packages sent to it.
 
-![Settings](https://github.com/Citrinate/FreePackages/FreePackagesImporter/Screenshots/settings.png)
+![Settings](https://raw.githubusercontent.com/Citrinate/FreePackages/main/FreePackagesImporter/Screenshots/settings.png)
