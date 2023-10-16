@@ -12,29 +12,26 @@ This plugin works by listening for [changes](https://steamdb.info/faq/#changenum
 - Unpack the downloaded .zip file to the `plugins` folder inside your ASF folder.
 - (Re)start ASF, you should get a message indicating that the plugin loaded successfully.
 
-> Please note, this plugin is only tested to work with ASF-generic.  It may or may not work with other ASF variants.
+> **Note**
+> This plugin is only tested to work with ASF-generic.  It may or may not work with other ASF variants.
 
 ## Usage
 
 ### Enabling the plugin
 
-You can enable the plugin per individual bot by adding `EnableFreePackages` to that bot's config file.
+You can enable the plugin per individual bot by adding `EnableFreePackages` to that bot's config file:
 
-Example: `"EnableFreePackages": true,`
-
-> `bool` type with default value of `false`.
-
+```json
+"EnableFreePackages": true,
+```
 ---
 
 ### Changing the hourly package limit
 
-A maximum of 50 packages can be activated per hour.  By default, this plugin will use at most 40 of those hourly activations and will resume where it left off if it's ever interrupted.  You can control this limit by adding `FreePackagesPerHour` to your individual bot's config files.
+A maximum of 50 packages can be activated per hour.  By default, this plugin will use at most 40 of those hourly activations and will resume where it left off if it's ever interrupted.  You can control this limit by adding `FreePackagesPerHour` to your individual bot's config files of `uint` type with default value of 40.
 
-Example: `"FreePackagesPerHour": 42,`
-
-> Note: I don't recommend raising this value.  The default is 40 to let you manually redeem packages without having to fight with the plugin.  It's also not always possible for the plugin to tell when it's being rate-limited, and so it's best to avoid ever getting rate-limited.
-
-> `uint` type with default value of 40.
+> **Note**
+> I don't recommend raising this value.  The default is 40 to let you manually redeem packages without having to fight with the plugin.  It's also not always possible for the plugin to tell when it's being rate-limited, and so it's best to avoid ever getting rate-limited.
 
 ---
 
@@ -42,7 +39,7 @@ Example: `"FreePackagesPerHour": 42,`
 
 By default, the plugin will attempt to activate all free packages.  You can control what kinds of packages are activated by adding `FreePackagesFilter` to your individual bot's config files with the following structure:
 
-```
+```json
 "FreePackagesFilter": {
     "ImportStoreFilters": false,
     "Categories": [],
@@ -61,23 +58,13 @@ All filter options are explained below:
 
 #### ImportStoreFilters
 
-`"ImportStoreFilters": <true/false>`
-
-Example: `"ImportStoreFilters": true,`
-
-If set to `true`, the plugin will use the ignored games, ignored tags, and ignored content descriptor settings you use on the Steam storefront, in addition to any other filters you define.
-
-> `bool` type with default value of `false`.
+`bool` type with default value of `false`.  If set to `true`, the plugin will use the ignored games, ignored tags, and ignored content descriptor settings you use on the Steam storefront, in addition to any other filters you define.
 
 ---
 
 #### Categories
 
-`"Categories": [<CategoryIDs>]`
-
-Example: `"Categories": [1, 22],`
-
-Packages must contain an app with at least one of these `CategoryIDs` or they will not be added to your account.  You can leave this empty to allow for all categories.
+`HashSet<uint>` type with default value of `[]`.  Packages must contain an app with at least one of these `CategoryIDs` or they will not be added to your account.  You can leave this empty to allow for all categories.
 
 <details>
   <summary>List of Category IDs</summary>
@@ -139,63 +126,32 @@ Packages must contain an app with at least one of these `CategoryIDs` or they wi
   60 | Controller Preferred
 </details>
 
-> `ImmutableHashSet<uint>` type with default value of being empty.
-
 ---
 
 #### Tags
 
-`"Tags": [<TagIDs>]`
+`HashSet<uint>` type with default value of `[]`.  Packages must contain an app with at least one of these `TagIDs` or they will not be added to your account.  You can leave this empty to allow for all tags.  A list of tags can be found [here](https://steamdb.info/tags/).  The `TagID` will be at the end of the URL.  For example, the `TagID` for the [Indie](https://steamdb.info/tag/492/) tag is `492`.
 
-Example: `"Tags": [492, 1664, 5432],`
-
-Packages must contain an app with at least one of these `TagIDs` or they will not be added to your account.  You can leave this empty to allow for all tags.
-
-A list of tags can be found [here](https://steamdb.info/tags/).  The tag's ID will be at the end of the URL.  For example, the ID for the [Indie](https://steamdb.info/tag/492/) tag is 492.
-
-> Note: The "Profile Features Limited" tag presented by SteamDB is not a real tag that Steam uses.  There is no way for this plugin to detect whether or not an app has limited profile features.
-
-> `ImmutableHashSet<uint>` type with default value of being empty.
+> **Note**
+> The "Profile Features Limited" tag presented by SteamDB is not a real tag that Steam uses.  There is no way for this plugin to detect whether or not an app has limited profile features.
 
 ---
 
 #### IgnoredTypes
 
-`"IgnoredTypes": [<TypeNames>]`
-
-Example: `"IgnoredTypes": ["Demo", "Application"],`
-
-Packages containing apps with any of the `TypeNames` specified here will not be added to your account.
-
-The available types for filtering are: `Game`, `Application`, `Tool`, `Demo`, `DLC`, `Music`, `Video`
-
-> `ImmutableHashSet<string>` type with default value of being empty.
+`HashSet<string>` type with default value of `[]`.  Packages containing apps with any of the `TypeNames` specified here will not be added to your account.  The available `TypeNames` for filtering are: `Game`, `Application`, `Tool`, `Demo`, `DLC`, `Music`, `Video`
 
 ---
 
 #### IgnoredTags
 
-`"IgnoredTags": [<TagIDs>]`
-
-Example: `"IgnoredTags": [4085],`
-
-Packages containing apps with any of these `TagIDs` will not be added to your account.
-
-Refer to [Tags](#tags) for more information about `TagIDs`.
-
-> `HashSet<uint>` type with default value of being empty.
+`HashSet<uint>` type with default value of `[]`.  Packages containing apps with any of these `TagIDs` will not be added to your account.  Refer to [Tags](#tags) for more information about `TagIDs`.
 
 ---
 
 #### IgnoredContentDescriptors
 
-`"IgnoredTags": [<ContentDescriptionIDs>]`
-
-Example: `"IgnoredContentDescriptors": [3, 4],`
-
-Packages containing apps with any of the `ContentDescriptionIDs` specified here will not be added to your account.
-
-A list of content descriptors is provided below.  More detailed information about content descriptors can be found [here](https://store.steampowered.com/account/preferences/) under "Mature Content Filtering".
+`HashSet<uint>` type with default value of `[]`.  Packages containing apps with any of the `ContentDescriptorIDs` specified here will not be added to your account.  Detailed information about content descriptors can be found [here](https://store.steampowered.com/account/preferences/) under "Mature Content Filtering".
 
 <details>
   <summary>List of Content Descriptor IDs</summary>
@@ -209,37 +165,21 @@ A list of content descriptors is provided below.  More detailed information abou
   5 | General Mature Content
 </details>
 
-> `HashSet<uint>` type with default value of being empty.
-
 ---
 
 #### IgnoredAppIDs
 
-`"IgnoredAppIDs": [<AppIDs>]`
-
-Example: `"IgnoredAppIDs": [440, 730],`
-
-Packages containing apps with any of these IDs will not be added to your account.
-
-> `HashSet<uint>` type with default value of being empty.
+`HashSet<uint>` type with default value of `[]`.  Packages containing apps with any of these `AppIDs` will not be added to your account.
 
 ---
 
 #### IgnoreFreeWeekends
 
-`"IgnoreFreeWeekends": <true/false>`
-
-Example: `"IgnoreFreeWeekends": true,`
-
-Free weekend packages will be ignored if set to `true`.
-
-> `bool` type with default value of `false`.
+`bool` type with default value of `false`.  Free weekend packages will be ignored if set to `true`.
 
 ---
 
 ### Commands
-
-> Parameters in square brackets are sometimes `[Optional]`, parameters in angle brackets are always `<Required>`. Plural parameters such as `[Bots]` can accept multiple values separated by `,` such as `A,B,C`
 
 Command | Access | Description
 --- | --- | ---
