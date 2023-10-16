@@ -186,7 +186,7 @@ namespace FreePackages {
 
 			if (FilterConfig.IgnoredTags.Count > 0) {
 				bool has_matching_tag = kv["common"]["store_tags"].Children.Any(tag => FilterConfig.IgnoredTags.Contains(tag.AsUnsignedInteger()));
-				if (!has_matching_tag) {
+				if (has_matching_tag) {
 					// App contains an unwanted tag
 					return true;
 				}
