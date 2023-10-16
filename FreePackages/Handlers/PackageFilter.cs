@@ -192,6 +192,14 @@ namespace FreePackages {
 				}
 			}
 
+			if (FilterConfig.IgnoredCategories.Count > 0) {
+				bool has_matching_category = kv["common"]["category"].Children.Any(category => UInt32.TryParse(category.Name?.Substring(9), out uint category_number) && FilterConfig.IgnoredCategories.Contains(category_number)); // category numbers are stored in the name as "category_##"
+				if (has_matching_category) {
+					// App contains unwanted categories
+					return true;
+				}
+			}
+
 			if (FilterConfig.IgnoredContentDescriptors.Count > 0) {
 				bool has_matching_mature_content_descriptor = kv["common"]["content_descriptors"].Children.Any(content_descriptor => FilterConfig.IgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
 				if (has_matching_mature_content_descriptor) {

@@ -23,6 +23,9 @@ namespace FreePackages {
 		internal HashSet<uint> IgnoredTags = new();
 
 		[JsonProperty(Required = Required.Default)]
+		internal ImmutableHashSet<uint> IgnoredCategories = ImmutableHashSet<uint>.Empty;
+
+		[JsonProperty(Required = Required.Default)]
 		internal HashSet<uint> IgnoredContentDescriptors = new();
 
 		[JsonProperty(Required = Required.Default)]
