@@ -42,12 +42,16 @@ By default, the plugin will attempt to activate all free packages.  You can cont
 ```json
 "FreePackagesFilter": {
     "ImportStoreFilters": false,
-    "Categories": [],
+    "Types": [],
     "Tags": [],
+    "Categories": [],
     "IgnoredTypes": [],
+    "IgnoredTags": [],
+    "IgnoredCategories": [],
     "IgnoredContentDescriptors": [],
     "IgnoredAppIDs": [],
     "IgnoreFreeWeekends": false,
+    "MinReviewScore": 0,
 },
 ```
 
@@ -58,6 +62,21 @@ All filter options are explained below:
 #### ImportStoreFilters
 
 `bool` type with default value of `false`.  If set to `true`, the plugin will use the ignored games, ignored tags, and ignored content descriptor settings you use on the Steam storefront, in addition to any other filters you define.
+
+---
+
+#### Types
+
+`HashSet<string>` type with default value of `[]`.  Packages must contain an app with one of the `TypeNames` specified here or they will not be added to your account.  You can leave this empty to allow for all types.  The available `TypeNames` for filtering are: `Game`, `Application`, `Tool`, `Demo`, `DLC`, `Music`, `Video`
+
+---
+
+#### Tags
+
+`HashSet<uint>` type with default value of `[]`.  Packages must contain an app with at least one of these `TagIDs` or they will not be added to your account.  You can leave this empty to allow for all tags.  A list of tags can be found [here](https://steamdb.info/tags/).  The `TagID` will be at the end of the URL.  For example, the `TagID` for the [Indie](https://steamdb.info/tag/492/) tag is 492.
+
+> **Note**
+> The "Profile Features Limited" tag presented by SteamDB is not a real tag that Steam uses.  There is no way for this plugin to detect whether or not an app has limited profile features.
 
 ---
 
@@ -127,18 +146,21 @@ All filter options are explained below:
 
 ---
 
-#### Tags
+#### IgnoredTypes
 
-`HashSet<uint>` type with default value of `[]`.  Packages must contain an app with at least one of these `TagIDs` or they will not be added to your account.  You can leave this empty to allow for all tags.  A list of tags can be found [here](https://steamdb.info/tags/).  The `TagID` will be at the end of the URL.  For example, the `TagID` for the [Indie](https://steamdb.info/tag/492/) tag is `492`.
-
-> **Note**
-> The "Profile Features Limited" tag presented by SteamDB is not a real tag that Steam uses.  There is no way for this plugin to detect whether or not an app has limited profile features.
+`HashSet<string>` type with default value of `[]`.  Packages containing apps with any of the `TypeNames` specified here will not be added to your account.  Refer to [Types](#types) for more information about `TypeNames`.
 
 ---
 
-#### IgnoredTypes
+#### IgnoredTags
 
-`HashSet<string>` type with default value of `[]`.  Packages containing apps with any of the `TypeNames` specified here will not be added to your account.  The available `TypeNames` for filtering are: `Game`, `Application`, `Tool`, `Demo`, `DLC`, `Music`, `Video`
+`HashSet<uint>` type with default value of `[]`.  Packages containing apps with any of these `TagIDs` will not be added to your account.  Refer to [Tags](#tags) for more information about `TagIDs`.
+
+---
+
+#### IgnoredCategories
+
+`HashSet<uint>` type with default value of `[]`.  Packages containing apps with any of these `CategoryIDs` will not be added to your account.  Refer to [Categories](#categories) for more information about `CategoryIDs`.
 
 ---
 
@@ -169,6 +191,28 @@ All filter options are explained below:
 #### IgnoreFreeWeekends
 
 `bool` type with default value of `false`.  Free weekend packages will be ignored if set to `true`.
+
+---
+
+#### MinReviewScore
+
+`uint` type with default value of `0`.  Packages must contain an app with a `ReviewScore` greater than or equal to this or they will not be added to your account.  You can leave this blank or set it to `0` to allow for all values.  A `ReviewScore` is not the same as the percentage of positive reviews.  This number ranges from 1 to 9.  Refer to the list below for more information.  This filter is not applied to demos as they can't normally be reviewed.
+
+<details>
+  <summary>List of Review Scores</summary>
+
+  Review Score | Description | # of Reviews | % of Positive Reviews 
+  --- | --- | --- | ---
+  1 | Overwhelmingly Negative | 500+ | 0%-19%
+  2 | Very Negative | 50-499 | 0%-19%
+  3 | Negative | 1-49 | 0%-19%
+  4 | Mostly Negative | 1-49 | 20%-39%
+  5 | Mixed | 1-49 | 40%-69%
+  6 | Mostly Positive | 1-49 | 70%-79%
+  7 | Positive | 1-49 | 80%-100%
+  8 | Very Positive | 50-499 | 80%-100%
+  9 | Overwhelmingly Positive | 500+ | 80%-100%
+</details>
 
 ---
 
