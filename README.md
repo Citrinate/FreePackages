@@ -45,7 +45,6 @@ By default, the plugin will attempt to activate all free packages.  You can cont
     "Categories": [],
     "Tags": [],
     "IgnoredTypes": [],
-    "IgnoredTags": [],
     "IgnoredContentDescriptors": [],
     "IgnoredAppIDs": [],
     "IgnoreFreeWeekends": false,
@@ -140,12 +139,6 @@ All filter options are explained below:
 #### IgnoredTypes
 
 `HashSet<string>` type with default value of `[]`.  Packages containing apps with any of the `TypeNames` specified here will not be added to your account.  The available `TypeNames` for filtering are: `Game`, `Application`, `Tool`, `Demo`, `DLC`, `Music`, `Video`
-
----
-
-#### IgnoredTags
-
-`HashSet<uint>` type with default value of `[]`.  Packages containing apps with any of these `TagIDs` will not be added to your account.  Refer to [Tags](#tags) for more information about `TagIDs`.
 
 ---
 
