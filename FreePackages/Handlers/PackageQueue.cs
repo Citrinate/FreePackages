@@ -191,7 +191,7 @@ namespace FreePackages {
 				// We could be rate limited, but the app could also be invalid beacause it has no available licenses.  It's necessary to assume invalid so we don't get into an infinite loop.
 				// Examples: https://steamdb.info/app/2401570/ on Oct 2, 2023, Attempting to download demo through Steam client gives error "no licenses"
 				// Free games that still have store pages but display "At the request of the publisher, ___ is unlisted on the Steam store and will not appear in search.": https://store.steampowered.com/app/376570/WildStar/
-				Bot.ArchiLogger.LogGenericInfo(string.Format("ID: app/{0} | Status: {1}", appID, EResult.Invalid));
+				Bot.ArchiLogger.LogGenericInfo(string.Format("ID: app/{0} | Status: Unknown", appID));
 
 				return EResult.Invalid;
 			}

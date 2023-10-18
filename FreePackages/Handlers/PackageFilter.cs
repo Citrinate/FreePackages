@@ -46,6 +46,7 @@ namespace FreePackages {
 			}
 
 			if (FilterConfig.ImportStoreFilters) {
+				// TODO: don't merge these
 				FilterConfig.IgnoredAppIDs.UnionWith(userData.IgnoredApps.Where(x => x.Value == 0).Select(x => x.Key));
 				FilterConfig.IgnoredTags.UnionWith(userData.ExcludedTags.Select(x => x.TagID));
 				FilterConfig.IgnoredContentDescriptors.UnionWith(userData.ExcludedContentDescriptorIDs);
@@ -63,15 +64,6 @@ namespace FreePackages {
 
 		internal static bool IsFreeApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app) {
 			KeyValue kv = app.KeyValues;
-
-			string? releaseState = kv["common"]["releasestate"].AsString();
-			if (releaseState != "released") {
-				// App not released yet
-				// Note: There's another seemingly relevant field: kv["common"]["steam_release_date"] 
-				// steam_release_date is not checked because an app can be "released", still have a future release date, and still be redeemed
-				// Example: https://steamdb.info/changelist/20505012/
-				return false;
-			}
 
 			if (kv["extended"]["isfreeapp"].AsBoolean()) {
 				return true;
@@ -91,7 +83,22 @@ namespace FreePackages {
 			return false;
 		}
 
-		internal bool IsRedeemableApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app) {
+		internal static bool IsAvailableApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app) {
+			KeyValue kv = app.KeyValues;
+
+			string? releaseState = kv["common"]["releasestate"].AsString();
+			if (releaseState != "released") {
+				// App not released yet
+				// Note: There's another seemingly relevant field: kv["common"]["steam_release_date"] 
+				// steam_release_date is not checked because an app can be "released", still have a future release date, and still be redeemed
+				// Example: https://steamdb.info/changelist/20505012/
+				return false;
+			}
+
+			return true;
+		}
+
+		internal bool IsRedeemableApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, bool ignoreOwnsCheck = false) {
 			if (UserData == null) {
 				throw new InvalidOperationException(nameof(UserData));
 			}
@@ -104,12 +111,12 @@ namespace FreePackages {
 				throw new InvalidOperationException(nameof(Country));
 			}
 
-			// It's impossible to tell for certain if an app is redeemable with the information we have here
+			// It's impossible to tell for certain if an app is redeemable by this account with the information we have here
 			// For an app to be redeemable it needs a package that's also redeemable, but we can't see which packages grant an app
 			// Some examples: Deactivated demo: https://steamdb.info/app/1316010
 			// App isn't region locked but with package that is: https://steamdb.info/app/2147450
 
-			if (OwnedAppIDs.Contains(app.ID)) {
+			if (!ignoreOwnsCheck && OwnedAppIDs.Contains(app.ID)) {
 				// Already own this app
 				return false;
 			}
@@ -229,32 +236,56 @@ namespace FreePackages {
 			KeyValue kv = package.KeyValues;
 
 			var billingType = (EBillingType) kv["billingtype"].AsInteger();
-			if (billingType != EBillingType.FreeOnDemand 
-				&& billingType != EBillingType.NoCost
-			) {
-				return false;
+			if (billingType == EBillingType.FreeOnDemand || billingType == EBillingType.NoCost) {
+				return true;
 			}
 
-			var appIDs = kv["appids"].Children.Select(x => x.AsUnsignedInteger());
-			if (appIDs.Count() == 0) {
+			return false;
+		}
+
+		internal static bool IsAvailablePackage(SteamApps.PICSProductInfoCallback.PICSProductInfo package) {
+			KeyValue kv = package.KeyValues;			
+
+			if (kv["appids"].Children.Count == 0) {
+				// Package has no apps
 				return false;
 			}
 
 			if ((EPackageStatus) kv["status"].AsInteger() != EPackageStatus.Available) {
+				// Package is unavailable
 				return false;
 			}
 
 			if ((ELicenseType) kv["licensetype"].AsInteger() != ELicenseType.SinglePurchase) {
+				// Wrong license type
 				return false;
 			}
 
 			var expiryTime = kv["extended"]["expirytime"].AsUnsignedLong();
 			var now = DateUtils.DateTimeToUnixTime(DateTime.UtcNow);
 			if (expiryTime > 0 && expiryTime < now) {
+				// Package was only available for a limited time and is no longer available
 				return false;
 			}
 			
 			if (kv["extended"]["deactivated_demo"].AsBoolean()) {
+				// Demo package has been disabled
+				return false;
+			}
+
+			return true;
+		}
+
+		internal static bool IsAvailablePackageContents(SteamApps.PICSProductInfoCallback.PICSProductInfo package, IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> apps) {
+			KeyValue kv = package.KeyValues;
+
+			if (kv["appids"].Children.Count != apps.Count()) {
+				// Could not find all of the apps for this package
+				return false;
+			}
+
+			if (apps.Any(app => !IsAvailableApp(app))) {
+				// At least one of the apps in this package isn't available
 				return false;
 			}
 
@@ -310,6 +341,11 @@ namespace FreePackages {
 					// Package is purchase restricted in this bot's country
 					return false;
 				}
+			}
+
+			if (apps.Any(app => !IsRedeemableApp(app, ignoreOwnsCheck: true))) {
+				// At least one of the apps in this package isn't redeemable
+				return false;
 			}
 
 			return true;

@@ -151,7 +151,7 @@ namespace FreePackages {
 		private async static Task HandleProductInfo(List<SteamApps.PICSProductInfoCallback> productInfo) {
 			// Figure out which apps are free and add any wanted apps to the queue
 			foreach (SteamApps.PICSProductInfoCallback.PICSProductInfo app in productInfo.SelectMany(static result => result.Apps.Values)) {
-				if (!PackageFilter.IsFreeApp(app)) {
+				if (!PackageFilter.IsFreeApp(app) || !PackageFilter.IsAvailableApp(app)) {
 					Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(appID: app.ID));
 
 					continue;
@@ -168,7 +168,7 @@ namespace FreePackages {
 				// Need to get the product info of the apps that are contained in each free package in order to apply filters
 				// This first loop gets a list of these apps and also filters out any non-free packages
 				foreach (SteamApps.PICSProductInfoCallback.PICSProductInfo package in packages) {
-					if (!PackageFilter.IsFreePackage(package)) {
+					if (!PackageFilter.IsFreePackage(package) || !PackageFilter.IsAvailablePackage(package)) {
 						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(packageID: package.ID));
 
 						continue;
@@ -189,6 +189,12 @@ namespace FreePackages {
 						KeyValue kv = package.KeyValues;
 						var childAppIDs = kv["appids"].Children.Select(x => x.AsUnsignedInteger()).ToHashSet<uint>();
 						var childApps = relatedApps.Where(x => childAppIDs.Contains(x.ID));
+						
+						if (!PackageFilter.IsAvailablePackageContents(package, childApps)) {
+							Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(packageID: package.ID));
+
+							continue;
+						}
 
 						Handlers.Values.ToList().ForEach(x => x.HandleFreePackage(package, childApps));
 					}
