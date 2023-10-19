@@ -74,7 +74,7 @@ namespace FreePackages {
 			}
 
 			if (BotCache.NumActivationsPastHour() >= ActivationsPerHour) {
-				DateTime resumeTime = BotCache.Activations.Max().AddHours(1).AddMinutes(1);
+				DateTime resumeTime = BotCache.GetLastActivation()!.Value.AddHours(1).AddMinutes(1);
 				Bot.ArchiLogger.LogGenericInfo(String.Format("Pausing free package activations until {0:T}", resumeTime));
 				UpdateTimer(resumeTime);
 				
@@ -240,7 +240,7 @@ namespace FreePackages {
 			responses.Add(String.Format("{0} free packages queued.  {1}/{2} hourly activations used.", BotCache.Packages.Count, activationsPastHour, ActivationsPerHour));
 
 			if (activationsPastHour >= ActivationsPerHour) {
-				DateTime resumeTime = BotCache.Activations.Max().AddHours(1).AddMinutes(1);
+				DateTime resumeTime = BotCache.GetLastActivation()!.Value.AddHours(1).AddMinutes(1);
 				responses.Add(String.Format("Activations will resume at {0:T}.", resumeTime));
 			}
 
