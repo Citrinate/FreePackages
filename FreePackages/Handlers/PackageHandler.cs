@@ -168,9 +168,9 @@ namespace FreePackages {
 			var apps = productInfo.SelectMany(static result => result.Apps.Values);
 			if (apps.Count() != 0) {
 				HashSet<uint> freeAppIDs = new();
-				HashSet<uint> playtestAppIDs = new();
-				HashSet<uint> playtestParentAppIDs = new();
-				// Need to get the product info of the parent apps of playtests in order to apply filters
+				HashSet<uint> childAppIDs = new();
+				HashSet<uint> parentAppIDs = new();
+				// Need to get the product info of the parent apps of playtests & demos in order to apply filters
 				// This first loop gets a list of these apps and also filters out any non-free packages
 				foreach (SteamApps.PICSProductInfoCallback.PICSProductInfo app in apps) {
 					if (!PackageFilter.IsFreeApp(app) || !PackageFilter.IsAvailableApp(app)) {
@@ -181,30 +181,35 @@ namespace FreePackages {
 
 					KeyValue kv = app.KeyValues;
 					EAppType type = kv["common"]["type"].AsEnum<EAppType>();
-					if (type == EAppType.Beta) {
-						playtestAppIDs.Add(app.ID);
-						// There's another field: ["extended"]["betaforappid"], but it's less reliable
+					if (type == EAppType.Beta || type == EAppType.Demo) {
+						childAppIDs.Add(app.ID);
+						// There's another field for playtests: ["extended"]["betaforappid"], but it's less reliable
 						// Ex: https://steamdb.info/app/2420490/ on Oct 17 2023 has "parent" and is redeemable, but doesn't have "betaforappid"
 						uint parentAppID = kv["common"]["parent"].AsUnsignedInteger();
 						if (parentAppID > 0) {
-							playtestParentAppIDs.Add(parentAppID);
+							parentAppIDs.Add(parentAppID);
 						}
 					}
 
 					freeAppIDs.Add(app.ID);
 				}
 
-				var playtestParentAppProductInfo = await GetProductInfo(appIDs: playtestParentAppIDs).ConfigureAwait(false);
-				if (playtestParentAppProductInfo != null) {
-					var playtestParentApps = playtestParentAppProductInfo.SelectMany(static result => result.Apps.Values);
+				var parentAppProductInfo = await GetProductInfo(appIDs: parentAppIDs).ConfigureAwait(false);
+				if (parentAppProductInfo != null) {
+					var parentApps = parentAppProductInfo.SelectMany(static result => result.Apps.Values);
 
 					foreach (SteamApps.PICSProductInfoCallback.PICSProductInfo app in apps.Where(x => freeAppIDs.Contains(x.ID))) {
-						if (playtestAppIDs.Contains(app.ID)) {
+						if (childAppIDs.Contains(app.ID)) {
 							KeyValue kv = app.KeyValues;
+							EAppType type = kv["common"]["type"].AsEnum<EAppType>();
 							uint parentAppID = kv["common"]["parent"].AsUnsignedInteger();
-							var parentApp = playtestParentApps.FirstOrDefault(x => x.ID == parentAppID);
+							var parentApp = parentApps.FirstOrDefault(x => x.ID == parentAppID);
 
-							Handlers.Values.ToList().ForEach(x => x.HandlePlaytest(app, parentApp));
+							if (type == EAppType.Beta) {
+								Handlers.Values.ToList().ForEach(x => x.HandlePlaytest(app, parentApp));
+							} else {
+								Handlers.Values.ToList().ForEach(x => x.HandleFreeApp(app, parentApp));	
+							}
 						} else {
 							Handlers.Values.ToList().ForEach(x => x.HandleFreeApp(app));
 						}
@@ -336,7 +341,7 @@ namespace FreePackages {
 			}
 		}
 
-		private void HandleFreeApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app) {
+		private void HandleFreeApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo? parentApp = null) {
 			if (!BotCache.ChangedApps.Contains(app.ID)) {
 				return;
 			}
@@ -350,11 +355,11 @@ namespace FreePackages {
 					return;
 				}
 
-				if (!PackageFilter.IsWantedApp(app)) {
+				if (!PackageFilter.IsWantedApp(app, parentApp)) {
 					return;
 				}
 
-				if (PackageFilter.IsIgnoredApp(app)) {
+				if (PackageFilter.IsIgnoredApp(app, parentApp)) {
 					return;
 				}
 			
@@ -421,7 +426,11 @@ namespace FreePackages {
 					return;
 				}
 
-				if (PackageFilter.IsIgnoredPlaytest(app, parentApp)) {
+				if (!PackageFilter.IsWantedApp(app, parentApp)) {
+					return;
+				}
+
+				if (PackageFilter.IsIgnoredApp(app, parentApp)) {
 					return;
 				}
 

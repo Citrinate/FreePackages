@@ -148,9 +148,18 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsWantedApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, EAppType? overrideType = null) {
+		internal bool IsWantedApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo? parentApp = null, EAppType? childType = null) {
 			KeyValue kv = app.KeyValues;
-			EAppType type = overrideType ?? kv["common"]["type"].AsEnum<EAppType>();
+			EAppType type = childType ?? kv["common"]["type"].AsEnum<EAppType>();
+			bool isParentApp = childType != null; // We're checking if the parent of an app is wanted
+
+			if (parentApp != null && IsWantedApp(parentApp, childType: type)) {
+				// If there's a parent app and we want either the app or the parent, then we want them both
+				// This is used for Demos and Playtests, where two are essentially the same, but may have different properties defined
+				
+				// Parent app is wanted
+				return true;
+			}
 
 			if (FilterConfig.Types.Count > 0) {
 				if (!FilterConfig.Types.Contains(type.ToString())) {
@@ -159,7 +168,8 @@ namespace FreePackages {
 				}
 			}
 
-			if (FilterConfig.Categories.Count > 0) {
+			if (FilterConfig.Categories.Count > 0 && !isParentApp) {
+				// Categories on child apps are assumed to be accurate even though they might differ from the parent app. Some differences are expected (ex: Trading cards)
 				bool has_matching_category = kv["common"]["category"].Children.Any(category => UInt32.TryParse(category.Name?.Substring(9), out uint category_number) && FilterConfig.Categories.Contains(category_number)); // category numbers are stored in the name as "category_##"
 				if (!has_matching_category) {
 					// Unwanted due to missing categories
@@ -187,9 +197,18 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsIgnoredApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, EAppType? overrideType = null) {
+		internal bool IsIgnoredApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo? parentApp = null, EAppType? childType = null) {
 			KeyValue kv = app.KeyValues;
-			EAppType type = overrideType ?? kv["common"]["type"].AsEnum<EAppType>();
+			EAppType type = childType ?? kv["common"]["type"].AsEnum<EAppType>();
+			bool isParentApp = childType != null; // We're checking if the parent of an app is ignored
+
+			if (parentApp != null && IsIgnoredApp(parentApp, childType: type)) {
+				// If there's a parent app and we ignore either the app or the parent, then we ignore them both
+				// This is used for Demos and Playtests, where two are essentially the same, but may have different properties defined
+
+				// Parent app is ignored
+				return true;
+			}
 
 			if (FilterConfig.IgnoredTypes.Contains(type.ToString())) {
 				// App is an unwanted type
@@ -204,7 +223,8 @@ namespace FreePackages {
 				}
 			}
 
-			if (FilterConfig.IgnoredCategories.Count > 0) {
+			if (FilterConfig.IgnoredCategories.Count > 0 && !isParentApp) {
+				// Categories on child apps are assumed to be accurate even though they might differ from the parent app. Some differences are expected (ex: Trading cards)
 				bool has_matching_category = kv["common"]["category"].Children.Any(category => UInt32.TryParse(category.Name?.Substring(9), out uint category_number) && FilterConfig.IgnoredCategories.Contains(category_number)); // category numbers are stored in the name as "category_##"
 				if (has_matching_category) {
 					// App contains unwanted categories
@@ -415,27 +435,7 @@ namespace FreePackages {
 				return false;
 			}
 
-			// The playtest app and the parent app may have different properties defined
-			if (!IsWantedApp(app) && !IsWantedApp(parentApp, EAppType.Beta)) {
-				// Both the playtest app and the parent app are unwanted
-				return false;
-			}
-
 			return true;
-		}
-
-		internal bool IsIgnoredPlaytest(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo parentApp) {
-			if (IsIgnoredApp(app)) {
-				// The playtest app has something in it that the user explicitly does not want
-				return true;
-			}
-
-			if (IsIgnoredApp(parentApp, EAppType.Beta)) {
-				// The parent app has something in it that the user explicitly does not want
-				return true;
-			}
-			
-			return false;
 		}
 	}
 }
