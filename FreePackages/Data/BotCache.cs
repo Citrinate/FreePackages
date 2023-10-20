@@ -139,6 +139,18 @@ namespace FreePackages {
 			return Activations.Where(activation => activation > DateTime.Now.AddHours(-1)).Count();
 		}
 
+		internal DateTime? GetLastActivation() {
+			// Can't use Activations.Max() because it breaks on non-generic ASF
+			DateTime? lastActivation = null;
+			foreach (DateTime activation in Activations) {
+				if (lastActivation == null || activation > lastActivation) {
+					lastActivation = activation;
+				}
+			}
+
+			return lastActivation;
+		}
+
 		internal void AddChanges(HashSet<uint>? appIDs = null, HashSet<uint>? packageIDs = null) {
 			if (appIDs != null) {
 				ChangedApps.UnionWith(appIDs);
