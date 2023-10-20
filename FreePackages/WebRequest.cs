@@ -55,5 +55,14 @@ namespace FreePackages {
 
 			return appList;
 		}
+
+		internal static async Task<PlaytestAccessResponse?> RequestPlaytestAccess(Bot bot, uint appID) {
+			Uri request = new(ArchiWebHandler.SteamStoreURL, String.Format("/ajaxrequestplaytestaccess/{0}", appID));
+			Dictionary<string, string> data = new(1); // Extra entry for sessionID
+			// Returns 401 error error with body "false" if playtest doesn't exist for appID
+			ObjectResponse<PlaytestAccessResponse>? playtestAccessResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<PlaytestAccessResponse>(request, data: data, maxTries: 1).ConfigureAwait(false);
+
+			return playtestAccessResponse?.Content;
+		}
 	}
 }

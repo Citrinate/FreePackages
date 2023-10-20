@@ -24,6 +24,9 @@ namespace FreePackages {
 		[JsonProperty(Required = Required.DisallowNull)]
 		internal ConcurrentHashSet<uint> ChangedPackages = new();
 
+		[JsonProperty(Required = Required.DisallowNull)]
+		internal ConcurrentHashSet<uint> WaitlistedPlaytests = new();
+
 		[JsonConstructor]
 		private BotCache() { }
 
@@ -166,6 +169,12 @@ namespace FreePackages {
 			Packages.Clear();
 			ChangedApps.Clear();
 			ChangedPackages.Clear();
+			Utilities.InBackground(Save);
+		}
+
+		internal void AddWaitlistedPlaytest(uint appID) {
+			WaitlistedPlaytests.Add(appID);
+			
 			Utilities.InBackground(Save);
 		}
 	}

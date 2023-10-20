@@ -13,10 +13,11 @@ namespace FreePackages {
 	internal sealed class PackageHandler : IDisposable {
 		internal readonly Bot Bot;
 		internal readonly BotCache BotCache;
-		private readonly PackageFilter PackageFilter;
+		internal readonly PackageFilter PackageFilter;
 		private readonly PackageQueue PackageQueue;
 		internal static ConcurrentDictionary<string, PackageHandler> Handlers = new();
 
+		private static SemaphoreSlim AddHandlerSemaphore = new SemaphoreSlim(1, 1);
 		private static SemaphoreSlim ProcessChangesSemaphore = new SemaphoreSlim(1, 1);
 		private static SemaphoreSlim ProductInfoSemaphore = new SemaphoreSlim(1, 1);
 		private const int ProductInfoLimitingDelaySeconds = 5;
@@ -39,16 +40,30 @@ namespace FreePackages {
 				Handlers.TryRemove(bot.BotName, out PackageHandler? _);
 			}
 
-			filterConfig ??= new();
+			await AddHandlerSemaphore.WaitAsync().ConfigureAwait(false);
+			try {
+				filterConfig ??= new();
 
-			string cacheFilePath = Bot.GetFilePath(String.Format("{0}_{1}", bot.BotName, nameof(FreePackages)), Bot.EFileType.Database);
-			BotCache? botCache = await BotCache.CreateOrLoad(cacheFilePath).ConfigureAwait(false);
-			if (botCache == null) {
-				bot.ArchiLogger.LogGenericError(String.Format(Strings.ErrorDatabaseInvalid, cacheFilePath));
-				botCache = new(cacheFilePath);
+				if (filterConfig.PlaytestMode != EPlaytestMode.None) {
+					// Only allow 1 bot to request playtests
+					int numBotsThatIncludePlaytests = Handlers.Values.Where(x => x.PackageFilter.FilterConfig.PlaytestMode != EPlaytestMode.None).Count();
+					if (numBotsThatIncludePlaytests > 0) {
+						filterConfig.PlaytestMode = EPlaytestMode.None;
+						bot.ArchiLogger.LogGenericInfo("Changed PlaytestMode to 0 (None), only 1 bot is allowed to use this filter");
+					}
+				}
+
+				string cacheFilePath = Bot.GetFilePath(String.Format("{0}_{1}", bot.BotName, nameof(FreePackages)), Bot.EFileType.Database);
+				BotCache? botCache = await BotCache.CreateOrLoad(cacheFilePath).ConfigureAwait(false);
+				if (botCache == null) {
+					bot.ArchiLogger.LogGenericError(String.Format(Strings.ErrorDatabaseInvalid, cacheFilePath));
+					botCache = new(cacheFilePath);
+				}
+
+				Handlers.TryAdd(bot.BotName, new PackageHandler(bot, botCache, filterConfig, packageLimit));
+			} finally {
+				AddHandlerSemaphore.Release();
 			}
-
-			Handlers.TryAdd(bot.BotName, new PackageHandler(bot, botCache, filterConfig, packageLimit));
 		}
 
 		internal static void OnAccountInfo(Bot bot, SteamUser.AccountInfoCallback callback) {
@@ -150,14 +165,51 @@ namespace FreePackages {
 
 		private async static Task HandleProductInfo(List<SteamApps.PICSProductInfoCallback> productInfo) {
 			// Figure out which apps are free and add any wanted apps to the queue
-			foreach (SteamApps.PICSProductInfoCallback.PICSProductInfo app in productInfo.SelectMany(static result => result.Apps.Values)) {
-				if (!PackageFilter.IsFreeApp(app) || !PackageFilter.IsAvailableApp(app)) {
-					Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(appID: app.ID));
+			var apps = productInfo.SelectMany(static result => result.Apps.Values);
+			if (apps.Count() != 0) {
+				HashSet<uint> freeAppIDs = new();
+				HashSet<uint> playtestAppIDs = new();
+				HashSet<uint> playtestParentAppIDs = new();
+				// Need to get the product info of the parent apps of playtests in order to apply filters
+				// This first loop gets a list of these apps and also filters out any non-free packages
+				foreach (SteamApps.PICSProductInfoCallback.PICSProductInfo app in apps) {
+					if (!PackageFilter.IsFreeApp(app) || !PackageFilter.IsAvailableApp(app)) {
+						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(appID: app.ID));
 
-					continue;
+						continue;
+					}
+
+					KeyValue kv = app.KeyValues;
+					EAppType type = kv["common"]["type"].AsEnum<EAppType>();
+					if (type == EAppType.Beta) {
+						playtestAppIDs.Add(app.ID);
+						// There's another field: ["extended"]["betaforappid"], but it's less reliable
+						// Ex: https://steamdb.info/app/2420490/ on Oct 17 2023 has "parent" and is redeemable, but doesn't have "betaforappid"
+						uint parentAppID = kv["common"]["parent"].AsUnsignedInteger();
+						if (parentAppID > 0) {
+							playtestParentAppIDs.Add(parentAppID);
+						}
+					}
+
+					freeAppIDs.Add(app.ID);
 				}
 
-				Handlers.Values.ToList().ForEach(x => x.HandleFreeApp(app));
+				var playtestParentAppProductInfo = await GetProductInfo(appIDs: playtestParentAppIDs).ConfigureAwait(false);
+				if (playtestParentAppProductInfo != null) {
+					var playtestParentApps = playtestParentAppProductInfo.SelectMany(static result => result.Apps.Values);
+
+					foreach (SteamApps.PICSProductInfoCallback.PICSProductInfo app in apps.Where(x => freeAppIDs.Contains(x.ID))) {
+						if (playtestAppIDs.Contains(app.ID)) {
+							KeyValue kv = app.KeyValues;
+							uint parentAppID = kv["common"]["parent"].AsUnsignedInteger();
+							var parentApp = playtestParentApps.FirstOrDefault(x => x.ID == parentAppID);
+
+							Handlers.Values.ToList().ForEach(x => x.HandlePlaytest(app, parentApp));
+						} else {
+							Handlers.Values.ToList().ForEach(x => x.HandleFreeApp(app));
+						}
+					}
+				}
 			}
 
 			// Figure out which packages are free and add any wanted packages to the queue
@@ -340,6 +392,38 @@ namespace FreePackages {
 				PackageQueue.AddPackage(new Package(EPackageType.Sub, package.ID, startTime), appIDs);
 			} finally {
 				BotCache.RemoveChange(packageID: package.ID);
+			}
+		}
+
+		private void HandlePlaytest(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo? parentApp) {
+			if (!BotCache.ChangedApps.Contains(app.ID)) {
+				return;
+			}
+
+			if (!PackageFilter.Ready) {
+				return;
+			}
+
+			try {
+				if (parentApp == null) {
+					return;
+				}
+
+				if (!PackageFilter.IsRedeemableApp(app)) {
+					return;
+				}
+
+				if (!PackageFilter.IsWantedPlaytest(app, parentApp)) {
+					return;
+				}
+
+				if (PackageFilter.IsIgnoredPlaytest(app, parentApp)) {
+					return;
+				}
+
+				PackageQueue.AddPackage(new Package(EPackageType.Playtest, parentApp.ID));
+			} finally {
+				BotCache.RemoveChange(appID: app.ID);
 			}
 		}
 

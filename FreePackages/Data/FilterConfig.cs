@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using Newtonsoft.Json;
@@ -34,13 +35,21 @@ namespace FreePackages {
 		[JsonProperty(Required = Required.Default)]
 		internal bool IgnoreFreeWeekends = false;
 
-		// [JsonProperty(Required = Required.Default)]
-		// internal bool IncludePlaytests = false;
-
 		[JsonProperty(Required = Required.Default)]
 		internal uint MinReviewScore = 0;
 
+		[JsonProperty(Required = Required.Default)]
+		internal EPlaytestMode PlaytestMode = EPlaytestMode.None;
+
 		[JsonConstructor]
 		internal FilterConfig() { }
+	}
+
+	[Flags]
+	internal enum EPlaytestMode : byte {
+		None = 0,
+		Unlimited = 1,
+		Limited = 2,
+		All = Unlimited | Limited
 	}
 }

@@ -129,10 +129,9 @@ namespace FreePackages {
 				return await ClaimFreeSub(package.ID).ConfigureAwait(false);
 			}
 
-			// TODO
-			// if (package.Type == EPackageType.Demo) {
-			// 	return await ClaimFreeDemo(package.ID).ConfigureAwait(false);
-			// }
+			if (package.Type == EPackageType.Playtest) {
+				return await ClaimPlaytest(package.ID).ConfigureAwait(false);
+			}
 
 			return EResult.Invalid;
 		}
@@ -229,6 +228,38 @@ namespace FreePackages {
 			if (result != EResult.OK) {
 				return EResult.Invalid;
 			}
+
+			return EResult.OK;
+		}
+
+		private async Task<EResult> ClaimPlaytest(uint appID) {
+			PlaytestAccessResponse? response = await WebRequest.RequestPlaytestAccess(Bot, appID).ConfigureAwait(false);
+
+			if (response == null) {
+				// Playtest does not exist currently
+				Bot.ArchiLogger.LogGenericInfo(string.Format("ID: playtest/{0} | Status: Invalid", appID));
+
+				return EResult.Invalid;
+			}
+
+			if (!response.Success) {
+				// Not sure if/when this happens
+				Bot.ArchiLogger.LogGenericInfo(string.Format("ID: playtest/{0} | Status: Failed", appID));
+
+				return EResult.Invalid;
+			}
+
+			if (response.Granted == null) {
+				// Playtest has limited slots, account was added to the waitlist
+				Bot.ArchiLogger.LogGenericInfo(string.Format("ID: playtest/{0} | Status: Waitlisted", appID));
+				// This won't show up in our owned apps until we're accepted, save it so we don't retry
+				BotCache.AddWaitlistedPlaytest(appID);
+
+				return EResult.OK;
+			}
+
+			// Access to playtest granted
+			Bot.ArchiLogger.LogGenericInfo(string.Format("ID: playtest/{0} | Status: {1}", appID, EResult.OK));
 
 			return EResult.OK;
 		}

@@ -26,7 +26,7 @@ namespace FreePackages {
 	public enum EPackageType {
 		App = 0,
 		Sub = 1,
-		// Playtest = 2
+		Playtest = 2
 	}
 
 	public class PackageComparer : IEqualityComparer<Package> {

@@ -12,7 +12,7 @@ namespace FreePackages {
 	internal sealed class PackageFilter {
 		private readonly Bot Bot;
 		private readonly BotCache BotCache;
-		private readonly FilterConfig FilterConfig;
+		internal readonly FilterConfig FilterConfig;
 		private HashSet<uint>? OwnedAppIDs = null;
 		private UserData? UserData = null;
 		private string? Country = null;
@@ -75,10 +75,10 @@ namespace FreePackages {
 				return true;
 			}
 
-			// TODO: Playtest stuff
-			// if (type == EAppType.Beta) {
-			// 	return true;
-			// }
+			// Playtest
+			if (type == EAppType.Beta) {
+				return true;
+			}
 
 			return false;
 		}
@@ -148,10 +148,10 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsWantedApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app) {
+		internal bool IsWantedApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, EAppType? overrideType = null) {
 			KeyValue kv = app.KeyValues;
+			EAppType type = overrideType ?? kv["common"]["type"].AsEnum<EAppType>();
 
-			EAppType type = kv["common"]["type"].AsEnum<EAppType>();
 			if (FilterConfig.Types.Count > 0) {
 				if (!FilterConfig.Types.Contains(type.ToString())) {
 					// App isn't a wanted type
@@ -175,8 +175,8 @@ namespace FreePackages {
 				}
 			}
 
-			if (FilterConfig.MinReviewScore > 0 && type != EAppType.Demo) {
-				// Not including demos here because demos don't really have review scores.  Technically they do, but only from abnormal behavior
+			if (FilterConfig.MinReviewScore > 0 && type != EAppType.Demo && type != EAppType.Beta) {
+				// Not including demos and playtests here because they don't really have review scores.  They can, but only from abnormal behavior
 				uint review_score = kv["common"]["review_score"].AsUnsignedInteger();
 				if (review_score < FilterConfig.MinReviewScore) {
 					// Unwanted due to low or missing review score
@@ -184,17 +184,13 @@ namespace FreePackages {
 				}
 			}
 
-			// TODO: playtest stuff
-			// kv["extended"]["betaforappid"] or kv["common"]["parent"]
-			// kv["extended"]["playtest_type"]: 0 or undefined = waitlist, 1 = open signup
-
 			return true;
 		}
 
-		internal bool IsIgnoredApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app) {
+		internal bool IsIgnoredApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, EAppType? overrideType = null) {
 			KeyValue kv = app.KeyValues;
+			EAppType type = overrideType ?? kv["common"]["type"].AsEnum<EAppType>();
 
-			EAppType type = kv["common"]["type"].AsEnum<EAppType>();
 			if (FilterConfig.IgnoredTypes.Contains(type.ToString())) {
 				// App is an unwanted type
 				return true;
@@ -374,6 +370,57 @@ namespace FreePackages {
 				return true;
 			}
 
+			return false;
+		}
+
+		internal bool IsWantedPlaytest(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo parentApp) {
+			if (FilterConfig.PlaytestMode == EPlaytestMode.None) {
+				// User doesnt want any playtests
+				return false;
+			}
+
+			KeyValue kv = app.KeyValues;
+			uint playtestType = kv["extended"]["playtest_type"].AsUnsignedInteger();
+
+			// playtest_type 0 or missing = limited
+			bool wantsLimitedPlaytests = (FilterConfig.PlaytestMode & EPlaytestMode.Limited) == EPlaytestMode.Limited;
+			if (playtestType == 0 && !wantsLimitedPlaytests) {
+				// User doesn't want limited playtests
+				return false;
+			}
+
+			// playtest_type 1 = unlimited
+			bool wantsUnlimitedPlaytests = (FilterConfig.PlaytestMode & EPlaytestMode.Unlimited) == EPlaytestMode.Unlimited;
+			if (playtestType == 1 && !wantsUnlimitedPlaytests) {
+				// User doesn't want unlimited playtests
+				return false;
+			}
+
+			if (BotCache.WaitlistedPlaytests.Contains(parentApp.ID)) {
+				// Unwanted because we're already on the waitlist for this playtest
+				return false;
+			}
+
+			// The playtest app and the parent app may have different properties defined
+			if (!IsWantedApp(app) && !IsWantedApp(parentApp, EAppType.Beta)) {
+				// Both the playtest app and the parent app are unwanted
+				return false;
+			}
+
+			return true;
+		}
+
+		internal bool IsIgnoredPlaytest(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo parentApp) {
+			if (IsIgnoredApp(app)) {
+				// The playtest app has something in it that the user explicitly does not want
+				return true;
+			}
+
+			if (IsIgnoredApp(parentApp, EAppType.Beta)) {
+				// The parent app has something in it that the user explicitly does not want
+				return true;
+			}
+			
 			return false;
 		}
 	}
