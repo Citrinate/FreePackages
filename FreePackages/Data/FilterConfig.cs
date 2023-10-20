@@ -39,6 +39,9 @@ namespace FreePackages {
 		internal uint MinReviewScore = 0;
 
 		[JsonProperty(Required = Required.Default)]
+		internal ImmutableHashSet<string> Languages = ImmutableHashSet<string>.Empty;
+
+		[JsonProperty(Required = Required.Default)]
 		internal EPlaytestMode PlaytestMode = EPlaytestMode.None;
 
 		[JsonConstructor]

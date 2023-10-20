@@ -155,7 +155,7 @@ namespace FreePackages {
 
 			if (parentApp != null && IsWantedApp(parentApp, childType: type)) {
 				// If there's a parent app and we want either the app or the parent, then we want them both
-				// This is used for Demos and Playtests, where two are essentially the same, but may have different properties defined
+				// This is used for Demos and Playtests, where two are essentially the same, but may have different properties defined (ex: Demos don't have tags)
 				
 				// Parent app is wanted
 				return true;
@@ -194,6 +194,15 @@ namespace FreePackages {
 				}
 			}
 
+			if (FilterConfig.Languages.Count > 0 && !isParentApp) {
+				// Languages on child apps are assumed to be accurate
+				bool has_matching_language = kv["common"]["supported_languges"].Children.Any(supported_language => supported_language.Name != null && FilterConfig.Languages.Contains(supported_language.Name));
+				if (!has_matching_language) {
+					// Unwanted due to missing supported language
+					return false;
+				}
+			}
+
 			return true;
 		}
 
@@ -204,7 +213,7 @@ namespace FreePackages {
 
 			if (parentApp != null && IsIgnoredApp(parentApp, childType: type)) {
 				// If there's a parent app and we ignore either the app or the parent, then we ignore them both
-				// This is used for Demos and Playtests, where two are essentially the same, but may have different properties defined
+				// This is used for Demos and Playtests, where two are essentially the same, but may have different properties defined (ex: Demos don't have tags)
 
 				// Parent app is ignored
 				return true;
