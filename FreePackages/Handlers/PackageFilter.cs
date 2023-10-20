@@ -373,6 +373,20 @@ namespace FreePackages {
 			return false;
 		}
 
+		internal bool IsRedeemablePlaytest(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo parentApp) {
+			// More than half of playtests we try to join will be invalid.
+			// Some of these will be becase there's no free packages (which we can't determine here), Ex: playtest is activated by key: https://steamdb.info/sub/858277/
+			// For most, There seems to be no difference at all between invalid playtest and valid ones.
+
+			KeyValue parentKv = parentApp.KeyValues;
+			if (parentApp.MissingToken && parentKv["common"] == KeyValue.Invalid) {
+				// Hidden app
+				return false;
+			}
+			
+			return true;
+		}
+
 		internal bool IsWantedPlaytest(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo parentApp) {
 			if (FilterConfig.PlaytestMode == EPlaytestMode.None) {
 				// User doesnt want any playtests

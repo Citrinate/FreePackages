@@ -413,6 +413,10 @@ namespace FreePackages {
 					return;
 				}
 
+				if (!PackageFilter.IsRedeemablePlaytest(app, parentApp)) {
+					return;
+				}
+
 				if (!PackageFilter.IsWantedPlaytest(app, parentApp)) {
 					return;
 				}

@@ -101,6 +101,8 @@ namespace FreePackages {
 				return;
 			}
 			
+			// Note: Not everything counts against the activation limit, ex: All playtests?, Some sub errors (dunno which), Maybe some app errors
+			// Might be worth revisiting later, but for now I feel comfortable just assuming everything counts
 			BotCache.AddActivation(DateTime.Now);
 
 			if (result == EResult.OK || result == EResult.Invalid) {
