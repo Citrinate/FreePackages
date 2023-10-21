@@ -98,7 +98,7 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsRedeemableApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, bool ignoreOwnsCheck = false) {
+		internal bool IsRedeemableApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app) {
 			if (UserData == null) {
 				throw new InvalidOperationException(nameof(UserData));
 			}
@@ -116,7 +116,7 @@ namespace FreePackages {
 			// Some examples: Deactivated demo: https://steamdb.info/app/1316010
 			// App isn't region locked but with package that is: https://steamdb.info/app/2147450
 
-			if (!ignoreOwnsCheck && OwnedAppIDs.Contains(app.ID)) {
+			if (OwnedAppIDs.Contains(app.ID)) {
 				// Already own this app
 				return false;
 			}
@@ -148,18 +148,9 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsWantedApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo? parentApp = null, EAppType? childType = null) {
+		internal bool IsWantedApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo? parentApp = null) {
 			KeyValue kv = app.KeyValues;
-			EAppType type = childType ?? kv["common"]["type"].AsEnum<EAppType>();
-			bool isParentApp = childType != null; // We're checking if the parent of an app is wanted
-
-			if (parentApp != null && IsWantedApp(parentApp, childType: type)) {
-				// If there's a parent app and we want either the app or the parent, then we want them both
-				// This is used for Demos and Playtests, where two are essentially the same, but may have different properties defined (ex: Demos don't have tags)
-				
-				// Parent app is wanted
-				return true;
-			}
+			EAppType type = kv["common"]["type"].AsEnum<EAppType>();
 
 			if (FilterConfig.Types.Count > 0) {
 				if (!FilterConfig.Types.Contains(type.ToString())) {
@@ -168,8 +159,7 @@ namespace FreePackages {
 				}
 			}
 
-			if (FilterConfig.Categories.Count > 0 && !isParentApp) {
-				// Categories on child apps are assumed to be accurate even though they might differ from the parent app. Some differences are expected (ex: Trading cards)
+			if (FilterConfig.Categories.Count > 0) {
 				bool has_matching_category = kv["common"]["category"].Children.Any(category => UInt32.TryParse(category.Name?.Substring(9), out uint category_number) && FilterConfig.Categories.Contains(category_number)); // category numbers are stored in the name as "category_##"
 				if (!has_matching_category) {
 					// Unwanted due to missing categories
@@ -179,8 +169,9 @@ namespace FreePackages {
 
 			if (FilterConfig.Tags.Count > 0) {
 				bool has_matching_tag = kv["common"]["store_tags"].Children.Any(tag => FilterConfig.Tags.Contains(tag.AsUnsignedInteger()));
-				if (!has_matching_tag) {
-					// Unwanted due to missing tags
+				bool parent_has_matching_tags = parentApp != null && parentApp.KeyValues["common"]["store_tags"].Children.Any(tag => FilterConfig.Tags.Contains(tag.AsUnsignedInteger()));
+				if (!has_matching_tag && !parent_has_matching_tags) {
+					// Unwanted due to missing tags (also check parent app, because parents can have more tags defined)
 					return false;
 				}
 			}
@@ -194,8 +185,7 @@ namespace FreePackages {
 				}
 			}
 
-			if (FilterConfig.Languages.Count > 0 && !isParentApp) {
-				// Languages on child apps are assumed to be accurate
+			if (FilterConfig.Languages.Count > 0) {
 				bool has_matching_language = kv["common"]["supported_languges"].Children.Any(supported_language => supported_language.Name != null && FilterConfig.Languages.Contains(supported_language.Name));
 				if (!has_matching_language) {
 					// Unwanted due to missing supported language
@@ -206,18 +196,9 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsIgnoredApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo? parentApp = null, EAppType? childType = null) {
+		internal bool IsIgnoredApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo? parentApp = null) {
 			KeyValue kv = app.KeyValues;
-			EAppType type = childType ?? kv["common"]["type"].AsEnum<EAppType>();
-			bool isParentApp = childType != null; // We're checking if the parent of an app is ignored
-
-			if (parentApp != null && IsIgnoredApp(parentApp, childType: type)) {
-				// If there's a parent app and we ignore either the app or the parent, then we ignore them both
-				// This is used for Demos and Playtests, where two are essentially the same, but may have different properties defined (ex: Demos don't have tags)
-
-				// Parent app is ignored
-				return true;
-			}
+			EAppType type = kv["common"]["type"].AsEnum<EAppType>();
 
 			if (FilterConfig.IgnoredTypes.Contains(type.ToString())) {
 				// App is an unwanted type
@@ -226,14 +207,14 @@ namespace FreePackages {
 
 			if (FilterConfig.IgnoredTags.Count > 0) {
 				bool has_matching_tag = kv["common"]["store_tags"].Children.Any(tag => FilterConfig.IgnoredTags.Contains(tag.AsUnsignedInteger()));
-				if (has_matching_tag) {
-					// App contains an unwanted tag
+				bool parent_has_matching_tags = parentApp != null && parentApp.KeyValues["common"]["store_tags"].Children.Any(tag => FilterConfig.Tags.Contains(tag.AsUnsignedInteger()));
+				if (has_matching_tag || parent_has_matching_tags) {
+					// App contains an unwanted tag (also check parent app, because parents can have more tags defined)
 					return true;
 				}
 			}
 
-			if (FilterConfig.IgnoredCategories.Count > 0 && !isParentApp) {
-				// Categories on child apps are assumed to be accurate even though they might differ from the parent app. Some differences are expected (ex: Trading cards)
+			if (FilterConfig.IgnoredCategories.Count > 0) {
 				bool has_matching_category = kv["common"]["category"].Children.Any(category => UInt32.TryParse(category.Name?.Substring(9), out uint category_number) && FilterConfig.IgnoredCategories.Contains(category_number)); // category numbers are stored in the name as "category_##"
 				if (has_matching_category) {
 					// App contains unwanted categories
@@ -243,13 +224,14 @@ namespace FreePackages {
 
 			if (FilterConfig.IgnoredContentDescriptors.Count > 0) {
 				bool has_matching_mature_content_descriptor = kv["common"]["content_descriptors"].Children.Any(content_descriptor => FilterConfig.IgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
-				if (has_matching_mature_content_descriptor) {
-					// App contains an unwanted content descriptor
+				bool parent_has_matching_mature_content_descriptor = parentApp != null && parentApp.KeyValues["common"]["content_descriptors"].Children.Any(content_descriptor => FilterConfig.IgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
+				if (has_matching_mature_content_descriptor || parent_has_matching_mature_content_descriptor) {
+					// App contains an unwanted content descriptor (also check parent app, because parents can have more descriptors defined)
 					return true;
 				}
 			}
 
-			if (FilterConfig.IgnoredAppIDs.Contains(app.ID)) {
+			if (FilterConfig.IgnoredAppIDs.Contains(app.ID) || (parentApp != null && FilterConfig.IgnoredAppIDs.Contains(parentApp.ID))) {
 				// App is explicity ignored
 				return true;
 			}
@@ -368,8 +350,8 @@ namespace FreePackages {
 				}
 			}
 
-			if (apps.Any(app => !IsRedeemableApp(app, ignoreOwnsCheck: true))) {
-				// At least one of the apps in this package isn't redeemable
+			if (apps.Any(app => !OwnedAppIDs.Contains(app.ID) && !IsRedeemableApp(app))) {
+				// At least one of the unowned apps in this package isn't redeemable
 				return false;
 			}
 
