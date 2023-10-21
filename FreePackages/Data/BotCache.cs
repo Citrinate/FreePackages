@@ -25,6 +25,12 @@ namespace FreePackages {
 		internal ConcurrentHashSet<uint> ChangedPackages = new();
 
 		[JsonProperty(Required = Required.DisallowNull)]
+		internal ConcurrentHashSet<uint> NewOwnedPackages = new();
+
+		[JsonProperty(Required = Required.DisallowNull)]
+		internal ConcurrentHashSet<uint> LastPackagesAdded = new();
+
+		[JsonProperty(Required = Required.DisallowNull)]
 		internal ConcurrentHashSet<uint> WaitlistedPlaytests = new();
 
 		[JsonConstructor]
@@ -151,7 +157,7 @@ namespace FreePackages {
 			return lastActivation;
 		}
 
-		internal void AddChanges(HashSet<uint>? appIDs = null, HashSet<uint>? packageIDs = null) {
+		internal void AddChanges(HashSet<uint>? appIDs = null, HashSet<uint>? packageIDs = null, HashSet<uint>? newOwnedPackageIDs = null) {
 			if (appIDs != null) {
 				ChangedApps.UnionWith(appIDs);
 			}
@@ -160,16 +166,24 @@ namespace FreePackages {
 				ChangedPackages.UnionWith(packageIDs);
 			}
 
+			if (newOwnedPackageIDs != null) {
+				NewOwnedPackages.UnionWith(newOwnedPackageIDs);
+			}
+
 			Utilities.InBackground(Save);
 		}
 
-		internal void RemoveChange(uint? appID = null, uint? packageID = null) {
+		internal void RemoveChange(uint? appID = null, uint? packageID = null, uint? newOwnedPackageID = null) {
 			if (appID != null) {
 				ChangedApps.Remove(appID.Value);
 			}
 
 			if (packageID != null) {
 				ChangedPackages.Remove(packageID.Value);
+			}
+
+			if (newOwnedPackageID != null) {
+				NewOwnedPackages.Remove(newOwnedPackageID.Value);
 			}
 		}
 
@@ -187,6 +201,13 @@ namespace FreePackages {
 		internal void AddWaitlistedPlaytest(uint appID) {
 			WaitlistedPlaytests.Add(appID);
 			
+			Utilities.InBackground(Save);
+		}
+
+		internal void UpdateLastPackagesAdded(HashSet<uint> lastPackagesAdded) {
+			LastPackagesAdded.IntersectWith(lastPackagesAdded);
+			LastPackagesAdded.UnionWith(lastPackagesAdded);
+
 			Utilities.InBackground(Save);
 		}
 	}

@@ -92,8 +92,7 @@ namespace FreePackages {
 
 		public Task OnBotSteamCallbacksInit(Bot bot, CallbackManager callbackManager) {
 			callbackManager.Subscribe<SteamUser.AccountInfoCallback>(callback => OnAccountInfo(bot, callback));
-			// TODO: Check for free DLC on newly added games
-			// callbackManager.Subscribe<SteamApps.LicenseListCallback>(callback => OnLicenseList(bot, callback));
+			callbackManager.Subscribe<SteamApps.LicenseListCallback>(callback => OnLicenseList(bot, callback));
 
 			return Task.CompletedTask;
 		}
@@ -104,6 +103,10 @@ namespace FreePackages {
 
 		private static void OnAccountInfo(Bot bot, SteamUser.AccountInfoCallback callback) {
 			PackageHandler.OnAccountInfo(bot, callback);
+		}
+
+		private static void OnLicenseList (Bot bot, SteamApps.LicenseListCallback callback) {
+			PackageHandler.OnLicenseList(bot, callback);
 		}
 
 		public async Task OnBotLoggedOn(Bot bot) {
