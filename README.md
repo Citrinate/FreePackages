@@ -115,7 +115,7 @@ All filter options are explained below:
 
 #### Types
 
-`HashSet<string>` type with default value of `[]`.  Packages must contain an app with one of the `TypeNames` specified here or they will not be added to your account.  You can leave this empty to allow for all types.  The available `TypeNames` for filtering are: `Game`, `Application`, `Tool`, `Demo`, `DLC`, `Music`, `Video`
+`HashSet<string>` type with default value of `[]`.  Packages must contain an app with one of the `TypeNames` specified here or they will not be added to your account.  You can leave this empty to allow for all types.  The available `TypeNames` for filtering are: `"Game"`, `"Application"`, `"Tool"`, `"Demo"`, `"DLC"`, `"Music"`, `"Video"`
 
 ---
 
