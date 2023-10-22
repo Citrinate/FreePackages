@@ -55,6 +55,54 @@ By default, the plugin will attempt to activate all free packages.  You can cont
 },
 ```
 
+<details>
+  <summary>Examples</summary>
+
+  ```json
+  "ImportStoreFilters": true,
+  ```
+
+  ```json
+  "Types": ["Game"],
+  ```
+
+  ```json
+  "Tags": [492, 1664, 5432],
+  ```
+
+  ```json
+  "Categories": [1, 22],
+  ```
+
+  ```json
+  "IgnoredTypes": ["Demo", "Application"],
+  ```
+
+  ```json
+  "IgnoredTags": [4085],
+  ```
+
+  ```json
+  "IgnoredCategories": [35],
+  ```
+
+  ```json
+  "IgnoredContentDescriptors": [3, 4],
+  ```
+
+  ```json
+  "IgnoredAppIDs": [440, 730],
+  ```
+
+  ```json
+  "IgnoreFreeWeekends": true,
+  ```
+
+  ```json
+  "MinReviewScore": 8,
+  ```
+</details>
+
 All filter options are explained below:
 
 ---
