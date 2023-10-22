@@ -19,7 +19,7 @@ namespace FreePackages.IPC {
 		[SwaggerOperation (Summary = "Request changes for apps and packages since a given change number")]
 		[ProducesResponseType(typeof(GenericResponse<SteamApps.PICSChangesCallback>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
-		public async Task<ActionResult<GenericResponse>> GetChangesSince(string botName, uint changeNumber) {
+		public async Task<ActionResult<GenericResponse>> GetChangesSince(string botName, uint changeNumber, bool showAppChanges = true, bool showPackageChanges = true) {
 			if (string.IsNullOrEmpty(botName)) {
 				throw new ArgumentNullException(nameof(botName));
 			}
@@ -35,7 +35,7 @@ namespace FreePackages.IPC {
 
 			SteamApps.PICSChangesCallback picsChanges;
 			try {
-				picsChanges = await bot.SteamApps.PICSGetChangesSince(changeNumber, true, true).ToLongRunningTask().ConfigureAwait(false);
+				picsChanges = await bot.SteamApps.PICSGetChangesSince(changeNumber, showAppChanges, showPackageChanges).ToLongRunningTask().ConfigureAwait(false);
 			} catch (Exception e) {
 				bot.ArchiLogger.LogGenericWarningException(e);
 

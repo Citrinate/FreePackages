@@ -20,7 +20,9 @@ namespace FreePackages {
 		private static SemaphoreSlim AddHandlerSemaphore = new SemaphoreSlim(1, 1);
 		private static SemaphoreSlim ProcessChangesSemaphore = new SemaphoreSlim(1, 1);
 		private static SemaphoreSlim ProductInfoSemaphore = new SemaphoreSlim(1, 1);
+		private static SemaphoreSlim PICSChangesSemaphore = new SemaphoreSlim(1, 1);
 		private const int ProductInfoLimitingDelaySeconds = 5;
+		private const int PICSChangesLimitingDelaySeconds = 5;
 		private const int ItemsPerProductInfoRequest = 255;
 
 		private PackageHandler(Bot bot, BotCache botCache, FilterConfig filterConfig, uint? packageLimit) {
@@ -90,7 +92,7 @@ namespace FreePackages {
 			await Handlers[bot.BotName].PackageFilter.UpdateUserData().ConfigureAwait(false);
 		}
 
-		internal async static Task OnPICSChanges(IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> appChanges, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> packageChanges) {
+		internal static void OnPICSChanges(IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> appChanges, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> packageChanges) {
 			if (Handlers.Count == 0) {
 				return;	
 			}
@@ -102,7 +104,7 @@ namespace FreePackages {
 			HashSet<uint> packageIDs = packageChanges.Select(x => x.Key).ToHashSet<uint>();
 			Handlers.Values.ToList().ForEach(x => x.BotCache.AddChanges(appIDs, packageIDs));
 
-			await HandleChanges().ConfigureAwait(false);
+			Utilities.InBackground(async() => await HandleChanges().ConfigureAwait(false));
 		}
 
 		internal async static Task OnPICSRestart(uint oldChangeNumber) {
@@ -111,29 +113,38 @@ namespace FreePackages {
 			}
 
 			// ASF restarts PICS if either apps or packages needs a full update.  Check the old change number, as one of them might still be good.
-			// TODO: search for the smallest valid change number
-			SteamApps.PICSChangesCallback picsChanges;
-			try {
-				Bot? refreshBot = GetRefreshBot();
-				if (refreshBot == null) {
-					return;
-				}
-
-				picsChanges = await refreshBot.SteamApps.PICSGetChangesSince(oldChangeNumber, true, true).ToLongRunningTask().ConfigureAwait(false);
-			} catch (Exception e) {
-				ASF.ArchiLogger.LogGenericWarningException(e);
-
+			SteamApps.PICSChangesCallback? picsChanges = await FetchPICSChanges(oldChangeNumber, sendAppChangeList: false, sendPackageChangeList: true).ConfigureAwait(false);
+			if (picsChanges == null) {
 				return;
 			}
 
-			if (picsChanges.RequiresFullAppUpdate) {
+			if (!picsChanges.RequiresFullAppUpdate) {
+				OnPICSChanges(picsChanges.AppChanges, new Dictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData>());
+			} else {
 				ASF.ArchiLogger.LogGenericDebug("Possibly missed some free apps due to PICS restart");
-			}
-			if (picsChanges.RequiresFullPackageUpdate) {
-				ASF.ArchiLogger.LogGenericDebug("Possibly missed some free packages due to PICS restart");
+				
+				// Search for the oldest change number which is still valid for apps
+				var appChanges = await FindOldestPICSChanges(oldChangeNumber + 1, picsChanges.CurrentChangeNumber, findApps: true);
+				if (appChanges != null) {
+					ASF.ArchiLogger.LogGenericDebug(String.Format("Recovered {0} app changes at change number {1}", appChanges.AppChanges.Count, appChanges.LastChangeNumber));
+
+					OnPICSChanges(appChanges.AppChanges, new Dictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData>());
+				}
 			}
 
-			await OnPICSChanges(picsChanges.AppChanges, picsChanges.PackageChanges).ConfigureAwait(false);
+			if (!picsChanges.RequiresFullPackageUpdate) {
+				OnPICSChanges(new Dictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData>(), picsChanges.PackageChanges);
+			} else {
+				ASF.ArchiLogger.LogGenericDebug("Possibly missed some free packages due to PICS restart");
+
+				// Search for the oldest change number which is still valid for packages
+				var packageChanges = await FindOldestPICSChanges(oldChangeNumber + 1, picsChanges.CurrentChangeNumber, findApps: false);
+				if (packageChanges != null) {
+					ASF.ArchiLogger.LogGenericDebug(String.Format("Recovered {0} package changes at change number {1}", packageChanges.PackageChanges.Count, packageChanges.LastChangeNumber));
+
+					OnPICSChanges(new Dictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData>(), packageChanges.PackageChanges);
+				}
+			}
 		}
 
 		private async static Task<bool> IsReady(uint maxWaitTimeSeconds = 120) {
@@ -365,6 +376,61 @@ namespace FreePackages {
 					async() => {
 						await Task.Delay(TimeSpan.FromSeconds(ProductInfoLimitingDelaySeconds)).ConfigureAwait(false);
 						ProductInfoSemaphore.Release();
+					}
+				);
+			}
+		}
+
+		private async static Task<SteamApps.PICSChangesCallback?> FindOldestPICSChanges(uint minValidChangeNumber, uint maxValidChangeNumber, bool findApps) {
+			if (minValidChangeNumber >= maxValidChangeNumber) {
+				return null;
+			}
+
+			bool sendAppChangeList = findApps;
+			bool sendPackageChangeList = !findApps;
+			uint changeNumber = maxValidChangeNumber - ((uint) Math.Floor((maxValidChangeNumber - minValidChangeNumber) / 2.0));
+			SteamApps.PICSChangesCallback? oldestPicsChanges = null;
+			uint i = 0;
+			
+			do {
+				i++;
+				SteamApps.PICSChangesCallback? picsChanges = await FetchPICSChanges(changeNumber, sendAppChangeList, sendPackageChangeList).ConfigureAwait(false);
+				if (picsChanges == null) {
+					break;
+				}
+
+				bool isValid = (findApps && !picsChanges.RequiresFullAppUpdate) || (!findApps && !picsChanges.RequiresFullPackageUpdate);
+				if (isValid) {
+					oldestPicsChanges = picsChanges;
+					maxValidChangeNumber = changeNumber;
+				} else {
+					minValidChangeNumber = changeNumber;
+				}
+
+				changeNumber = maxValidChangeNumber - Math.Max(1, ((uint) Math.Floor((maxValidChangeNumber - minValidChangeNumber) / 2.0)));
+			} while (changeNumber > minValidChangeNumber);
+
+			return oldestPicsChanges;
+		}
+
+		private async static Task<SteamApps.PICSChangesCallback?> FetchPICSChanges(uint changeNumber, bool sendAppChangeList = true, bool sendPackageChangeList = true) {
+			await PICSChangesSemaphore.WaitAsync().ConfigureAwait(false);
+			try {
+				Bot? refreshBot = GetRefreshBot();
+				if (refreshBot == null) {
+					return null;
+				}
+
+				return await refreshBot.SteamApps.PICSGetChangesSince(changeNumber, sendAppChangeList, sendPackageChangeList).ToLongRunningTask().ConfigureAwait(false);
+			} catch (Exception e) {
+				ASF.ArchiLogger.LogGenericWarningException(e);
+
+				return null;
+			} finally {
+				Utilities.InBackground(
+					async() => {
+						await Task.Delay(TimeSpan.FromSeconds(PICSChangesLimitingDelaySeconds)).ConfigureAwait(false);
+						PICSChangesSemaphore.Release();
 					}
 				);
 			}

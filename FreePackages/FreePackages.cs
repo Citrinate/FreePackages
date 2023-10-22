@@ -71,13 +71,15 @@ namespace FreePackages {
 			return Task.FromResult(GlobalCache?.LastChangeNumber ?? 0);
 		}
 
-		public async Task OnPICSChanges(uint currentChangeNumber, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> appChanges, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> packageChanges) {
+		public Task OnPICSChanges(uint currentChangeNumber, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> appChanges, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> packageChanges) {
 			if (GlobalCache == null) {
 				throw new InvalidOperationException(nameof(GlobalCache));
 			}
 
-			await PackageHandler.OnPICSChanges(appChanges, packageChanges).ConfigureAwait(false);
+			PackageHandler.OnPICSChanges(appChanges, packageChanges);
 			GlobalCache.UpdateChangeNumber(currentChangeNumber);
+			
+			return Task.CompletedTask;
 		}
 
 		public async Task OnPICSChangesRestart(uint currentChangeNumber) {
