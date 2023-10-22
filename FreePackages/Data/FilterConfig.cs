@@ -21,16 +21,16 @@ namespace FreePackages {
 		internal ImmutableHashSet<string> IgnoredTypes = ImmutableHashSet<string>.Empty;
 
 		[JsonProperty(Required = Required.Default)]
-		internal HashSet<uint> IgnoredTags = new();
+		internal ImmutableHashSet<uint> IgnoredTags = ImmutableHashSet<uint>.Empty;
 
 		[JsonProperty(Required = Required.Default)]
 		internal ImmutableHashSet<uint> IgnoredCategories = ImmutableHashSet<uint>.Empty;
 
 		[JsonProperty(Required = Required.Default)]
-		internal HashSet<uint> IgnoredContentDescriptors = new();
+		internal ImmutableHashSet<uint> IgnoredContentDescriptors = ImmutableHashSet<uint>.Empty;
 
 		[JsonProperty(Required = Required.Default)]
-		internal HashSet<uint> IgnoredAppIDs = new();
+		internal ImmutableHashSet<uint> IgnoredAppIDs = ImmutableHashSet<uint>.Empty;
 
 		[JsonProperty(Required = Required.Default)]
 		internal bool IgnoreFreeWeekends = false;

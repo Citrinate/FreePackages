@@ -15,6 +15,9 @@ namespace FreePackages {
 		internal readonly FilterConfig FilterConfig;
 		private HashSet<uint>? OwnedAppIDs = null;
 		private UserData? UserData = null;
+		private HashSet<uint> ImportedIgnoredAppIDs = new();
+		private HashSet<uint> ImportedIgnoredTags = new();
+		private HashSet<uint> ImportedIgnoredContentDescriptors = new();
 		private string? Country = null;
 		private readonly Timer UserDataRefreshTimer;
 		internal bool Ready { get { return OwnedAppIDs != null && Country != null && UserData != null; }}
@@ -46,10 +49,9 @@ namespace FreePackages {
 			}
 
 			if (FilterConfig.ImportStoreFilters) {
-				// TODO: don't merge these
-				FilterConfig.IgnoredAppIDs.UnionWith(userData.IgnoredApps.Where(x => x.Value == 0).Select(x => x.Key));
-				FilterConfig.IgnoredTags.UnionWith(userData.ExcludedTags.Select(x => x.TagID));
-				FilterConfig.IgnoredContentDescriptors.UnionWith(userData.ExcludedContentDescriptorIDs);
+				ImportedIgnoredAppIDs = userData.IgnoredApps.Where(x => x.Value == 0).Select(x => x.Key).ToHashSet();
+				ImportedIgnoredTags = userData.ExcludedTags.Select(x => x.TagID).ToHashSet();
+				ImportedIgnoredContentDescriptors = userData.ExcludedContentDescriptorIDs;
 			}
 
 			// Get all of the apps that are in each of the owned packages, and merge with explicitly owned apps
@@ -199,9 +201,9 @@ namespace FreePackages {
 				return true;
 			}
 
-			if (FilterConfig.IgnoredTags.Count > 0) {
-				bool has_matching_tag = kv["common"]["store_tags"].Children.Any(tag => FilterConfig.IgnoredTags.Contains(tag.AsUnsignedInteger()));
-				bool parent_has_matching_tags = app.Parent != null && app.Parent.ProductInfo.KeyValues["common"]["store_tags"].Children.Any(tag => FilterConfig.Tags.Contains(tag.AsUnsignedInteger()));
+			if (FilterConfig.IgnoredTags.Count > 0 || ImportedIgnoredTags.Count > 0) {
+				bool has_matching_tag = kv["common"]["store_tags"].Children.Any(tag => FilterConfig.IgnoredTags.Contains(tag.AsUnsignedInteger()) || ImportedIgnoredTags.Contains(tag.AsUnsignedInteger()));
+				bool parent_has_matching_tags = app.Parent != null && app.Parent.ProductInfo.KeyValues["common"]["store_tags"].Children.Any(tag => FilterConfig.Tags.Contains(tag.AsUnsignedInteger()) || ImportedIgnoredTags.Contains(tag.AsUnsignedInteger()));
 				if (has_matching_tag || parent_has_matching_tags) {
 					// App contains an unwanted tag (also check parent app, because parents can have more tags defined)
 					return true;
@@ -216,16 +218,16 @@ namespace FreePackages {
 				}
 			}
 
-			if (FilterConfig.IgnoredContentDescriptors.Count > 0) {
-				bool has_matching_mature_content_descriptor = kv["common"]["content_descriptors"].Children.Any(content_descriptor => FilterConfig.IgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
-				bool parent_has_matching_mature_content_descriptor = app.Parent != null && app.Parent.ProductInfo.KeyValues["common"]["content_descriptors"].Children.Any(content_descriptor => FilterConfig.IgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
+			if (FilterConfig.IgnoredContentDescriptors.Count > 0 || ImportedIgnoredContentDescriptors.Count > 0) {
+				bool has_matching_mature_content_descriptor = kv["common"]["content_descriptors"].Children.Any(content_descriptor => FilterConfig.IgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()) || ImportedIgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
+				bool parent_has_matching_mature_content_descriptor = app.Parent != null && app.Parent.ProductInfo.KeyValues["common"]["content_descriptors"].Children.Any(content_descriptor => FilterConfig.IgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()) || ImportedIgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
 				if (has_matching_mature_content_descriptor || parent_has_matching_mature_content_descriptor) {
 					// App contains an unwanted content descriptor (also check parent app, because parents can have more descriptors defined)
 					return true;
 				}
 			}
 
-			if (FilterConfig.IgnoredAppIDs.Contains(app.ProductInfo.ID) || (app.Parent != null && FilterConfig.IgnoredAppIDs.Contains(app.Parent.ProductInfo.ID))) {
+			if (FilterConfig.IgnoredAppIDs.Contains(app.ProductInfo.ID) || ImportedIgnoredAppIDs.Contains(app.ProductInfo.ID) || (app.Parent != null && (FilterConfig.IgnoredAppIDs.Contains(app.Parent.ProductInfo.ID) || ImportedIgnoredAppIDs.Contains(app.Parent.ProductInfo.ID)))) {
 				// App is explicity ignored
 				return true;
 			}
