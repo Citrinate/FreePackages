@@ -98,11 +98,7 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsRedeemableApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app) {
-			if (UserData == null) {
-				throw new InvalidOperationException(nameof(UserData));
-			}
-
+		internal bool IsRedeemableApp(FilterableApp app) {
 			if (OwnedAppIDs == null) {
 				throw new InvalidOperationException(nameof(OwnedAppIDs));
 			}
@@ -116,12 +112,12 @@ namespace FreePackages {
 			// Some examples: Deactivated demo: https://steamdb.info/app/1316010
 			// App isn't region locked but with package that is: https://steamdb.info/app/2147450
 
-			if (OwnedAppIDs.Contains(app.ID)) {
+			if (OwnedAppIDs.Contains(app.ProductInfo.ID)) {
 				// Already own this app
 				return false;
 			}
 
-			KeyValue kv = app.KeyValues;
+			KeyValue kv = app.ProductInfo.KeyValues;
 
 			uint mustOwnAppToPurchase = kv["extended"]["mustownapptopurchase"].AsUnsignedInteger();
 			if (mustOwnAppToPurchase > 0 && !OwnedAppIDs.Contains(mustOwnAppToPurchase)) {
@@ -148,12 +144,11 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsWantedApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo? parentApp = null) {
-			KeyValue kv = app.KeyValues;
-			EAppType type = kv["common"]["type"].AsEnum<EAppType>();
+		internal bool IsWantedApp(FilterableApp app) {
+			KeyValue kv = app.ProductInfo.KeyValues;
 
 			if (FilterConfig.Types.Count > 0) {
-				if (!FilterConfig.Types.Contains(type.ToString())) {
+				if (!FilterConfig.Types.Contains(app.Type.ToString())) {
 					// App isn't a wanted type
 					return false;
 				}
@@ -169,14 +164,14 @@ namespace FreePackages {
 
 			if (FilterConfig.Tags.Count > 0) {
 				bool has_matching_tag = kv["common"]["store_tags"].Children.Any(tag => FilterConfig.Tags.Contains(tag.AsUnsignedInteger()));
-				bool parent_has_matching_tags = parentApp != null && parentApp.KeyValues["common"]["store_tags"].Children.Any(tag => FilterConfig.Tags.Contains(tag.AsUnsignedInteger()));
+				bool parent_has_matching_tags = app.Parent != null && app.Parent.ProductInfo.KeyValues["common"]["store_tags"].Children.Any(tag => FilterConfig.Tags.Contains(tag.AsUnsignedInteger()));
 				if (!has_matching_tag && !parent_has_matching_tags) {
 					// Unwanted due to missing tags (also check parent app, because parents can have more tags defined)
 					return false;
 				}
 			}
 
-			if (FilterConfig.MinReviewScore > 0 && type != EAppType.Demo && type != EAppType.Beta) {
+			if (FilterConfig.MinReviewScore > 0 && app.Type != EAppType.Demo && app.Type != EAppType.Beta) {
 				// Not including demos and playtests here because they don't really have review scores.  They can, but only from abnormal behavior
 				uint review_score = kv["common"]["review_score"].AsUnsignedInteger();
 				if (review_score < FilterConfig.MinReviewScore) {
@@ -196,18 +191,17 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsIgnoredApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo? parentApp = null) {
-			KeyValue kv = app.KeyValues;
-			EAppType type = kv["common"]["type"].AsEnum<EAppType>();
+		internal bool IsIgnoredApp(FilterableApp app) {
+			KeyValue kv = app.ProductInfo.KeyValues;
 
-			if (FilterConfig.IgnoredTypes.Contains(type.ToString())) {
+			if (FilterConfig.IgnoredTypes.Contains(app.Type.ToString())) {
 				// App is an unwanted type
 				return true;
 			}
 
 			if (FilterConfig.IgnoredTags.Count > 0) {
 				bool has_matching_tag = kv["common"]["store_tags"].Children.Any(tag => FilterConfig.IgnoredTags.Contains(tag.AsUnsignedInteger()));
-				bool parent_has_matching_tags = parentApp != null && parentApp.KeyValues["common"]["store_tags"].Children.Any(tag => FilterConfig.Tags.Contains(tag.AsUnsignedInteger()));
+				bool parent_has_matching_tags = app.Parent != null && app.Parent.ProductInfo.KeyValues["common"]["store_tags"].Children.Any(tag => FilterConfig.Tags.Contains(tag.AsUnsignedInteger()));
 				if (has_matching_tag || parent_has_matching_tags) {
 					// App contains an unwanted tag (also check parent app, because parents can have more tags defined)
 					return true;
@@ -224,14 +218,14 @@ namespace FreePackages {
 
 			if (FilterConfig.IgnoredContentDescriptors.Count > 0) {
 				bool has_matching_mature_content_descriptor = kv["common"]["content_descriptors"].Children.Any(content_descriptor => FilterConfig.IgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
-				bool parent_has_matching_mature_content_descriptor = parentApp != null && parentApp.KeyValues["common"]["content_descriptors"].Children.Any(content_descriptor => FilterConfig.IgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
+				bool parent_has_matching_mature_content_descriptor = app.Parent != null && app.Parent.ProductInfo.KeyValues["common"]["content_descriptors"].Children.Any(content_descriptor => FilterConfig.IgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
 				if (has_matching_mature_content_descriptor || parent_has_matching_mature_content_descriptor) {
 					// App contains an unwanted content descriptor (also check parent app, because parents can have more descriptors defined)
 					return true;
 				}
 			}
 
-			if (FilterConfig.IgnoredAppIDs.Contains(app.ID) || (parentApp != null && FilterConfig.IgnoredAppIDs.Contains(parentApp.ID))) {
+			if (FilterConfig.IgnoredAppIDs.Contains(app.ProductInfo.ID) || (app.Parent != null && FilterConfig.IgnoredAppIDs.Contains(app.Parent.ProductInfo.ID))) {
 				// App is explicity ignored
 				return true;
 			}
@@ -283,15 +277,15 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal static bool IsAvailablePackageContents(SteamApps.PICSProductInfoCallback.PICSProductInfo package, IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> apps) {
-			KeyValue kv = package.KeyValues;
+		internal static bool IsAvailablePackageContents(FilterablePackage package) {
+			KeyValue kv = package.ProductInfo.KeyValues;
 
-			if (kv["appids"].Children.Count != apps.Count()) {
+			if (kv["appids"].Children.Count != package.PackageContents.Count()) {
 				// Could not find all of the apps for this package
 				return false;
 			}
 
-			if (apps.Any(app => !IsAvailableApp(app))) {
+			if (package.PackageContents.Any(app => !IsAvailableApp(app.ProductInfo))) {
 				// At least one of the apps in this package isn't available
 				return false;
 			}
@@ -299,7 +293,7 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsRedeemablePackage(SteamApps.PICSProductInfoCallback.PICSProductInfo package, IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> apps) {			
+		internal bool IsRedeemablePackage(FilterablePackage package) {			
 			if (UserData == null) {
 				throw new InvalidOperationException(nameof(UserData));
 			}
@@ -312,17 +306,17 @@ namespace FreePackages {
 				throw new InvalidOperationException(nameof(Country));
 			}
 
-			if (UserData.OwnedPackages.Contains(package.ID)) {
+			if (UserData.OwnedPackages.Contains(package.ProductInfo.ID)) {
 				// Already own this package
 				return false;
 			}
 
-			if (apps.All(x => OwnedAppIDs.Contains(x.ID))) {
+			if (package.PackageContents.All(x => OwnedAppIDs.Contains(x.ProductInfo.ID))) {
 				// Already own all of the apps in this package
 				return false;
 			}
 
-			KeyValue kv = package.KeyValues;
+			KeyValue kv = package.ProductInfo.KeyValues;
 
 			uint dontGrantIfAppidOwned = kv["extended"]["dontgrantifappidowned"].AsUnsignedInteger();
 			if (dontGrantIfAppidOwned > 0 && OwnedAppIDs.Contains(dontGrantIfAppidOwned)) {
@@ -350,7 +344,7 @@ namespace FreePackages {
 				}
 			}
 
-			if (apps.Any(app => !OwnedAppIDs.Contains(app.ID) && !IsRedeemableApp(app))) {
+			if (package.PackageContents.Any(app => !OwnedAppIDs.Contains(app.ProductInfo.ID) && !IsRedeemableApp(app))) {
 				// At least one of the unowned apps in this package isn't redeemable
 				return false;
 			}
@@ -358,10 +352,10 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsWantedPackage(SteamApps.PICSProductInfoCallback.PICSProductInfo package, IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> apps) {
-			KeyValue kv = package.KeyValues;
+		internal bool IsWantedPackage(FilterablePackage package) {
+			KeyValue kv = package.ProductInfo.KeyValues;
 
-			bool has_wanted_app = apps.Any(app => IsWantedApp(app));
+			bool has_wanted_app = package.PackageContents.Any(app => IsWantedApp(app));
 			if (!has_wanted_app) {
 				return false;
 			}
@@ -369,14 +363,14 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsIgnoredPackage(SteamApps.PICSProductInfoCallback.PICSProductInfo package, IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> apps) {
-			KeyValue kv = package.KeyValues;
+		internal bool IsIgnoredPackage(FilterablePackage package) {
+			KeyValue kv = package.ProductInfo.KeyValues;
 
 			if (FilterConfig.IgnoreFreeWeekends && kv["extended"]["freeweekend"].AsBoolean()) {
 				return true;
 			}
 
-			bool has_ignored_app = apps.Any(app => IsIgnoredApp(app));
+			bool has_ignored_app = package.PackageContents.Any(app => IsIgnoredApp(app));
 			if (has_ignored_app) {
 				return true;
 			}
@@ -384,13 +378,21 @@ namespace FreePackages {
 			return false;
 		}
 
-		internal bool IsRedeemablePlaytest(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo parentApp) {
+		internal bool IsRedeemablePlaytest(FilterableApp app) {
 			// More than half of playtests we try to join will be invalid.
 			// Some of these will be becase there's no free packages (which we can't determine here), Ex: playtest is activated by key: https://steamdb.info/sub/858277/
 			// For most, There seems to be no difference at all between invalid playtest and valid ones.
 
-			KeyValue parentKv = parentApp.KeyValues;
-			if (parentApp.MissingToken && parentKv["common"] == KeyValue.Invalid) {
+			if (app.Parent == null) {
+				return false;
+			}
+
+			if (!IsRedeemableApp(app)) {
+				return false;
+			}
+
+			KeyValue parentKv = app.Parent.ProductInfo.KeyValues;
+			if (app.Parent.ProductInfo.MissingToken && parentKv["common"] == KeyValue.Invalid) {
 				// Hidden app
 				return false;
 			}
@@ -398,13 +400,21 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsWantedPlaytest(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo parentApp) {
+		internal bool IsWantedPlaytest(FilterableApp app) {
+			if (app.Parent == null) {
+				return false;
+			}
+
+			if (!IsWantedApp(app)) {
+				return false;
+			}
+
 			if (FilterConfig.PlaytestMode == EPlaytestMode.None) {
 				// User doesnt want any playtests
 				return false;
 			}
 
-			KeyValue kv = app.KeyValues;
+			KeyValue kv = app.ProductInfo.KeyValues;
 			uint playtestType = kv["extended"]["playtest_type"].AsUnsignedInteger();
 
 			// playtest_type 0 or missing = limited
@@ -421,7 +431,7 @@ namespace FreePackages {
 				return false;
 			}
 
-			if (BotCache.WaitlistedPlaytests.Contains(parentApp.ID)) {
+			if (BotCache.WaitlistedPlaytests.Contains(app.Parent.ProductInfo.ID)) {
 				// Unwanted because we're already on the waitlist for this playtest
 				return false;
 			}

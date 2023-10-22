@@ -15,10 +15,9 @@ namespace FreePackages {
 		public Package(EPackageType type, uint id, ulong? startTime = null) {
 			Type = type;
 			ID = id;
-			StartTime = startTime;
 
-			if (StartTime == 0) {
-				StartTime = null;
+			if (startTime != null && startTime > 0) {
+				StartTime = startTime;
 			}
 		}
 	}

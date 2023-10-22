@@ -176,107 +176,114 @@ namespace FreePackages {
 
 		private async static Task HandleProductInfo(List<SteamApps.PICSProductInfoCallback> productInfo) {
 			// Figure out which apps are free and add any wanted apps to the queue
-			var apps = productInfo.SelectMany(static result => result.Apps.Values);
-			if (apps.Count() != 0) {
-				// Need to get the product info of the parent apps of playtests & demos in order to apply filters
-				// This first loop gets a list of these apps and also filters out any non-free packages
-				HashSet<uint> freeAppIDs = new();
-				HashSet<uint> childAppIDs = new();
-				HashSet<uint> parentAppIDs = new();
-				foreach (SteamApps.PICSProductInfoCallback.PICSProductInfo app in apps) {
-					if (!PackageFilter.IsFreeApp(app) || !PackageFilter.IsAvailableApp(app)) {
-						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(appID: app.ID));
+			var appProductInfos = productInfo.SelectMany(static result => result.Apps.Values);
+			if (appProductInfos.Count() > 0) {
+				List<FilterableApp> apps = appProductInfos.Select(x => new FilterableApp(x)).ToList();
 
-						continue;
+				// Filter out non-free apps
+				apps.RemoveAll(app => {
+					if (!app.IsFree || !app.IsAvailable) {
+						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(appID: app.ProductInfo.ID));
+
+						return true;
 					}
 
-					KeyValue kv = app.KeyValues;
-					EAppType type = kv["common"]["type"].AsEnum<EAppType>();
-					if (type == EAppType.Beta || type == EAppType.Demo) {
-						childAppIDs.Add(app.ID);
-						// There's another field for playtests: ["extended"]["betaforappid"], but it's less reliable
-						// Ex: https://steamdb.info/app/2420490/ on Oct 17 2023 has "parent" and is redeemable, but doesn't have "betaforappid"
-						uint parentAppID = kv["common"]["parent"].AsUnsignedInteger();
-						if (parentAppID > 0) {
-							parentAppIDs.Add(parentAppID);
-						}
-					}
+					return false;
+				});
 
-					freeAppIDs.Add(app.ID);
+				// Get the relevent parents of these free apps
+				HashSet<uint> parentIDs = apps.Where(app => app.ParentID != null).Select(app => app.ParentID!.Value).ToHashSet();
+				var parentProductInfos = (await GetProductInfo(appIDs: parentIDs).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);				
+				if (parentProductInfos == null) {
+					ASF.ArchiLogger.LogNullError(parentProductInfos);
+
+					return;
 				}
 
-				var parentAppProductInfo = await GetProductInfo(appIDs: parentAppIDs).ConfigureAwait(false);
-				if (parentAppProductInfo != null) {
-					var parentApps = parentAppProductInfo.SelectMany(static result => result.Apps.Values);
-
-					foreach (SteamApps.PICSProductInfoCallback.PICSProductInfo app in apps.Where(x => freeAppIDs.Contains(x.ID))) {
-						if (childAppIDs.Contains(app.ID)) {
-							KeyValue kv = app.KeyValues;
-							EAppType type = kv["common"]["type"].AsEnum<EAppType>();
-							uint parentAppID = kv["common"]["parent"].AsUnsignedInteger();
-							var parentApp = parentApps.FirstOrDefault(x => x.ID == parentAppID);
-
-							if (type == EAppType.Beta) {
-								Handlers.Values.ToList().ForEach(x => x.HandlePlaytest(app, parentApp));
-							} else {
-								Handlers.Values.ToList().ForEach(x => x.HandleFreeApp(app, parentApp));	
-							}
-						} else {
-							Handlers.Values.ToList().ForEach(x => x.HandleFreeApp(app));
+				if (parentProductInfos.Count() > 0) {
+					apps.ForEach(app => {
+						if (app.ParentID != null) {
+							app.AddParent(parentProductInfos.FirstOrDefault(parent => parent.ID == app.ParentID));
 						}
-					}
+					});
 				}
+
+				// Add wanted apps to the queue
+				apps.ForEach(app => {
+					if (app.Type == EAppType.Beta) {
+						Handlers.Values.ToList().ForEach(x => x.HandlePlaytest(app));
+					} else {
+						Handlers.Values.ToList().ForEach(x => x.HandleFreeApp(app));
+					}
+				});
 			}
 
 			// Figure out which packages are free and add any wanted packages to the queue
-			var packages = productInfo.SelectMany(static result => result.Packages.Values);
-			if (packages.Count() != 0) {
-				// We're also going to look into newly owned packages whether they're free or not
+			var packageProductInfos = productInfo.SelectMany(static result => result.Packages.Values);
+			if (packageProductInfos.Count() > 0) {
 				HashSet<uint> newOwnedPackageIDs = Handlers.Values.Where(x => x.Bot.IsConnectedAndLoggedOn).SelectMany(x => x.BotCache.NewOwnedPackages).ToHashSet<uint>();
-				// Need to get the product info of the apps that are contained in each free package in order to apply filters
-				// This first loop gets a list of these apps and also filters out any non-free packages
-				HashSet<uint> freePackageIDs = new();
-				HashSet<uint> relatedAppIDs = new();
-				foreach (SteamApps.PICSProductInfoCallback.PICSProductInfo package in packages) {
-					if (!PackageFilter.IsFreePackage(package) || !PackageFilter.IsAvailablePackage(package)) {
-						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(packageID: package.ID));
+				List<FilterablePackage> packages = packageProductInfos.Select(x => new FilterablePackage(x, newOwnedPackageIDs.Contains(x.ID))).ToList();
 
-						if (!newOwnedPackageIDs.Contains(package.ID)) {
-							continue;
+				// Filter out non-free, non-new packages
+				packages.RemoveAll(package => {
+					if (!package.IsFree || !package.IsAvailable) {
+						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(packageID: package.ProductInfo.ID));
+
+						if (!package.IsNew) {
+							return true;
 						}
+					}
+
+					return false;
+				});
+
+				// Get the apps contained in each free package
+				HashSet<uint> packageContentsIDs = packages.SelectMany(package => package.PackageContentIDs).ToHashSet();
+				var packageContentProductInfos = (await GetProductInfo(appIDs: packageContentsIDs).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);
+				if (packageContentProductInfos == null) {
+					ASF.ArchiLogger.LogNullError(packageContentProductInfos);
+
+					return;
+				}
+
+				packages.ForEach(package => package.AddPackageContents(packageContentProductInfos.Where(x => package.PackageContentIDs.Contains(x.ID))));
+
+				// Filter out any free packages which contain unavailable apps
+				packages.RemoveAll(package => {
+					if (package.IsFree && !PackageFilter.IsAvailablePackageContents(package)) {
+						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(packageID: package.ProductInfo.ID));
+
+						return true;
+					}
+
+					return false;
+				});
+
+				// Get the parents for the apps we just got
+				HashSet<uint> parentIDs = packages.SelectMany(package => package.PackageContentParentIDs).ToHashSet();
+				var parentProductInfos = (await GetProductInfo(appIDs: parentIDs).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);				
+				if (parentProductInfos == null) {
+					ASF.ArchiLogger.LogNullError(parentProductInfos);
+
+					return;
+				}
+
+				if (parentProductInfos.Count() > 0) {
+					packages.ForEach(package => {
+						if (package.PackageContentParentIDs.Count != 0) {
+							package.AddPackageContentParents(parentProductInfos.Where(parent => package.PackageContentParentIDs.Contains(parent.ID)));
+						}
+					});
+				}
+
+				// Add wanted packages to the queue or check new packages for free DLC
+				packages.ForEach(package => {
+					if (package.IsNew) {
+						Handlers.Values.ToList().ForEach(x => x.HandleNewPackage(package));
 					} else {
-						freePackageIDs.Add(package.ID);
+						Handlers.Values.ToList().ForEach(x => x.HandleFreePackage(package));
 					}
-
-					KeyValue kv = package.KeyValues;
-					var childAppIDs = kv["appids"].Children.Select(x => x.AsUnsignedInteger());					
-					relatedAppIDs.UnionWith(childAppIDs);
-				}
-
-				var relatedAppProductInfo = await GetProductInfo(appIDs: relatedAppIDs).ConfigureAwait(false);
-				if (relatedAppProductInfo != null) {
-					var relatedApps = relatedAppProductInfo.SelectMany(static result => result.Apps.Values);
-
-					foreach (SteamApps.PICSProductInfoCallback.PICSProductInfo package in packages.Where(x => freePackageIDs.Contains(x.ID) || newOwnedPackageIDs.Contains(x.ID))) {
-						KeyValue kv = package.KeyValues;
-						var childAppIDs = kv["appids"].Children.Select(x => x.AsUnsignedInteger()).ToHashSet<uint>();
-						var childApps = relatedApps.Where(x => childAppIDs.Contains(x.ID));
-						
-						if (newOwnedPackageIDs.Contains(package.ID)) {
-							Handlers.Values.ToList().ForEach(x => x.HandleNewPackage(package, childApps));
-						}
-
-						if (freePackageIDs.Contains(package.ID)) {
-							if (!PackageFilter.IsAvailablePackageContents(package, childApps)) {
-								Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(packageID: package.ID));
-
-								continue;
-							}
-
-							Handlers.Values.ToList().ForEach(x => x.HandleFreePackage(package, childApps));
-						}
-					}
-				}
+				});
 			}
 
 			// Remove invalid apps from the app change list
@@ -363,8 +370,8 @@ namespace FreePackages {
 			}
 		}
 
-		private void HandleFreeApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo? parentApp = null) {
-			if (!BotCache.ChangedApps.Contains(app.ID)) {
+		private void HandleFreeApp(FilterableApp app) {
+			if (!BotCache.ChangedApps.Contains(app.ProductInfo.ID)) {
 				return;
 			}
 
@@ -377,22 +384,22 @@ namespace FreePackages {
 					return;
 				}
 
-				if (!PackageFilter.IsWantedApp(app, parentApp)) {
+				if (!PackageFilter.IsWantedApp(app)) {
 					return;
 				}
 
-				if (PackageFilter.IsIgnoredApp(app, parentApp)) {
+				if (PackageFilter.IsIgnoredApp(app)) {
 					return;
 				}
 			
-				PackageQueue.AddPackage(new Package(EPackageType.App, app.ID));				
+				PackageQueue.AddPackage(new Package(EPackageType.App, app.ProductInfo.ID));				
 			} finally {
-				BotCache.RemoveChange(appID: app.ID);
+				BotCache.RemoveChange(appID: app.ProductInfo.ID);
 			}
 		}
 
-		private void HandleFreePackage(SteamApps.PICSProductInfoCallback.PICSProductInfo package, IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> apps) {
-			if (!BotCache.ChangedPackages.Contains(package.ID)) {
+		private void HandleFreePackage(FilterablePackage package) {
+			if (!BotCache.ChangedPackages.Contains(package.ProductInfo.ID)) {
 				return;
 			}
 
@@ -401,29 +408,27 @@ namespace FreePackages {
 			}
 
 			try {
-				if (!PackageFilter.IsRedeemablePackage(package, apps)) {
+				if (!PackageFilter.IsRedeemablePackage(package)) {
 					return;
 				}
 
-				if (!PackageFilter.IsWantedPackage(package, apps)) {
+				if (!PackageFilter.IsWantedPackage(package)) {
 					return;
 				}
 
-				if (PackageFilter.IsIgnoredPackage(package, apps)) {
+				if (PackageFilter.IsIgnoredPackage(package)) {
 					return;
 				}
 
-				KeyValue kv = package.KeyValues;
-				ulong startTime = kv["extended"]["starttime"].AsUnsignedLong();
-				HashSet<uint> appIDs = apps.Select(x => x.ID).ToHashSet<uint>();
-				PackageQueue.AddPackage(new Package(EPackageType.Sub, package.ID, startTime), appIDs);
+				ulong startTime = package.ProductInfo.KeyValues["extended"]["starttime"].AsUnsignedLong();
+				PackageQueue.AddPackage(new Package(EPackageType.Sub, package.ProductInfo.ID, startTime), package.PackageContentIDs);
 			} finally {
-				BotCache.RemoveChange(packageID: package.ID);
+				BotCache.RemoveChange(packageID: package.ProductInfo.ID);
 			}
 		}
 
-		private void HandlePlaytest(SteamApps.PICSProductInfoCallback.PICSProductInfo app, SteamApps.PICSProductInfoCallback.PICSProductInfo? parentApp) {
-			if (!BotCache.ChangedApps.Contains(app.ID)) {
+		private void HandlePlaytest(FilterableApp app) {
+			if (!BotCache.ChangedApps.Contains(app.ProductInfo.ID)) {
 				return;
 			}
 
@@ -432,48 +437,43 @@ namespace FreePackages {
 			}
 
 			try {
-				if (parentApp == null) {
+				if (app.Parent == null) {
 					return;
 				}
 
-				if (!PackageFilter.IsRedeemableApp(app)) {
+				if (!PackageFilter.IsRedeemablePlaytest(app)) {
 					return;
 				}
 
-				if (!PackageFilter.IsRedeemablePlaytest(app, parentApp)) {
+				if (!PackageFilter.IsWantedPlaytest(app)) {
 					return;
 				}
 
-				if (!PackageFilter.IsWantedPlaytest(app, parentApp)) {
+				if (PackageFilter.IsIgnoredApp(app)) {
 					return;
 				}
 
-				if (!PackageFilter.IsWantedApp(app, parentApp)) {
-					return;
-				}
-
-				if (PackageFilter.IsIgnoredApp(app, parentApp)) {
-					return;
-				}
-
-				PackageQueue.AddPackage(new Package(EPackageType.Playtest, parentApp.ID));
+				PackageQueue.AddPackage(new Package(EPackageType.Playtest, app.Parent.ProductInfo.ID));
 			} finally {
-				BotCache.RemoveChange(appID: app.ID);
+				BotCache.RemoveChange(appID: app.ProductInfo.ID);
 			}
 		}
 
-		private void HandleNewPackage(SteamApps.PICSProductInfoCallback.PICSProductInfo package, IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> apps) {
-			if (!BotCache.NewOwnedPackages.Contains(package.ID)) {
+		private void HandleNewPackage(FilterablePackage package) {
+			if (!BotCache.NewOwnedPackages.Contains(package.ProductInfo.ID)) {
 				return;
 			}
 
 			try {
+				if (package.PackageContents.Count == 0) {
+					return;
+				}
+
 				// Check for free DLC on newly added packages
 				HashSet<uint> dlcAppIDs = new();
 
-				foreach (SteamApps.PICSProductInfoCallback.PICSProductInfo app in apps) {
-					KeyValue kv = app.KeyValues;
-					string? dlcList = kv["extended"]["listofdlc"].AsString();
+				foreach (FilterableApp app in package.PackageContents) {
+					string? dlcList = app.ProductInfo.KeyValues["extended"]["listofdlc"].AsString();
 					if (String.IsNullOrEmpty(dlcList)) {
 						continue;
 					}
@@ -491,7 +491,7 @@ namespace FreePackages {
 					BotCache.AddChanges(appIDs: dlcAppIDs);
 				}
 			} finally {
-				BotCache.RemoveChange(newOwnedPackageID: package.ID);
+				BotCache.RemoveChange(newOwnedPackageID: package.ProductInfo.ID);
 			}
 		}
 
