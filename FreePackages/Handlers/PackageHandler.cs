@@ -390,10 +390,8 @@ namespace FreePackages {
 			bool sendPackageChangeList = !findApps;
 			uint changeNumber = maxValidChangeNumber - ((uint) Math.Floor((maxValidChangeNumber - minValidChangeNumber) / 2.0));
 			SteamApps.PICSChangesCallback? oldestPicsChanges = null;
-			uint i = 0;
 			
 			do {
-				i++;
 				SteamApps.PICSChangesCallback? picsChanges = await FetchPICSChanges(changeNumber, sendAppChangeList, sendPackageChangeList).ConfigureAwait(false);
 				if (picsChanges == null) {
 					break;
