@@ -36,7 +36,7 @@ namespace FreePackages {
 
 			bool isEnabled = false;
 			uint? packageLimit = null;
-			FilterConfig? filter = null;
+			List<FilterConfig> filterConfigs = new();
 
 			foreach (KeyValuePair<string, JToken> configProperty in additionalConfigProperties) {
 				switch (configProperty.Key) {
@@ -55,15 +55,27 @@ namespace FreePackages {
 					}
 
 					case "FreePackagesFilter": {
-						filter = configProperty.Value.ToObject<FilterConfig>();
-						bot.ArchiLogger.LogGenericInfo("Free Packages Filter : " + JsonConvert.SerializeObject(filter));
+						FilterConfig? filter = configProperty.Value.ToObject<FilterConfig>();
+						if (filter != null) {
+							bot.ArchiLogger.LogGenericInfo("Free Packages Filter : " + JsonConvert.SerializeObject(filter));
+							filterConfigs.Add(filter);
+						}
+						break;
+					}
+					
+					case "FreePackagesFilters": {
+						List<FilterConfig>? filters = configProperty.Value.ToObject<List<FilterConfig>>();
+						if (filters != null) {
+							bot.ArchiLogger.LogGenericInfo("Free Packages Filters : " + JsonConvert.SerializeObject(filters));
+							filterConfigs.AddRange(filters);
+						}
 						break;
 					}
 				}
 			}
 			
 			if (isEnabled) {
-				await PackageHandler.AddHandler(bot, filter, packageLimit).ConfigureAwait(false);
+				await PackageHandler.AddHandler(bot, filterConfigs, packageLimit).ConfigureAwait(false);
 			}
 		}
 

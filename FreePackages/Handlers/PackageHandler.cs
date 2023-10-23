@@ -25,10 +25,10 @@ namespace FreePackages {
 		private const int PICSChangesLimitingDelaySeconds = 5;
 		private const int ItemsPerProductInfoRequest = 255;
 
-		private PackageHandler(Bot bot, BotCache botCache, FilterConfig filterConfig, uint? packageLimit) {
+		private PackageHandler(Bot bot, BotCache botCache, List<FilterConfig> filterConfigs, uint? packageLimit) {
 			Bot = bot;
 			BotCache = botCache;
-			PackageFilter = new PackageFilter(bot, botCache, filterConfig);
+			PackageFilter = new PackageFilter(bot, botCache, filterConfigs);
 			PackageQueue = new PackageQueue(bot, botCache, packageLimit);
 		}
 
@@ -36,7 +36,7 @@ namespace FreePackages {
 			PackageQueue.Dispose();
 		}
 
-		internal static async Task AddHandler(Bot bot, FilterConfig? filterConfig, uint? packageLimit) {
+		internal static async Task AddHandler(Bot bot, List<FilterConfig> filterConfigs, uint? packageLimit) {
 			if (Handlers.ContainsKey(bot.BotName)) {
 				Handlers[bot.BotName].Dispose();
 				Handlers.TryRemove(bot.BotName, out PackageHandler? _);
@@ -44,13 +44,12 @@ namespace FreePackages {
 
 			await AddHandlerSemaphore.WaitAsync().ConfigureAwait(false);
 			try {
-				filterConfig ??= new();
-
-				if (filterConfig.PlaytestMode != EPlaytestMode.None) {
+				if (filterConfigs.Any(filterConfig => filterConfig.PlaytestMode != EPlaytestMode.None)) {
 					// Only allow 1 bot to request playtests
-					int numBotsThatIncludePlaytests = Handlers.Values.Where(x => x.PackageFilter.FilterConfig.PlaytestMode != EPlaytestMode.None).Count();
+					// int numBotsThatIncludePlaytests = Handlers.Values.Where(x => x.PackageFilter.FilterConfig.PlaytestMode != EPlaytestMode.None).Count();
+					int numBotsThatIncludePlaytests = Handlers.Values.Where(x => x.PackageFilter.FilterConfigs.Any(filterConfig => filterConfig.PlaytestMode != EPlaytestMode.None)).Count();
 					if (numBotsThatIncludePlaytests > 0) {
-						filterConfig.PlaytestMode = EPlaytestMode.None;
+						filterConfigs.ForEach(filterConfig => filterConfig.PlaytestMode = EPlaytestMode.None);
 						bot.ArchiLogger.LogGenericInfo("Changed PlaytestMode to 0 (None), only 1 bot is allowed to use this filter");
 					}
 				}
@@ -62,7 +61,7 @@ namespace FreePackages {
 					botCache = new(cacheFilePath);
 				}
 
-				Handlers.TryAdd(bot.BotName, new PackageHandler(bot, botCache, filterConfig, packageLimit));
+				Handlers.TryAdd(bot.BotName, new PackageHandler(bot, botCache, filterConfigs, packageLimit));
 			} finally {
 				AddHandlerSemaphore.Release();
 			}
@@ -452,10 +451,6 @@ namespace FreePackages {
 					return;
 				}
 
-				if (PackageFilter.IsIgnoredApp(app)) {
-					return;
-				}
-			
 				PackageQueue.AddPackage(new Package(EPackageType.App, app.ProductInfo.ID));				
 			} finally {
 				BotCache.RemoveChange(appID: app.ProductInfo.ID);
@@ -477,10 +472,6 @@ namespace FreePackages {
 				}
 
 				if (!PackageFilter.IsWantedPackage(package)) {
-					return;
-				}
-
-				if (PackageFilter.IsIgnoredPackage(package)) {
 					return;
 				}
 
@@ -510,10 +501,6 @@ namespace FreePackages {
 				}
 
 				if (!PackageFilter.IsWantedPlaytest(app)) {
-					return;
-				}
-
-				if (PackageFilter.IsIgnoredApp(app)) {
 					return;
 				}
 

@@ -12,7 +12,7 @@ namespace FreePackages {
 	internal sealed class PackageFilter {
 		private readonly Bot Bot;
 		private readonly BotCache BotCache;
-		internal readonly FilterConfig FilterConfig;
+		internal readonly List<FilterConfig> FilterConfigs;
 		private HashSet<uint>? OwnedAppIDs = null;
 		private UserData? UserData = null;
 		private HashSet<uint> ImportedIgnoredAppIDs = new();
@@ -22,10 +22,10 @@ namespace FreePackages {
 		private readonly Timer UserDataRefreshTimer;
 		internal bool Ready { get { return OwnedAppIDs != null && Country != null && UserData != null; }}
 
-		internal PackageFilter(Bot bot, BotCache botCache, FilterConfig filterConfig) {
+		internal PackageFilter(Bot bot, BotCache botCache, List<FilterConfig> filterConfigs) {
 			Bot = bot;
 			BotCache = botCache;
-			FilterConfig = filterConfig;
+			FilterConfigs = filterConfigs;
 			UserDataRefreshTimer = new Timer(async e => await UpdateUserData().ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
 		}
 
@@ -48,11 +48,9 @@ namespace FreePackages {
 				return;
 			}
 
-			if (FilterConfig.ImportStoreFilters) {
-				ImportedIgnoredAppIDs = userData.IgnoredApps.Where(x => x.Value == 0).Select(x => x.Key).ToHashSet();
-				ImportedIgnoredTags = userData.ExcludedTags.Select(x => x.TagID).ToHashSet();
-				ImportedIgnoredContentDescriptors = userData.ExcludedContentDescriptorIDs;
-			}
+			ImportedIgnoredAppIDs = userData.IgnoredApps.Where(x => x.Value == 0).Select(x => x.Key).ToHashSet();
+			ImportedIgnoredTags = userData.ExcludedTags.Select(x => x.TagID).ToHashSet();
+			ImportedIgnoredContentDescriptors = userData.ExcludedContentDescriptorIDs;
 
 			// Get all of the apps that are in each of the owned packages, and merge with explicitly owned apps
 			var ownedAppIDs = userData.OwnedApps;
@@ -61,6 +59,7 @@ namespace FreePackages {
 
 			OwnedAppIDs = ownedAppIDs;
 			UserData = userData;
+
 			UserDataRefreshTimer.Change(TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(15));
 		}
 
@@ -146,44 +145,45 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsWantedApp(FilterableApp app) {
+		private bool IsWantedApp(FilterableApp app, FilterConfig filter) {
 			KeyValue kv = app.ProductInfo.KeyValues;
 
-			if (FilterConfig.Types.Count > 0) {
-				if (!FilterConfig.Types.Contains(app.Type.ToString())) {
+			if (filter.Types.Count > 0 && app.Type != EAppType.Beta) {
+				// Don't require user to specify they want playtests (Beta), this is already implied by the PlaytestMode filter
+				if (!filter.Types.Contains(app.Type.ToString())) {
 					// App isn't a wanted type
 					return false;
 				}
 			}
 
-			if (FilterConfig.Categories.Count > 0) {
-				bool has_matching_category = kv["common"]["category"].Children.Any(category => UInt32.TryParse(category.Name?.Substring(9), out uint category_number) && FilterConfig.Categories.Contains(category_number)); // category numbers are stored in the name as "category_##"
+			if (filter.Categories.Count > 0) {
+				bool has_matching_category = kv["common"]["category"].Children.Any(category => UInt32.TryParse(category.Name?.Substring(9), out uint category_number) && filter.Categories.Contains(category_number)); // category numbers are stored in the name as "category_##"
 				if (!has_matching_category) {
 					// Unwanted due to missing categories
 					return false;
 				}
 			}
 
-			if (FilterConfig.Tags.Count > 0) {
-				bool has_matching_tag = kv["common"]["store_tags"].Children.Any(tag => FilterConfig.Tags.Contains(tag.AsUnsignedInteger()));
-				bool parent_has_matching_tags = app.Parent != null && app.Parent.ProductInfo.KeyValues["common"]["store_tags"].Children.Any(tag => FilterConfig.Tags.Contains(tag.AsUnsignedInteger()));
+			if (filter.Tags.Count > 0) {
+				bool has_matching_tag = kv["common"]["store_tags"].Children.Any(tag => filter.Tags.Contains(tag.AsUnsignedInteger()));
+				bool parent_has_matching_tags = app.Parent != null && app.Parent.ProductInfo.KeyValues["common"]["store_tags"].Children.Any(tag => filter.Tags.Contains(tag.AsUnsignedInteger()));
 				if (!has_matching_tag && !parent_has_matching_tags) {
 					// Unwanted due to missing tags (also check parent app, because parents can have more tags defined)
 					return false;
 				}
 			}
 
-			if (FilterConfig.MinReviewScore > 0 && app.Type != EAppType.Demo && app.Type != EAppType.Beta) {
+			if (filter.MinReviewScore > 0 && app.Type != EAppType.Demo && app.Type != EAppType.Beta) {
 				// Not including demos and playtests here because they don't really have review scores.  They can, but only from abnormal behavior
 				uint review_score = kv["common"]["review_score"].AsUnsignedInteger();
-				if (review_score < FilterConfig.MinReviewScore) {
+				if (review_score < filter.MinReviewScore) {
 					// Unwanted due to low or missing review score
 					return false;
 				}
 			}
 
-			if (FilterConfig.Languages.Count > 0) {
-				bool has_matching_language = kv["common"]["supported_languges"].Children.Any(supported_language => supported_language.Name != null && FilterConfig.Languages.Contains(supported_language.Name));
+			if (filter.Languages.Count > 0) {
+				bool has_matching_language = kv["common"]["supported_languges"].Children.Any(supported_language => supported_language.Name != null && filter.Languages.Contains(supported_language.Name));
 				if (!has_matching_language) {
 					// Unwanted due to missing supported language
 					return false;
@@ -193,43 +193,72 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsIgnoredApp(FilterableApp app) {
+		private bool IsIgnoredApp(FilterableApp app, FilterConfig filter) {
+			if (UserData == null) {
+				throw new InvalidOperationException(nameof(UserData));
+			}
+
 			KeyValue kv = app.ProductInfo.KeyValues;
 
-			if (FilterConfig.IgnoredTypes.Contains(app.Type.ToString())) {
+			if (filter.IgnoredTypes.Contains(app.Type.ToString())) {
 				// App is an unwanted type
 				return true;
 			}
 
-			if (FilterConfig.IgnoredTags.Count > 0 || ImportedIgnoredTags.Count > 0) {
-				bool has_matching_tag = kv["common"]["store_tags"].Children.Any(tag => FilterConfig.IgnoredTags.Contains(tag.AsUnsignedInteger()) || ImportedIgnoredTags.Contains(tag.AsUnsignedInteger()));
-				bool parent_has_matching_tags = app.Parent != null && app.Parent.ProductInfo.KeyValues["common"]["store_tags"].Children.Any(tag => FilterConfig.Tags.Contains(tag.AsUnsignedInteger()) || ImportedIgnoredTags.Contains(tag.AsUnsignedInteger()));
+			if (filter.IgnoredTags.Count > 0) {
+				bool has_matching_tag = kv["common"]["store_tags"].Children.Any(tag => filter.IgnoredTags.Contains(tag.AsUnsignedInteger()));
+				bool parent_has_matching_tags = app.Parent != null && app.Parent.ProductInfo.KeyValues["common"]["store_tags"].Children.Any(tag => filter.Tags.Contains(tag.AsUnsignedInteger()));
 				if (has_matching_tag || parent_has_matching_tags) {
 					// App contains an unwanted tag (also check parent app, because parents can have more tags defined)
 					return true;
 				}
 			}
 
-			if (FilterConfig.IgnoredCategories.Count > 0) {
-				bool has_matching_category = kv["common"]["category"].Children.Any(category => UInt32.TryParse(category.Name?.Substring(9), out uint category_number) && FilterConfig.IgnoredCategories.Contains(category_number)); // category numbers are stored in the name as "category_##"
+			if (filter.IgnoredCategories.Count > 0) {
+				bool has_matching_category = kv["common"]["category"].Children.Any(category => UInt32.TryParse(category.Name?.Substring(9), out uint category_number) && filter.IgnoredCategories.Contains(category_number)); // category numbers are stored in the name as "category_##"
 				if (has_matching_category) {
 					// App contains unwanted categories
 					return true;
 				}
 			}
 
-			if (FilterConfig.IgnoredContentDescriptors.Count > 0 || ImportedIgnoredContentDescriptors.Count > 0) {
-				bool has_matching_mature_content_descriptor = kv["common"]["content_descriptors"].Children.Any(content_descriptor => FilterConfig.IgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()) || ImportedIgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
-				bool parent_has_matching_mature_content_descriptor = app.Parent != null && app.Parent.ProductInfo.KeyValues["common"]["content_descriptors"].Children.Any(content_descriptor => FilterConfig.IgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()) || ImportedIgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
+			if (filter.IgnoredContentDescriptors.Count > 0) {
+				bool has_matching_mature_content_descriptor = kv["common"]["content_descriptors"].Children.Any(content_descriptor => filter.IgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
+				bool parent_has_matching_mature_content_descriptor = app.Parent != null && app.Parent.ProductInfo.KeyValues["common"]["content_descriptors"].Children.Any(content_descriptor => filter.IgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
 				if (has_matching_mature_content_descriptor || parent_has_matching_mature_content_descriptor) {
 					// App contains an unwanted content descriptor (also check parent app, because parents can have more descriptors defined)
 					return true;
 				}
 			}
 
-			if (FilterConfig.IgnoredAppIDs.Contains(app.ProductInfo.ID) || ImportedIgnoredAppIDs.Contains(app.ProductInfo.ID) || (app.Parent != null && (FilterConfig.IgnoredAppIDs.Contains(app.Parent.ProductInfo.ID) || ImportedIgnoredAppIDs.Contains(app.Parent.ProductInfo.ID)))) {
+			if (filter.IgnoredAppIDs.Contains(app.ProductInfo.ID) || (app.Parent != null && (filter.IgnoredAppIDs.Contains(app.Parent.ProductInfo.ID)))) {
 				// App is explicity ignored
 				return true;
+			}
+
+			if (filter.ImportStoreFilters) {
+				if (ImportedIgnoredTags.Count > 0) {
+					bool has_matching_tag = kv["common"]["store_tags"].Children.Any(tag => ImportedIgnoredTags.Contains(tag.AsUnsignedInteger()));
+					bool parent_has_matching_tags = app.Parent != null && app.Parent.ProductInfo.KeyValues["common"]["store_tags"].Children.Any(tag => ImportedIgnoredTags.Contains(tag.AsUnsignedInteger()));
+					if (has_matching_tag || parent_has_matching_tags) {
+						// App contains a tag which they have ignored on Steam
+						return true;
+					}
+				}
+
+				if (ImportedIgnoredContentDescriptors.Count > 0) {
+					bool has_matching_mature_content_descriptor = kv["common"]["content_descriptors"].Children.Any(content_descriptor => ImportedIgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
+					bool parent_has_matching_mature_content_descriptor = app.Parent != null && app.Parent.ProductInfo.KeyValues["common"]["content_descriptors"].Children.Any(content_descriptor => ImportedIgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
+					if (has_matching_mature_content_descriptor || parent_has_matching_mature_content_descriptor) {
+						// App contains a content descriptor which they have ignored on Steam
+						return true;
+					}
+				}
+
+				if (ImportedIgnoredAppIDs.Contains(app.ProductInfo.ID) || (app.Parent != null && ImportedIgnoredAppIDs.Contains(app.Parent.ProductInfo.ID))) {
+					// User has ignored this app on Steam
+					return true;
+				}
 			}
 
 			return false;
@@ -354,10 +383,10 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsWantedPackage(FilterablePackage package) {
+		private bool IsWantedPackage(FilterablePackage package, FilterConfig filter) {
 			KeyValue kv = package.ProductInfo.KeyValues;
 
-			bool has_wanted_app = package.PackageContents.Any(app => IsWantedApp(app));
+			bool has_wanted_app = package.PackageContents.Any(app => IsWantedApp(app, filter));
 			if (!has_wanted_app) {
 				return false;
 			}
@@ -365,14 +394,14 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsIgnoredPackage(FilterablePackage package) {
+		private bool IsIgnoredPackage(FilterablePackage package, FilterConfig filter) {
 			KeyValue kv = package.ProductInfo.KeyValues;
 
-			if (FilterConfig.IgnoreFreeWeekends && kv["extended"]["freeweekend"].AsBoolean()) {
+			if (filter.IgnoreFreeWeekends && kv["extended"]["freeweekend"].AsBoolean()) {
 				return true;
 			}
 
-			bool has_ignored_app = package.PackageContents.Any(app => IsIgnoredApp(app));
+			bool has_ignored_app = package.PackageContents.Any(app => IsIgnoredApp(app, filter));
 			if (has_ignored_app) {
 				return true;
 			}
@@ -398,20 +427,25 @@ namespace FreePackages {
 				// Hidden app
 				return false;
 			}
+
+			if (BotCache.WaitlistedPlaytests.Contains(app.Parent.ProductInfo.ID)) {
+				// We're already on the waitlist for this playtest
+				return false;
+			}
 			
 			return true;
 		}
 
-		internal bool IsWantedPlaytest(FilterableApp app) {
+		private bool IsWantedPlaytest(FilterableApp app, FilterConfig filter) {
 			if (app.Parent == null) {
 				return false;
 			}
 
-			if (!IsWantedApp(app)) {
+			if (!IsWantedApp(app, filter)) {
 				return false;
 			}
 
-			if (FilterConfig.PlaytestMode == EPlaytestMode.None) {
+			if (filter.PlaytestMode == EPlaytestMode.None) {
 				// User doesnt want any playtests
 				return false;
 			}
@@ -420,25 +454,24 @@ namespace FreePackages {
 			uint playtestType = kv["extended"]["playtest_type"].AsUnsignedInteger();
 
 			// playtest_type 0 or missing = limited
-			bool wantsLimitedPlaytests = (FilterConfig.PlaytestMode & EPlaytestMode.Limited) == EPlaytestMode.Limited;
+			bool wantsLimitedPlaytests = (filter.PlaytestMode & EPlaytestMode.Limited) == EPlaytestMode.Limited;
 			if (playtestType == 0 && !wantsLimitedPlaytests) {
 				// User doesn't want limited playtests
 				return false;
 			}
 
 			// playtest_type 1 = unlimited
-			bool wantsUnlimitedPlaytests = (FilterConfig.PlaytestMode & EPlaytestMode.Unlimited) == EPlaytestMode.Unlimited;
+			bool wantsUnlimitedPlaytests = (filter.PlaytestMode & EPlaytestMode.Unlimited) == EPlaytestMode.Unlimited;
 			if (playtestType == 1 && !wantsUnlimitedPlaytests) {
 				// User doesn't want unlimited playtests
 				return false;
 			}
 
-			if (BotCache.WaitlistedPlaytests.Contains(app.Parent.ProductInfo.ID)) {
-				// Unwanted because we're already on the waitlist for this playtest
-				return false;
-			}
-
 			return true;
 		}
+
+		internal bool IsWantedApp(FilterableApp app) => FilterConfigs.Count == 0 || FilterConfigs.Any(filter => IsWantedApp(app, filter) && !IsIgnoredApp(app, filter));
+		internal bool IsWantedPackage(FilterablePackage package) => FilterConfigs.Count == 0 || FilterConfigs.Any(filter => IsWantedPackage(package, filter) && !IsIgnoredPackage(package, filter));
+		internal bool IsWantedPlaytest(FilterableApp app) => FilterConfigs.Any(filter => IsWantedPlaytest(app, filter) && !IsIgnoredApp(app, filter));
 	}
 }
