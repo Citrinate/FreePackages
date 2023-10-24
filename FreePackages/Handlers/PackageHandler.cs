@@ -192,8 +192,8 @@ namespace FreePackages {
 
 				// Filter out non-free apps
 				apps.RemoveAll(app => {
-					if (!app.IsFree || !app.IsAvailable) {
-						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(appID: app.ProductInfo.ID));
+					if (!app.IsFree() || !app.IsAvailable()) {
+						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(appID: app.ID));
 
 						return true;
 					}
@@ -201,7 +201,7 @@ namespace FreePackages {
 					return false;
 				});
 
-				// Get the relevent parents of these free apps
+				// Get the parents of the free apps
 				HashSet<uint> parentIDs = apps.Where(app => app.ParentID != null).Select(app => app.ParentID!.Value).ToHashSet();
 				var parentProductInfos = (await GetProductInfo(appIDs: parentIDs).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);				
 				if (parentProductInfos == null) {
@@ -236,8 +236,8 @@ namespace FreePackages {
 
 				// Filter out non-free, non-new packages
 				packages.RemoveAll(package => {
-					if (!package.IsFree || !package.IsAvailable) {
-						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(packageID: package.ProductInfo.ID));
+					if (!package.IsFree() || !package.IsAvailable()) {
+						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(packageID: package.ID));
 
 						if (!package.IsNew) {
 							return true;
@@ -247,7 +247,7 @@ namespace FreePackages {
 					return false;
 				});
 
-				// Get the apps contained in each free package
+				// Get the apps contained in each package
 				HashSet<uint> packageContentsIDs = packages.SelectMany(package => package.PackageContentIDs).ToHashSet();
 				var packageContentProductInfos = (await GetProductInfo(appIDs: packageContentsIDs).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);
 				if (packageContentProductInfos == null) {
@@ -258,18 +258,20 @@ namespace FreePackages {
 
 				packages.ForEach(package => package.AddPackageContents(packageContentProductInfos.Where(x => package.PackageContentIDs.Contains(x.ID))));
 
-				// Filter out any free packages which contain unavailable apps
+				// Filter out any packages which contain unavailable apps
 				packages.RemoveAll(package => {
-					if (package.IsFree && !PackageFilter.IsAvailablePackageContents(package)) {
-						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(packageID: package.ProductInfo.ID));
+					if (!package.IsAvailablePackageContents()) {
+						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(packageID: package.ID));
 
-						return true;
+						if (!package.IsNew) {
+							return true;
+						}
 					}
 
 					return false;
 				});
 
-				// Get the parents for the apps we just got
+				// Get the parents for the apps in each package
 				HashSet<uint> parentIDs = packages.SelectMany(package => package.PackageContentParentIDs).ToHashSet();
 				var parentProductInfos = (await GetProductInfo(appIDs: parentIDs).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);				
 				if (parentProductInfos == null) {
@@ -434,7 +436,7 @@ namespace FreePackages {
 		}
 
 		private void HandleFreeApp(FilterableApp app) {
-			if (!BotCache.ChangedApps.Contains(app.ProductInfo.ID)) {
+			if (!BotCache.ChangedApps.Contains(app.ID)) {
 				return;
 			}
 
@@ -451,14 +453,14 @@ namespace FreePackages {
 					return;
 				}
 
-				PackageQueue.AddPackage(new Package(EPackageType.App, app.ProductInfo.ID));				
+				PackageQueue.AddPackage(new Package(EPackageType.App, app.ID));				
 			} finally {
-				BotCache.RemoveChange(appID: app.ProductInfo.ID);
+				BotCache.RemoveChange(appID: app.ID);
 			}
 		}
 
 		private void HandleFreePackage(FilterablePackage package) {
-			if (!BotCache.ChangedPackages.Contains(package.ProductInfo.ID)) {
+			if (!BotCache.ChangedPackages.Contains(package.ID)) {
 				return;
 			}
 
@@ -475,15 +477,14 @@ namespace FreePackages {
 					return;
 				}
 
-				ulong startTime = package.ProductInfo.KeyValues["extended"]["starttime"].AsUnsignedLong();
-				PackageQueue.AddPackage(new Package(EPackageType.Sub, package.ProductInfo.ID, startTime), package.PackageContentIDs);
+				PackageQueue.AddPackage(new Package(EPackageType.Sub, package.ID, package.StartTime), package.PackageContentIDs);
 			} finally {
-				BotCache.RemoveChange(packageID: package.ProductInfo.ID);
+				BotCache.RemoveChange(packageID: package.ID);
 			}
 		}
 
 		private void HandlePlaytest(FilterableApp app) {
-			if (!BotCache.ChangedApps.Contains(app.ProductInfo.ID)) {
+			if (!BotCache.ChangedApps.Contains(app.ID)) {
 				return;
 			}
 
@@ -504,14 +505,14 @@ namespace FreePackages {
 					return;
 				}
 
-				PackageQueue.AddPackage(new Package(EPackageType.Playtest, app.Parent.ProductInfo.ID));
+				PackageQueue.AddPackage(new Package(EPackageType.Playtest, app.Parent.ID));
 			} finally {
-				BotCache.RemoveChange(appID: app.ProductInfo.ID);
+				BotCache.RemoveChange(appID: app.ID);
 			}
 		}
 
 		private void HandleNewPackage(FilterablePackage package) {
-			if (!BotCache.NewOwnedPackages.Contains(package.ProductInfo.ID)) {
+			if (!BotCache.NewOwnedPackages.Contains(package.ID)) {
 				return;
 			}
 
@@ -524,12 +525,11 @@ namespace FreePackages {
 				HashSet<uint> dlcAppIDs = new();
 
 				foreach (FilterableApp app in package.PackageContents) {
-					string? dlcList = app.ProductInfo.KeyValues["extended"]["listofdlc"].AsString();
-					if (String.IsNullOrEmpty(dlcList)) {
+					if (String.IsNullOrEmpty(app.ListOfDLC)) {
 						continue;
 					}
 
-					foreach (string dlcAppIDString in dlcList.Split(",", StringSplitOptions.RemoveEmptyEntries)) {
+					foreach (string dlcAppIDString in app.ListOfDLC.Split(",", StringSplitOptions.RemoveEmptyEntries)) {
 						if (!uint.TryParse(dlcAppIDString, out uint dlcAppID) || (dlcAppID == 0)) {
 							continue;
 						}
@@ -542,7 +542,7 @@ namespace FreePackages {
 					BotCache.AddChanges(appIDs: dlcAppIDs);
 				}
 			} finally {
-				BotCache.RemoveChange(newOwnedPackageID: package.ProductInfo.ID);
+				BotCache.RemoveChange(newOwnedPackageID: package.ID);
 			}
 		}
 

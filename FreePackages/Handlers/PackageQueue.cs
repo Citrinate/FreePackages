@@ -182,7 +182,7 @@ namespace FreePackages {
 				
 				if (hasPackages) {
 					// Replace the app with the appropriate package and when we try to activate that we'll find out for sure if we're rate limited or not
-					// Note: This is mostly wishful thinking. /api/appdetails rarely shows the free packages for free apps
+					// Note: This is mostly wishful thinking. /api/appdetails rarely shows the free packages for free apps (one example where it does: https://steamdb.info/app/2119270/)
 					Bot.ArchiLogger.LogGenericInfo(string.Format("ID: app/{0} | Status: Replaced with {1}", appID, String.Join(", ", appDetails!.Data!.Packages.Select(x => $"sub/{x}"))));
 					BotCache.AddChanges(packageIDs: appDetails.Data.Packages);
 
