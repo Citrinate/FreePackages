@@ -66,7 +66,7 @@ namespace FreePackages.IPC {
 			IEnumerable<SteamApps.PICSProductInfoCallback> productInfos;
 			try {
 				List<SteamApps.PICSRequest> apps = appIDs == null ? new() : appIDs.Split(",").Select(x => new SteamApps.PICSRequest(uint.Parse(x))).ToList();
-				List<SteamApps.PICSRequest> packages = packageIDs == null ? new() : packageIDs.Split(",").Select(x => new SteamApps.PICSRequest(uint.Parse(x))).ToList();
+				List<SteamApps.PICSRequest> packages = packageIDs == null ? new() : packageIDs.Split(",").Select(x => new SteamApps.PICSRequest(uint.Parse(x), ASF.GlobalDatabase?.PackageAccessTokensReadOnly.GetValueOrDefault(uint.Parse(x), (ulong) 0) ?? 0)).ToList();
 				var response = await bot.SteamApps.PICSGetProductInfo(apps, packages).ToLongRunningTask().ConfigureAwait(false);
 				if (response.Results == null) {
 					return BadRequest(new GenericResponse(false));
