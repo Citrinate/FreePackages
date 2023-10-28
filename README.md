@@ -322,7 +322,7 @@ All filter options are explained below:
 
 #### ImportStoreFilters
 
-`bool` type with default value of `false`.  If set to `true`, the plugin will use the ignored games, ignored tags, and ignored content descriptor settings you use on the Steam storefront, in addition to any other filters you define.
+`bool` type with default value of `false`.  If set to `true`, the filter will also use the ignored games, ignored tags, and ignored content descriptor settings you use on the Steam storefront.
 
 ---
 
