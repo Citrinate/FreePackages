@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -15,21 +16,22 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace FreePackages.IPC {
 	[Route("Api/FreePackages", Name = nameof(FreePackages))]
 	public sealed class FreePackagesController : ArchiController {
-		[HttpGet("{botName:required}/GetChangesSince/{changeNumber:required}")]
+		[HttpGet("{botNames:required}/GetChangesSince/{changeNumber:required}")]
 		[SwaggerOperation (Summary = "Request changes for apps and packages since a given change number")]
 		[ProducesResponseType(typeof(GenericResponse<SteamApps.PICSChangesCallback>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
-		public async Task<ActionResult<GenericResponse>> GetChangesSince(string botName, uint changeNumber, bool showAppChanges = true, bool showPackageChanges = true) {
-			if (string.IsNullOrEmpty(botName)) {
-				throw new ArgumentNullException(nameof(botName));
+		public async Task<ActionResult<GenericResponse>> GetChangesSince(string botNames, uint changeNumber, bool showAppChanges = true, bool showPackageChanges = true) {
+			if (string.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
 			}
 
-			Bot? bot = Bot.GetBot(botName);
-			if (bot == null) {
-				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+			if ((bots == null) || (bots.Count == 0)) {
+				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botNames)));
 			}
-			
-			if (!bot.IsConnectedAndLoggedOn) {
+
+			Bot? bot = bots.FirstOrDefault(static bot => bot.IsConnectedAndLoggedOn);
+			if (bot == null) {
 				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
 			}
 
@@ -45,21 +47,23 @@ namespace FreePackages.IPC {
 			return Ok(new GenericResponse<SteamApps.PICSChangesCallback>(true, picsChanges));
 		}
 
-		[HttpGet("{botName:required}/GetProductInfo")]
+		[HttpGet("{botNames:required}/GetProductInfo")]
 		[SwaggerOperation (Summary = "Request product information for a list of apps or packages")]
 		[ProducesResponseType(typeof(GenericResponse<IEnumerable<SteamApps.PICSProductInfoCallback>>), (int) HttpStatusCode.OK)]
+		[ProducesResponseType(typeof(byte[]), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
-		public async Task<ActionResult<GenericResponse>> GetProductInfo(string botName, string? appIDs, string? packageIDs) {
-			if (string.IsNullOrEmpty(botName)) {
-				throw new ArgumentNullException(nameof(botName));
+		public async Task<ActionResult<GenericResponse>> GetProductInfo(string botNames, string? appIDs, string? packageIDs, bool returnFirstRaw = false) {
+			if (string.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
 			}
 
-			Bot? bot = Bot.GetBot(botName);
-			if (bot == null) {
-				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+			if ((bots == null) || (bots.Count == 0)) {
+				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botNames)));
 			}
-			
-			if (!bot.IsConnectedAndLoggedOn) {
+
+			Bot? bot = bots.FirstOrDefault(static bot => bot.IsConnectedAndLoggedOn);
+			if (bot == null) {
 				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
 			}
 
@@ -77,6 +81,23 @@ namespace FreePackages.IPC {
 				bot.ArchiLogger.LogGenericWarningException(e);
 
 				return BadRequest(new GenericResponse(false, e.Message));
+			}
+
+			if (returnFirstRaw) {
+				var results = productInfos.SelectMany(static result => result.Apps.Values).Concat(productInfos.SelectMany(static result => result.Packages.Values));
+				if (results.Count() == 0) {
+					return File(Array.Empty<byte>(), "text/plain; charset=utf-8");
+				}
+
+				try {
+					await using var kvMemory = new MemoryStream();
+					results.First().KeyValues.SaveToStream(kvMemory, false);
+					return File(kvMemory.ToArray(), "text/plain; charset=utf-8");
+				} catch (Exception e) {
+					bot.ArchiLogger.LogGenericWarningException(e);
+
+					return BadRequest(new GenericResponse(false, e.Message));
+				}
 			}
 
 			return Ok(new GenericResponse<IEnumerable<SteamApps.PICSProductInfoCallback>>(true, productInfos));

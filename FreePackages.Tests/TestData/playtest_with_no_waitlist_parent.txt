@@ -1,0 +1,109 @@
+"appinfo"
+{
+	"appid"		"1873120"
+	"public_only"		"1"
+	"common"
+	{
+		"name"		"No Love Lost"
+		"type"		"Game"
+		"oslist"		"windows"
+		"osarch"		"64"
+		"osextended"		""
+		"icon"		"d27e304e1a6be6f11764180fd6fbf82110ba2d82"
+		"clienttga"		"46bea63ee70112935ebb604fcb71ea2353814a81"
+		"clienticon"		"fa4218b9d59b8042cb86f013688ee65b8e0b93f5"
+		"releasestate"		"prerelease"
+		"controller_support"		"full"
+		"small_capsule"
+		{
+			"english"		"capsule_231x87.jpg"
+		}
+		"header_image"
+		{
+			"english"		"header.jpg"
+		}
+		"library_assets"
+		{
+			"library_capsule"		"en"
+			"library_hero"		"en"
+			"library_logo"		"en"
+			"logo_position"
+			{
+				"pinned_position"		"BottomLeft"
+				"width_pct"		"50"
+				"height_pct"		"50"
+			}
+		}
+		"store_asset_mtime"		"1696362029"
+		"associations"
+		{
+			"0"
+			{
+				"type"		"developer"
+				"name"		"Ratloop Games Canada"
+			}
+			"1"
+			{
+				"type"		"publisher"
+				"name"		"Ratloop Games Canada"
+			}
+		}
+		"primary_genre"		"1"
+		"genres"
+		{
+			"0"		"1"
+			"1"		"25"
+			"2"		"23"
+			"3"		"37"
+		}
+		"category"
+		{
+			"category_2"		"1"
+			"category_1"		"1"
+			"category_49"		"1"
+			"category_36"		"1"
+			"category_9"		"1"
+			"category_38"		"1"
+			"category_28"		"1"
+			"category_22"		"1"
+		}
+		"supported_languages"
+		{
+			"english"
+			{
+				"supported"		"true"
+				"full_audio"		"true"
+			}
+			"french"
+			{
+				"supported"		"true"
+			}
+		}
+		"community_hub_visible"		"1"
+		"gameid"		"1873120"
+		"exfgls"		"1"
+		"store_tags"
+		{
+			"0"		"3834"
+			"1"		"4106"
+			"2"		"1774"
+			"3"		"3814"
+			"4"		"6730"
+			"5"		"1775"
+			"6"		"1697"
+			"7"		"7481"
+			"8"		"5765"
+			"9"		"1695"
+			"10"		"5125"
+			"11"		"5711"
+			"12"		"19"
+			"13"		"11104"
+			"14"		"4747"
+			"15"		"3942"
+			"16"		"4102"
+			"17"		"4252"
+			"18"		"3859"
+			"19"		"3843"
+		}
+	}
+}

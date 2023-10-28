@@ -12,6 +12,7 @@ namespace FreePackages {
 		internal EAppType Type;
 		internal bool IsFreeApp;
 		internal string? ReleaseState;
+		internal string? State;
 		internal uint MustOwnAppToPurchase;
 		internal List<string>? RestrictedCountries;
 		internal List<string>? PurchaseRestrictedCountries;
@@ -23,16 +24,16 @@ namespace FreePackages {
 		internal uint ReviewScore;
 		internal string? ListOfDLC;
 		internal uint PlayTestType;
+		internal bool Hidden;
 
-		internal bool MissingToken;
-		internal bool MissingCommon;
-
-		internal FilterableApp(SteamApps.PICSProductInfoCallback.PICSProductInfo productInfo) {
-			ID = productInfo.ID;
-			KeyValue kv = productInfo.KeyValues;
-			Type = kv["common"]["type"].AsEnum<EAppType>();
+		internal FilterableApp(SteamApps.PICSProductInfoCallback.PICSProductInfo productInfo) : this(productInfo.ID, productInfo.KeyValues) {}
+		internal FilterableApp(KeyValue kv) : this(kv["appid"].AsUnsignedInteger(), kv) {}
+		internal FilterableApp(uint id, KeyValue kv) {
+			ID = id;
+			Type = Enum.Parse<EAppType>(kv["common"]["type"].AsString() ?? EAppType.Invalid.ToString(), true);
 			IsFreeApp = kv["extended"]["isfreeapp"].AsBoolean();
 			ReleaseState = kv["common"]["releasestate"].AsString();
+			State = kv["extended"]["state"].AsString();
 			MustOwnAppToPurchase = kv["extended"]["mustownapptopurchase"].AsUnsignedInteger();
 			RestrictedCountries = kv["common"]["restricted_countries"].AsString()?.ToUpper().Split(",").ToList();
 			PurchaseRestrictedCountries = kv["extended"]["purchaserestrictedcountries"].AsString()?.ToUpper().Split(" ").ToList();
@@ -40,12 +41,11 @@ namespace FreePackages {
 			AppTags = kv["common"]["store_tags"].Children.Select(tag => tag.AsUnsignedInteger()).ToList();
 			Category = kv["common"]["category"].Children.Select(category => UInt32.Parse(category.Name!.Substring(9))).ToList(); // category numbers are stored in the name as "category_##"
 			ContentDescriptors = kv["common"]["content_descriptors"].Children.Select(content_descriptor => content_descriptor.AsUnsignedInteger()).ToList();
-			SupportedLanguages = kv["common"]["supported_languges"].Children.Select(supported_language => supported_language.Name!).ToList();
+			SupportedLanguages = kv["common"]["supported_languages"].Children.Select(supported_language => supported_language.Name!).ToList();
 			ReviewScore = kv["common"]["review_score"].AsUnsignedInteger();
 			ListOfDLC = kv["extended"]["listofdlc"].AsString();
 			PlayTestType = kv["extended"]["playtest_type"].AsUnsignedInteger();
-			MissingToken = productInfo.MissingToken;
-			MissingCommon = kv["common"] == KeyValue.Invalid;
+			Hidden = kv["common"] == KeyValue.Invalid;
 
 			// I only want the parents for playtests and demos (because they share a store page with their parents and so should inherit some of their parents properties)
 			if (Type == EAppType.Beta || Type == EAppType.Demo) {
@@ -64,12 +64,14 @@ namespace FreePackages {
 			}
 		}
 
-		internal void AddParent(SteamApps.PICSProductInfoCallback.PICSProductInfo? productInfo) {
-			if (productInfo == null) {
+		internal void AddParent(SteamApps.PICSProductInfoCallback.PICSProductInfo? productInfo) => AddParent(productInfo?.ID, productInfo?.KeyValues);
+		internal void AddParent(KeyValue? kv) => AddParent(kv?["appid"].AsUnsignedInteger(), kv);
+		internal void AddParent(uint? id, KeyValue? kv) {
+			if (id == null || kv == null) {
 				return;
 			}
 
-			Parent = new FilterableApp(productInfo);
+			Parent = new FilterableApp(id.Value, kv);
 		}
 
 		internal bool IsFree() {
@@ -90,7 +92,7 @@ namespace FreePackages {
 		}
 
 		internal bool IsAvailable() {
-			if (ReleaseState != "released") {
+			if (ReleaseState != "released" && State != "eStateAvailable") {
 				// App not released yet
 				// Note: There's another seemingly relevant field: kv["common"]["steam_release_date"] 
 				// steam_release_date is not checked because an app can be "released", still have a future release date, and still be redeemed
@@ -123,8 +125,9 @@ namespace FreePackages {
 			if (types.Count() == 0) {
 				return false;
 			}
+			
 
-			return types.Contains(Type.ToString());
+			return types.Contains(Type.ToString(), StringComparer.OrdinalIgnoreCase);
 		}
 
 		internal bool HasTag(IEnumerable<uint> tags) {
@@ -153,7 +156,10 @@ namespace FreePackages {
 				return true;
 			}
 
-			// Only use parent categories if the app has no categories defined. Ex: Tekken 8 playtest (https://steamdb.info/app/2385860/)
+			// Only use parent categories if the app has no categories of its own. Ex: Tekken 8 playtest (https://steamdb.info/app/2385860/).
+			// This may lead to unintended fitlering, but not doing it may also lead to unintended filtering.
+			// Don't use parent categories if the app has categories of its own defined, but the parent has more.
+			// It could be that the parent naturally has more categories, for example a demo without achievement and a parent with achievements.
 			if (Category.Count == 0 && Parent != null && Parent.Category.Any(category => categories.Contains(category))) {
 				return true;
 			}
@@ -183,14 +189,15 @@ namespace FreePackages {
 				return false;
 			}
 
-			if (SupportedLanguages.Any(language => languages.Contains(language))) {
+			if (SupportedLanguages.Any(language => languages.Contains(language, StringComparer.OrdinalIgnoreCase))) {
 				return true;
 			}
 
 			// Only check the parent's languages if the app has no languages of its own
-			// It could be that the parent app naturally has more language support, in demos for example (ex: Grounded Demo supports only English while the full release supports more languages https://steamdb.info/app/1316010/ , https://steamcommunity.com/app/962130/discussions/0/2440336502396337163/)
 			// Most playtests don't list supported languages, in which case we do want to use the parent's languages (ex: Tekken 8 playtest https://steamdb.info/app/2385860/)
-			if (SupportedLanguages.Count == 0 && Parent != null && Parent.SupportedLanguages.Any(language => languages.Contains(language))) {
+			// Don't check the parent's langauge if the app has languages of its own, but the parent has more.
+			// It could be that the parent app naturally has more language support, in demos for example (ex: Grounded Demo supports only English while the full release supports more languages https://steamdb.info/app/1316010/ , https://steamcommunity.com/app/962130/discussions/0/2440336502396337163/)
+			if (SupportedLanguages.Count == 0 && Parent != null && Parent.SupportedLanguages.Any(language => languages.Contains(language, StringComparer.OrdinalIgnoreCase))) {
 				return true;
 			}
 

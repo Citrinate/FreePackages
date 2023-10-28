@@ -1,0 +1,317 @@
+"appinfo"
+{
+	"appid"		"1316010"
+	"common"
+	{
+		"name"		"Grounded Demo"
+		"type"		"Demo"
+		"parent"		"962130"
+		"releasestate"		"released"
+		"clienticon"		"c32d52dd08904e453d46e3110aec9b5ed914b258"
+		"clienttga"		"c1d33aae31007248c34be89203c178d7c6996aab"
+		"icon"		"0e598fd0dc10e3d85e5f244c62d0c41e4c8d96cc"
+		"oslist"		"windows"
+		"osarch"		""
+		"osextended"		""
+		"controller_support"		"full"
+		"small_capsule"
+		{
+			"english"		"capsule_231x87.jpg"
+		}
+		"header_image"
+		{
+			"english"		"header.jpg"
+		}
+		"library_assets"
+		{
+			"library_capsule"		"en"
+			"library_hero"		"en"
+			"library_logo"		"en"
+			"logo_position"
+			{
+				"pinned_position"		"BottomLeft"
+				"width_pct"		"21.178529754959186"
+				"height_pct"		"49.99999999999998"
+			}
+		}
+		"store_asset_mtime"		"1592326549"
+		"associations"
+		{
+			"0"
+			{
+				"type"		"developer"
+				"name"		"Obsidian Entertainment"
+			}
+			"1"
+			{
+				"type"		"publisher"
+				"name"		"Xbox Game Studios"
+			}
+		}
+		"primary_genre"		"1"
+		"genres"
+		{
+			"0"		"1"
+			"1"		"25"
+		}
+		"category"
+		{
+			"category_2"		"1"
+			"category_28"		"1"
+		}
+		"supported_languages"
+		{
+			"english"
+			{
+				"supported"		"true"
+				"full_audio"		"true"
+				"subtitles"		"true"
+			}
+		}
+		"steam_release_date"		"1592326772"
+		"gameid"		"1316010"
+	}
+	"extended"
+	{
+		"demoofappid"		"962130"
+		"developer"		"Obsidian Entertainment"
+		"publisher"		"Xbox Game Studios"
+	}
+	"config"
+	{
+		"installdir"		"Grounded Demo"
+		"launch"
+		{
+			"0"
+			{
+				"executable"		"Grounded.exe"
+				"type"		"default"
+			}
+		}
+	}
+	"depots"
+	{
+		"228988"
+		{
+			"config"
+			{
+				"oslist"		"windows"
+			}
+			"depotfromapp"		"228980"
+			"sharedinstall"		"1"
+		}
+		"1316011"
+		{
+			"config"
+			{
+				"language"		"english"
+				"oslist"		"windows"
+			}
+			"manifests"
+			{
+				"public"
+				{
+					"gid"		"5972724179545370343"
+					"size"		"19"
+					"download"		"64"
+				}
+			}
+		}
+		"962131"
+		{
+			"config"
+			{
+				"oslist"		"windows"
+			}
+			"manifests"
+			{
+				"public"
+				{
+					"gid"		"6304564497855120806"
+					"size"		"10201903161"
+					"download"		"9708831952"
+				}
+			}
+			"encryptedmanifests"
+			{
+				"accessibility_dev"
+				{
+					"gid"		"B81E6F9BFE38DC2A71781CD690878249"
+					"size"		"CE1747D84359852D9061DF408196A8A0"
+					"download"		"9859FA6AF29591AA86E48623A2600C96"
+				}
+				"agerating_dev"
+				{
+					"gid"		"0959E3838032795AA7CCFBDAB9E76651"
+					"size"		"DC2BEAD669084DCD50DD29161387F44F"
+					"download"		"1DDE990A88685D6BF5E0EC267D2735F6"
+				}
+				"amd_dev"
+				{
+					"gid"		"6065C3C8A18D8B90BEF764850E4F1C9E"
+					"size"		"3BB533C3AF07017FA0D23BEC520707AF"
+					"download"		"072E27BCE25333B33B40F8EB9A7E8A0D"
+				}
+				"buddha"
+				{
+					"gid"		"3B111541FD0CC4A1ED7E3326B6A0F958"
+					"size"		"1D445FC1CB48B9C868207BF56A9F57BC"
+					"download"		"3D0207EFEB0AB5A368155F9A95A2911C"
+				}
+				"convention_demo"
+				{
+					"gid"		"B223208976E03034ED9EF4D45B2E4D96"
+					"size"		"805A7BE4736131C72CEB6109514D5EDB"
+					"download"		"4F92091CAEAF057381032036779BA82A"
+				}
+				"latest_dev"
+				{
+					"gid"		"F926EBE122C79227344E728F5A3A47CD"
+					"size"		"526700E45327E7D3BA56D38831418C65"
+					"download"		"A87039DB3BE2F986F4181F0178E9F653"
+				}
+				"latest_release"
+				{
+					"gid"		"CAF691566F292F2D8218B076AF169697"
+					"size"		"41FF84C48EE9ABD874E1CF6FFD661AA5"
+					"download"		"973E3493B6CC7523998667598E7457B6"
+				}
+				"live_debug"
+				{
+					"gid"		"271A9890324C10F105CDB7BAFEAF64EB"
+					"size"		"8B791BA860040C7A9CEC0ED38CC516CB"
+					"download"		"2170ABCF2F634AA5200D026FA51921F4"
+				}
+				"microsoft_research"
+				{
+					"gid"		"B86F01D2A2EA523B47134D3C66F995E8"
+					"size"		"6B946EA7F0CF6321C44618EF7A2D4A6C"
+					"download"		"4DB4F2CDE2D40E9138099DCFACAD5B3D"
+				}
+				"october2023_preview"
+				{
+					"gid"		"0C770047A0632E5C5C7FF4AFD873104A"
+					"size"		"1546F403858514FA65D4A596780981A1"
+					"download"		"185F6F2363AB396168CEF9A1BF6C47BE"
+				}
+				"shield_dev"
+				{
+					"gid"		"B24742670C5D6973AD7C50050DF76FC7"
+					"size"		"98AFC5F2D943D39599B60A818DD55CAF"
+					"download"		"35CC78E0F57E384F91FBB1C602529E7D"
+				}
+				"shipping_staging"
+				{
+					"gid"		"1989FF4C64B7C0282613897A1112E85E"
+					"size"		"26EFBF14E9FAC817E1AB372094FD4563"
+					"download"		"C6FEA2C49EB8CF61AB0AB982D49D6FAD"
+				}
+				"stable_dev"
+				{
+					"gid"		"77052E24E7351944DE1364FD06AED7FA"
+					"size"		"609D0632FAF22C9EC67085C914876908"
+					"download"		"A5DA0B7A4322EC3DD9E6281AF63D5723"
+				}
+				"stable_release"
+				{
+					"gid"		"45D6E36695DE4C32E73D7E361B883D71"
+					"size"		"A45153E08A07C3090DCFDCF800E100F0"
+					"download"		"CE197A98ED9F331658EC079A6A2887D5"
+				}
+			}
+			"depotfromapp"		"962130"
+		}
+		"branches"
+		{
+			"public"
+			{
+				"buildid"		"5201901"
+				"timeupdated"		"1592886820"
+			}
+			"accessibility_dev"
+			{
+				"buildid"		"12090331"
+				"pwdrequired"		"1"
+				"timeupdated"		"1694112002"
+			}
+			"agerating_dev"
+			{
+				"buildid"		"9237043"
+				"pwdrequired"		"1"
+				"timeupdated"		"1659467892"
+			}
+			"amd_dev"
+			{
+				"buildid"		"9534059"
+				"pwdrequired"		"1"
+				"timeupdated"		"1663610876"
+			}
+			"buddha"
+			{
+				"buildid"		"8423567"
+				"pwdrequired"		"1"
+				"timeupdated"		"1648142420"
+			}
+			"convention_demo"
+			{
+				"buildid"		"9086064"
+				"pwdrequired"		"1"
+				"timeupdated"		"1657576276"
+			}
+			"latest_dev"
+			{
+				"buildid"		"12553307"
+				"pwdrequired"		"1"
+				"timeupdated"		"1698408947"
+			}
+			"latest_release"
+			{
+				"buildid"		"12557541"
+				"pwdrequired"		"1"
+				"timeupdated"		"1698440258"
+			}
+			"live_debug"
+			{
+				"buildid"		"12240975"
+				"pwdrequired"		"1"
+				"timeupdated"		"1695414287"
+			}
+			"microsoft_research"
+			{
+				"buildid"		"12408365"
+				"pwdrequired"		"1"
+				"timeupdated"		"1696984594"
+			}
+			"october2023_preview"
+			{
+				"buildid"		"12534773"
+				"pwdrequired"		"1"
+				"timeupdated"		"1698258737"
+			}
+			"shield_dev"
+			{
+				"buildid"		"5296138"
+				"pwdrequired"		"1"
+				"timeupdated"		"1594936337"
+			}
+			"shipping_staging"
+			{
+				"buildid"		"12557659"
+				"pwdrequired"		"1"
+				"timeupdated"		"1698441348"
+			}
+			"stable_dev"
+			{
+				"buildid"		"12413496"
+				"pwdrequired"		"1"
+				"timeupdated"		"1697131606"
+			}
+			"stable_release"
+			{
+				"buildid"		"12534776"
+				"pwdrequired"		"1"
+				"timeupdated"		"1698258753"
+			}
+		}
+	}
+}

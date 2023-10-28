@@ -1,0 +1,244 @@
+"appinfo"
+{
+	"appid"		"547490"
+	"common"
+	{
+		"name"		"Shadow Tactics: Blades of the Shogun Demo"
+		"type"		"Demo"
+		"parent"		"418240"
+		"releasestate"		"released"
+		"clienticon"		"e64c61ad70b477c279e4e8fe8bb51192faad71e1"
+		"clienttga"		"03a420c172a66c87b49df082c5f3c875e680b33f"
+		"icon"		"7f933b7e1bcb83caf3bbcc9a143aee85b8a677af"
+		"oslist"		"windows,macos,linux"
+		"osarch"		""
+		"clienticns"		"e5c881742fd49c6e21fe36940891e6342863bdfe"
+		"linuxclienticon"		"7cdeabcd323ade1d904b4202b10f0870221aaefa"
+		"logo"		"0cccaad529953928ba8013f103798c6252fce977"
+		"logo_small"		"0cccaad529953928ba8013f103798c6252fce977_thumb"
+		"metacritic_name"		"Shadow Tactics: Blades of the Shogun Demo"
+		"small_capsule"
+		{
+			"english"		"capsule_231x87.jpg"
+		}
+		"header_image"
+		{
+			"english"		"header.jpg"
+		}
+		"library_assets"
+		{
+			"library_capsule"		"en"
+			"library_hero"		"en"
+			"library_logo"		"en"
+			"logo_position"
+			{
+				"pinned_position"		"BottomLeft"
+				"width_pct"		"87.80630105017502"
+				"height_pct"		"100"
+			}
+		}
+		"store_asset_mtime"		"1572358387"
+		"associations"
+		{
+			"0"
+			{
+				"type"		"developer"
+				"name"		"Mimimi Games"
+			}
+			"1"
+			{
+				"type"		"publisher"
+				"name"		"Daedalic Entertainment"
+			}
+		}
+		"primary_genre"		"2"
+		"genres"
+		{
+			"0"		"2"
+		}
+		"category"
+		{
+			"category_2"		"1"
+		}
+		"steam_release_date"		"1479740328"
+		"gameid"		"547490"
+		"review_score"		"7"
+		"review_percentage"		"92"
+	}
+	"extended"
+	{
+		"demoofappid"		"418240"
+		"developer"		"Mimimi Games"
+		"publisher"		"Daedalic Entertainment"
+	}
+	"config"
+	{
+		"installdir"		"Shadow Tactics Blades of the Shogun Demo"
+		"steamcontrollertemplateindex"		"4"
+		"launch"
+		{
+			"0"
+			{
+				"executable"		"Shadow Tactics.exe"
+				"type"		"default"
+				"config"
+				{
+					"oslist"		"windows"
+				}
+			}
+			"1"
+			{
+				"executable"		"Shadow Tactics.app"
+				"type"		"default"
+				"config"
+				{
+					"oslist"		"macos"
+				}
+			}
+			"2"
+			{
+				"executable"		"Shadow Tactics"
+				"type"		"default"
+				"config"
+				{
+					"oslist"		"linux"
+				}
+			}
+		}
+	}
+	"depots"
+	{
+		"baselanguages"		"english,german,french,italian,koreana,spanish,schinese,tchinese,russian,japanese,polish,turkish,brazilian"
+		"228983"
+		{
+			"config"
+			{
+				"oslist"		"windows"
+			}
+			"depotfromapp"		"228980"
+			"sharedinstall"		"1"
+		}
+		"228990"
+		{
+			"config"
+			{
+				"oslist"		"windows"
+			}
+			"depotfromapp"		"228980"
+			"sharedinstall"		"1"
+		}
+		"547491"
+		{
+			"config"
+			{
+				"oslist"		"windows"
+			}
+			"manifests"
+			{
+				"public"
+				{
+					"gid"		"415302662000161731"
+					"size"		"2483367579"
+					"download"		"1579750960"
+				}
+			}
+			"encryptedmanifests"
+			{
+				"testing"
+				{
+					"gid"		"809834B310C73E5E74A1A12DA2AEE4B5"
+					"size"		"967081FA4C13915F98A4624CBF18C481"
+					"download"		"74EBB6AC027E975CEE3E09AF4E3CBD4A"
+				}
+				"testing-gog"
+				{
+					"gid"		"D3EBDFCA02F3A3CFEB660861E666FDEC"
+					"size"		"718061EFE4F7E5B206EB11F0A05C5501"
+					"download"		"9F3E08158157FAF7577DB87E79A740C4"
+				}
+			}
+		}
+		"547492"
+		{
+			"config"
+			{
+				"oslist"		"macos"
+			}
+			"manifests"
+			{
+				"public"
+				{
+					"gid"		"719892081455757642"
+					"size"		"2554651174"
+					"download"		"1588009600"
+				}
+			}
+			"encryptedmanifests"
+			{
+				"testing"
+				{
+					"gid"		"D307C340834D0A5B52F096FA18CB593E"
+					"size"		"C90A096EB2ED5B954ADA67A128EC3F9D"
+					"download"		"9DC3585D4D8CB9D45D63325F31D628F8"
+				}
+				"testing-gog"
+				{
+					"gid"		"C727D2D9E1A847F4238C627E18CEFF45"
+					"size"		"AA4DBBF97D029AF8ADDAB199BEB4C0B8"
+					"download"		"52B51A433DA86A6FDF70A1547CB840F0"
+				}
+			}
+		}
+		"547493"
+		{
+			"config"
+			{
+				"oslist"		"linux"
+			}
+			"manifests"
+			{
+				"public"
+				{
+					"gid"		"6022208623055710377"
+					"size"		"2484007210"
+					"download"		"1581660880"
+				}
+			}
+			"encryptedmanifests"
+			{
+				"testing"
+				{
+					"gid"		"09DCD479A984D000DBDF5B2FA9B2DE12"
+					"size"		"06E94BB0E4ABAB812776B0351BC7A6D3"
+					"download"		"07BC093CF01B74B9AE0C9D4058CDDC5A"
+				}
+				"testing-gog"
+				{
+					"gid"		"F71FD30B9148FE0984A23E2E46749999"
+					"size"		"D7FB04A7E59E845DA9E31C8EAFA34D01"
+					"download"		"3F4C9635AC62E4A412686013F2E3624B"
+				}
+			}
+		}
+		"branches"
+		{
+			"public"
+			{
+				"buildid"		"2806562"
+				"timeupdated"		"1528285244"
+			}
+			"testing"
+			{
+				"buildid"		"2806562"
+				"pwdrequired"		"1"
+				"timeupdated"		"1527257577"
+			}
+			"testing-gog"
+			{
+				"buildid"		"2807619"
+				"pwdrequired"		"1"
+				"timeupdated"		"1527274558"
+			}
+		}
+	}
+}

@@ -1,16 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
-using ArchiSteamFarm.Localization;
-using ArchiSteamFarm.Steam;
 using SteamKit2;
 
 namespace FreePackages {
 	internal sealed class PackageFilter {
-		private readonly Bot Bot;
 		private readonly BotCache BotCache;
 		internal readonly List<FilterConfig> FilterConfigs;
 		private HashSet<uint>? OwnedAppIDs = null;
@@ -18,49 +13,30 @@ namespace FreePackages {
 		private HashSet<uint> ImportedIgnoredAppIDs = new();
 		private HashSet<uint> ImportedIgnoredTags = new();
 		private HashSet<uint> ImportedIgnoredContentDescriptors = new();
-		private string? Country = null;
-		private readonly Timer UserDataRefreshTimer;
+		internal string? Country = null;
 		internal bool Ready { get { return OwnedAppIDs != null && Country != null && UserData != null; }}
 
-		internal PackageFilter(Bot bot, BotCache botCache, List<FilterConfig> filterConfigs) {
-			Bot = bot;
+		internal PackageFilter(BotCache botCache, List<FilterConfig> filterConfigs) {
 			BotCache = botCache;
 			FilterConfigs = filterConfigs;
-			UserDataRefreshTimer = new Timer(async e => await UpdateUserData().ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
 		}
 
 		internal void UpdateAccountInfo(SteamUser.AccountInfoCallback callback) {
 			Country = callback.Country;
 		}
 		
-		internal async Task UpdateUserData() {
-			if (!Bot.IsConnectedAndLoggedOn) {
-				UserDataRefreshTimer.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(15));
-
-				return;
-			}
-
-			UserData? userData = await WebRequest.GetUserData(Bot).ConfigureAwait(false);
-			if (userData == null) {
-				UserDataRefreshTimer.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(15));
-				Bot.ArchiLogger.LogGenericError(String.Format(Strings.ErrorObjectIsNull, userData));
-
-				return;
-			}
-
-			ImportedIgnoredAppIDs = userData.IgnoredApps.Where(x => x.Value == 0).Select(x => x.Key).ToHashSet();
-			ImportedIgnoredTags = userData.ExcludedTags.Select(x => x.TagID).ToHashSet();
-			ImportedIgnoredContentDescriptors = userData.ExcludedContentDescriptorIDs;
+		internal void UpdateUserData(UserData userData) {
+			UserData = userData;
+			ImportedIgnoredAppIDs = UserData.IgnoredApps.Where(x => x.Value == 0).Select(x => x.Key).ToHashSet();
+			ImportedIgnoredTags = UserData.ExcludedTags.Select(x => x.TagID).ToHashSet();
+			ImportedIgnoredContentDescriptors = UserData.ExcludedContentDescriptorIDs;
+			OwnedAppIDs = UserData.OwnedApps;
 
 			// Get all of the apps that are in each of the owned packages, and merge with explicitly owned apps
-			var ownedAppIDs = userData.OwnedApps;
-			var ownedPackageIDs = userData.OwnedPackages;
-			ownedAppIDs.UnionWith(ASF.GlobalDatabase!.PackagesDataReadOnly.Where(x => ownedPackageIDs.Contains(x.Key) && x.Value.AppIDs != null).SelectMany(x => x.Value.AppIDs!).ToHashSet<uint>());
-
-			OwnedAppIDs = ownedAppIDs;
-			UserData = userData;
-
-			UserDataRefreshTimer.Change(TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(15));
+			if (ASF.GlobalDatabase != null) {
+				var ownedPackageIDs = UserData.OwnedPackages;
+				OwnedAppIDs.UnionWith(ASF.GlobalDatabase.PackagesDataReadOnly.Where(x => ownedPackageIDs.Contains(x.Key) && x.Value.AppIDs != null).SelectMany(x => x.Value.AppIDs!).ToHashSet<uint>());
+			}
 		}
 
 		internal bool IsRedeemableApp(FilterableApp app) {
@@ -88,13 +64,13 @@ namespace FreePackages {
 				return false;
 			}
 
-			if (app.RestrictedCountries != null && app.RestrictedCountries.Contains(Country.ToUpper())) {
+			if (app.RestrictedCountries != null && app.RestrictedCountries.Contains(Country, StringComparer.OrdinalIgnoreCase)) {
 				// App is restricted in this bot's country
 				return false;
 			}
 
 			if (app.PurchaseRestrictedCountries != null) {
-				bool isPurchaseRestricted = app.PurchaseRestrictedCountries.Contains(Country.ToUpper());
+				bool isPurchaseRestricted = app.PurchaseRestrictedCountries.Contains(Country, StringComparer.OrdinalIgnoreCase);
 				if (isPurchaseRestricted != app.AllowPurchaseFromRestrictedCountries) {
 					// App is purchase restricted in this bot's country
 					return false;
@@ -104,7 +80,7 @@ namespace FreePackages {
 			return true;
 		}
 
-		private bool IsAppWantedByFilter(FilterableApp app, FilterConfig filter) {
+		internal bool IsAppWantedByFilter(FilterableApp app, FilterConfig filter) {
 			if (filter.Types.Count > 0 && app.Type != EAppType.Beta && !app.HasType(filter.Types)) {
 				// Don't require user to specify they want playtests (Beta), this is already implied by the PlaytestMode filter
 				// App isn't a wanted type
@@ -135,7 +111,7 @@ namespace FreePackages {
 			return true;
 		}
 
-		private bool IsAppIgnoredByFilter(FilterableApp app, FilterConfig filter) {
+		internal bool IsAppIgnoredByFilter(FilterableApp app, FilterConfig filter) {
 			if (UserData == null) {
 				throw new InvalidOperationException(nameof(UserData));
 			}
@@ -214,7 +190,7 @@ namespace FreePackages {
 			}
 
 			if (package.RestrictedCountries != null) {
-				bool isRestricted = package.RestrictedCountries.Contains(Country.ToUpper());
+				bool isRestricted = package.RestrictedCountries.Contains(Country, StringComparer.OrdinalIgnoreCase);
 				if (isRestricted != package.OnlyAllowRestrictedCountries) {
 					// Package is restricted in this bot's country
 					return false;
@@ -222,7 +198,7 @@ namespace FreePackages {
 			}
 
 			if (package.PurchaseRestrictedCountries != null) {
-				bool isPurchaseRestricted = package.PurchaseRestrictedCountries.Contains(Country.ToUpper());
+				bool isPurchaseRestricted = package.PurchaseRestrictedCountries.Contains(Country, StringComparer.OrdinalIgnoreCase);
 				if (isPurchaseRestricted != package.AllowPurchaseFromRestrictedCountries) {
 					// Package is purchase restricted in this bot's country
 					return false;
@@ -237,7 +213,7 @@ namespace FreePackages {
 			return true;
 		}
 
-		private bool IsPackageWantedByFilter(FilterablePackage package, FilterConfig filter) {
+		internal bool IsPackageWantedByFilter(FilterablePackage package, FilterConfig filter) {
 			bool hasWantedApp = package.PackageContents.Any(app => IsAppWantedByFilter(app, filter));
 			if (!hasWantedApp) {
 				return false;
@@ -246,7 +222,7 @@ namespace FreePackages {
 			return true;
 		}
 
-		private bool IsPackageIgnoredByFilter(FilterablePackage package, FilterConfig filter) {
+		internal bool IsPackageIgnoredByFilter(FilterablePackage package, FilterConfig filter) {
 			if (filter.IgnoreFreeWeekends && package.FreeWeekend) {
 				return true;
 			}
@@ -272,7 +248,7 @@ namespace FreePackages {
 				return false;
 			}
 
-			if (app.Parent.MissingToken && app.Parent.MissingCommon) {
+			if (app.Parent.Hidden) {
 				// Hidden app
 				return false;
 			}
@@ -285,7 +261,7 @@ namespace FreePackages {
 			return true;
 		}
 
-		private bool IsPlaytestWantedByFilter(FilterableApp app, FilterConfig filter) {
+		internal bool IsPlaytestWantedByFilter(FilterableApp app, FilterConfig filter) {
 			if (app.Parent == null) {
 				return false;
 			}

@@ -1,0 +1,30 @@
+"1890"
+{
+	"packageid"		"1890"
+	"billingtype"		"1"
+	"licensetype"		"1"
+	"status"		"0"
+	"extended"
+	{
+		"allowpurchasefromrestrictedcountries"		"1"
+		"purchaserestrictedcountries"		"US CA MX PR"
+	}
+	"appids"
+	{
+		"0"		"33520"
+		"1"		"33530"
+	}
+	"depotids"
+	{
+		"0"		"33521"
+		"1"		"33522"
+		"2"		"33523"
+		"3"		"33524"
+		"4"		"33531"
+		"5"		"33532"
+		"6"		"33533"
+	}
+	"appitems"
+	{
+	}
+}

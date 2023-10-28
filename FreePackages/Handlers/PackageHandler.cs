@@ -17,6 +17,7 @@ namespace FreePackages {
 		private readonly PackageQueue PackageQueue;
 		internal static ConcurrentDictionary<string, PackageHandler> Handlers = new();
 
+		private readonly Timer UserDataRefreshTimer;
 		private static SemaphoreSlim AddHandlerSemaphore = new SemaphoreSlim(1, 1);
 		private static SemaphoreSlim ProcessChangesSemaphore = new SemaphoreSlim(1, 1);
 		private static SemaphoreSlim ProductInfoSemaphore = new SemaphoreSlim(1, 1);
@@ -28,12 +29,14 @@ namespace FreePackages {
 		private PackageHandler(Bot bot, BotCache botCache, List<FilterConfig> filterConfigs, uint? packageLimit) {
 			Bot = bot;
 			BotCache = botCache;
-			PackageFilter = new PackageFilter(bot, botCache, filterConfigs);
+			PackageFilter = new PackageFilter(botCache, filterConfigs);
 			PackageQueue = new PackageQueue(bot, botCache, packageLimit);
+			UserDataRefreshTimer = new Timer(async e => await FetchUserData().ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
 		}
 
 		public void Dispose() {
 			PackageQueue.Dispose();
+			UserDataRefreshTimer.Dispose();
 		}
 
 		internal static async Task AddHandler(Bot bot, List<FilterConfig> filterConfigs, uint? packageLimit) {
@@ -88,7 +91,7 @@ namespace FreePackages {
 				return;
 			}
 			
-			await Handlers[bot.BotName].PackageFilter.UpdateUserData().ConfigureAwait(false);
+			await Handlers[bot.BotName].FetchUserData().ConfigureAwait(false);
 		}
 
 		internal static void OnPICSChanges(IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> appChanges, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> packageChanges) {
@@ -433,6 +436,26 @@ namespace FreePackages {
 					}
 				);
 			}
+		}
+
+		private async Task FetchUserData() {
+			if (!Bot.IsConnectedAndLoggedOn) {
+				UserDataRefreshTimer.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(15));
+
+				return;
+			}
+
+			UserData? userData = await WebRequest.GetUserData(Bot).ConfigureAwait(false);
+			if (userData == null) {
+				UserDataRefreshTimer.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(15));
+				Bot.ArchiLogger.LogGenericError(String.Format(Strings.ErrorObjectIsNull, userData));
+
+				return;
+			}
+
+			PackageFilter.UpdateUserData(userData);
+
+			UserDataRefreshTimer.Change(TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(15));
 		}
 
 		private void HandleFreeApp(FilterableApp app) {

@@ -1,0 +1,313 @@
+"appinfo"
+{
+	"appid"		"410"
+	"common"
+	{
+		"clienticon"		"c7cb09b9f0fbb9589b4bd5a8217c8333c4d8204e"
+		"clienttga"		"0da38a1351a4d7f17b4c53c9d9bd09ba59ed463b"
+		"icon"		"cfa928ab4119dd137e50d728e8fe703e4e970aff"
+		"clienticns"		"89b04b46c85279c6da7a543408644031317e49b3"
+		"linuxclienticon"		"9fcff385181db33a52955cb704f1409fc82adf8f"
+		"name"		"Portal: First Slice"
+		"logo"		"d8809408d0cb0edadcdbda25cf22f1955f29a853"
+		"logo_small"		"eb0ab1b98e35090f26435a36696234d31e177f61"
+		"type"		"Demo"
+		"parent"		"400"
+		"oslist"		"macos,windows,linux"
+		"controller_support"		"partial"
+		"small_capsule"
+		{
+			"english"		"capsule_231x87.jpg"
+		}
+		"header_image"
+		{
+			"english"		"header.jpg"
+		}
+		"associations"
+		{
+			"0"
+			{
+				"type"		"developer"
+				"name"		"Valve"
+			}
+			"1"
+			{
+				"type"		"publisher"
+				"name"		"Valve"
+			}
+		}
+		"primary_genre"		"1"
+		"genres"
+		{
+			"0"		"1"
+		}
+		"category"
+		{
+			"category_2"		"1"
+			"category_10"		"1"
+			"category_12"		"1"
+			"category_13"		"1"
+			"category_18"		"1"
+		}
+		"supported_languages"
+		{
+			"english"
+			{
+				"supported"		"true"
+				"full_audio"		"true"
+			}
+			"french"
+			{
+				"supported"		"true"
+				"full_audio"		"true"
+			}
+			"german"
+			{
+				"supported"		"true"
+				"full_audio"		"true"
+			}
+			"russian"
+			{
+				"supported"		"true"
+				"full_audio"		"true"
+			}
+			"danish"
+			{
+				"supported"		"true"
+			}
+			"dutch"
+			{
+				"supported"		"true"
+			}
+			"finnish"
+			{
+				"supported"		"true"
+			}
+			"italian"
+			{
+				"supported"		"true"
+			}
+			"japanese"
+			{
+				"supported"		"true"
+			}
+			"korean"
+			{
+				"supported"		"true"
+			}
+			"norwegian"
+			{
+				"supported"		"true"
+			}
+			"polish"
+			{
+				"supported"		"true"
+			}
+			"portuguese"
+			{
+				"supported"		"true"
+			}
+			"schinese"
+			{
+				"supported"		"true"
+			}
+			"spanish"
+			{
+				"supported"		"true"
+			}
+			"swedish"
+			{
+				"supported"		"true"
+			}
+			"tchinese"
+			{
+				"supported"		"true"
+				"full_audio"		"true"
+			}
+		}
+		"original_release_date"		"1210230000"
+		"steam_release_date"		"1210269600"
+		"gameid"		"410"
+		"review_score"		"8"
+		"review_percentage"		"96"
+	}
+	"extended"
+	{
+		"demoofappid"		"400"
+		"dependantonapp"		"400"
+		"developer"		"Valve"
+		"gamedir"		"portal"
+		"homepage"		"http://www.half-life2.com"
+		"icon"		"steam/games/icon_portal"
+		"icon2"		"steam/games/icon_portal_dull"
+		"languages"		"english,french,german,russian"
+		"noservers"		"0"
+		"order"		"1"
+		"sourcegame"		"1"
+		"state"		"eStateAvailable"
+		"validoslist"		"macos,windows"
+		"developer_url"		"http://www.valvesoftware.com"
+		"publisher"		"Valve"
+	}
+	"config"
+	{
+		"launch"
+		{
+			"0"
+			{
+				"executable"		"hl2.exe"
+				"arguments"		"-game portal -steam"
+				"config"
+				{
+					"oslist"		"windows"
+				}
+			}
+			"1"
+			{
+				"executable"		"hl2_osx"
+				"arguments"		"-game portal -steam"
+				"config"
+				{
+					"oslist"		"macos"
+				}
+			}
+			"2"
+			{
+				"executable"		"hl2.sh"
+				"arguments"		"-game portal -steam"
+				"config"
+				{
+					"oslist"		"linux"
+				}
+			}
+		}
+		"contenttype"		"3"
+		"installdir"		"Portal"
+		"convertgcfs"		"1"
+	}
+	"depots"
+	{
+		"402"
+		{
+			"config"
+			{
+				"oslist"		"windows"
+				"language"		""
+			}
+			"systemdefined"		"1"
+			"depotfromapp"		"400"
+			"sharedinstall"		"2"
+		}
+		"403"
+		{
+			"config"
+			{
+				"oslist"		"macos"
+				"language"		""
+			}
+			"systemdefined"		"1"
+			"depotfromapp"		"400"
+			"sharedinstall"		"2"
+		}
+		"404"
+		{
+			"config"
+			{
+				"oslist"		"linux"
+				"language"		""
+			}
+			"systemdefined"		"1"
+			"depotfromapp"		"400"
+			"sharedinstall"		"2"
+		}
+		"405"
+		{
+			"config"
+			{
+				"language"		"russian"
+			}
+			"depotfromapp"		"400"
+			"sharedinstall"		"2"
+		}
+		"406"
+		{
+			"config"
+			{
+				"language"		"spanish"
+			}
+			"depotfromapp"		"400"
+			"sharedinstall"		"2"
+		}
+		"407"
+		{
+			"config"
+			{
+				"language"		"french"
+			}
+			"depotfromapp"		"400"
+			"sharedinstall"		"2"
+		}
+		"408"
+		{
+			"config"
+			{
+				"language"		"german"
+			}
+			"depotfromapp"		"400"
+			"sharedinstall"		"2"
+		}
+		"409"
+		{
+			"config"
+			{
+				"language"		""
+			}
+			"depotfromapp"		"400"
+			"sharedinstall"		"2"
+		}
+		"410"
+		{
+			"config"
+			{
+				"language"		""
+			}
+			"depotfromapp"		"400"
+			"sharedinstall"		"2"
+		}
+		"overridescddb"		"1"
+		"baselanguages"		"english,german,french,italian,koreana,spanish,schinese,tchinese,russian,thai,japanese,portuguese,polish,danish,dutch,finnish,norwegian,swedish,hungarian,czech,romanian,turkish"
+		"branches"
+		{
+		}
+	}
+	"ufs"
+	{
+		"quota"		"10485760"
+		"maxnumfiles"		"100"
+		"appidredirect"		"400"
+		"savefiles"
+		{
+			"1"
+			{
+				"root"		"gameinstall"
+				"path"		"portal/save"
+				"pattern"		"*.sav"
+				"siblings"		"tga"
+				"platforms"
+				{
+					"1"		"all"
+				}
+			}
+			"2"
+			{
+				"root"		"gameinstall"
+				"path"		"portal/save"
+				"pattern"		"bonus_maps_data.bmd"
+				"platforms"
+				{
+					"1"		"all"
+				}
+			}
+		}
+	}
+}

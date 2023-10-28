@@ -1,0 +1,27 @@
+"178"
+{
+	"packageid"		"178"
+	"billingtype"		"1"
+	"licensetype"		"1"
+	"status"		"0"
+	"extended"
+	{
+		"allowpurchasefromrestrictedcountries"		"1"
+		"lowviolenceinrestrictedcountries"		"1"
+		"onlyallowrestrictedcountries"		"1"
+		"purchaserestrictedcountries"		"DE"
+		"restrictedcountries"		"DE"
+	}
+	"appids"
+	{
+		"0"		"2620"
+	}
+	"depotids"
+	{
+		"0"		"2621"
+		"1"		"2656"
+	}
+	"appitems"
+	{
+	}
+}

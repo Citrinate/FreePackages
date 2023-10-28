@@ -34,7 +34,7 @@ namespace FreePackages {
 		internal ConcurrentHashSet<uint> WaitlistedPlaytests = new();
 
 		[JsonConstructor]
-		private BotCache() { }
+		internal BotCache() { }
 
 		internal BotCache(string filePath) : this() {
 			if (string.IsNullOrEmpty(filePath)) {

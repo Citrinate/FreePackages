@@ -23,11 +23,12 @@ namespace FreePackages {
 		internal List<string>? PurchaseRestrictedCountries;
 		internal bool AllowPurchaseFromRestrictedCountries;
 		internal bool FreeWeekend;
-
-		internal FilterablePackage(SteamApps.PICSProductInfoCallback.PICSProductInfo productInfo, bool isNew) {
+		
+		internal FilterablePackage(SteamApps.PICSProductInfoCallback.PICSProductInfo productInfo, bool isNew = false) : this(productInfo.ID, productInfo.KeyValues, isNew) {}
+		internal FilterablePackage(KeyValue kv, bool isNew = false) : this(Convert.ToUInt32(kv.Name), kv, isNew) {}
+		internal FilterablePackage(uint id, KeyValue kv, bool isNew) {
 			IsNew = isNew;
-			ID = productInfo.ID;
-			KeyValue kv = productInfo.KeyValues;
+			ID = id;
 			PackageContentIDs = kv["appids"].Children.Select(x => x.AsUnsignedInteger()).ToHashSet();
 			BillingType = (EBillingType) kv["billingtype"].AsInteger();
 			Status = (EPackageStatus) kv["status"].AsInteger();
@@ -43,8 +44,10 @@ namespace FreePackages {
 			FreeWeekend = kv["extended"]["freeweekend"].AsBoolean();
 		}
 
-		internal void AddPackageContents(IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> productInfos) {
-			PackageContents = productInfos.Select(productInfo => new FilterableApp(productInfo)).ToList();
+		internal void AddPackageContents(IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> productInfos) => AddPackageContents(productInfos.Select(productInfo => (productInfo.ID, productInfo.KeyValues)));
+		internal void AddPackageContents(IEnumerable<KeyValue> kvs) => AddPackageContents(kvs.Select(kv => (kv["appid"].AsUnsignedInteger(), kv)));
+		internal void AddPackageContents(IEnumerable<(uint id, KeyValue kv)> packageContents) {
+			PackageContents = packageContents.Select(packageContent => new FilterableApp(packageContent.id, packageContent.kv)).ToList();
 
 			// Don't care about the parents of package contents on new packages (we scan new packages for free dlc and nothing else)
 			if (!IsNew) {
@@ -52,10 +55,17 @@ namespace FreePackages {
 			}
 		}
 
-		internal void AddPackageContentParents(IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> productInfos) {
+		internal void AddPackageContentParents(IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> productInfos) => AddPackageContentParents(productInfos.Select(productInfo => (productInfo.ID, productInfo.KeyValues)));
+		internal void AddPackageContentParents(IEnumerable<KeyValue> kvs) => AddPackageContentParents(kvs.Select(kv => (kv["appid"].AsUnsignedInteger(), kv)));
+		internal void AddPackageContentParents(IEnumerable<(uint id, KeyValue kv)> parents) {
 			PackageContents.ForEach(app => {
 				if (app.ParentID != null) {
-					app.AddParent(productInfos.FirstOrDefault(parent => parent.ID == app.ParentID));
+					try {
+						var parent = parents.First(parent => parent.id == app.ParentID);
+						app.AddParent(parent.id, parent.kv);
+					} catch (Exception) {
+						// Ignore missing parent exception
+					}
 				}
 			});
 		}

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using Newtonsoft.Json;
 
 namespace FreePackages {
@@ -9,28 +8,28 @@ namespace FreePackages {
 		internal bool ImportStoreFilters = false;
 
 		[JsonProperty(Required = Required.Default)]
-		internal ImmutableHashSet<string> Types = ImmutableHashSet<string>.Empty;
+		internal HashSet<string> Types = new();
 
 		[JsonProperty(Required = Required.Default)]
-		internal ImmutableHashSet<uint> Categories = ImmutableHashSet<uint>.Empty;
+		internal HashSet<uint> Categories = new();
 
 		[JsonProperty(Required = Required.Default)]
-		internal ImmutableHashSet<uint> Tags = ImmutableHashSet<uint>.Empty;
+		internal HashSet<uint> Tags = new();
 
 		[JsonProperty(Required = Required.Default)]
-		internal ImmutableHashSet<string> IgnoredTypes = ImmutableHashSet<string>.Empty;
+		internal HashSet<string> IgnoredTypes = new();
 
 		[JsonProperty(Required = Required.Default)]
-		internal ImmutableHashSet<uint> IgnoredTags = ImmutableHashSet<uint>.Empty;
+		internal HashSet<uint> IgnoredTags = new();
 
 		[JsonProperty(Required = Required.Default)]
-		internal ImmutableHashSet<uint> IgnoredCategories = ImmutableHashSet<uint>.Empty;
+		internal HashSet<uint> IgnoredCategories = new();
 
 		[JsonProperty(Required = Required.Default)]
-		internal ImmutableHashSet<uint> IgnoredContentDescriptors = ImmutableHashSet<uint>.Empty;
+		internal HashSet<uint> IgnoredContentDescriptors = new();
 
 		[JsonProperty(Required = Required.Default)]
-		internal ImmutableHashSet<uint> IgnoredAppIDs = ImmutableHashSet<uint>.Empty;
+		internal HashSet<uint> IgnoredAppIDs = new();
 
 		[JsonProperty(Required = Required.Default)]
 		internal bool IgnoreFreeWeekends = false;
@@ -39,7 +38,7 @@ namespace FreePackages {
 		internal uint MinReviewScore = 0;
 
 		[JsonProperty(Required = Required.Default)]
-		internal ImmutableHashSet<string> Languages = ImmutableHashSet<string>.Empty;
+		internal HashSet<string> Languages = new();
 
 		[JsonProperty(Required = Required.Default)]
 		internal EPlaytestMode PlaytestMode = EPlaytestMode.None;

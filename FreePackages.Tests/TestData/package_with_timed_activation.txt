@@ -1,0 +1,26 @@
+"20737"
+{
+	"packageid"		"20737"
+	"billingtype"		"12"
+	"licensetype"		"1"
+	"status"		"0"
+	"extended"
+	{
+		"deactivated_demo"		"1"
+		"dontgrantifappidowned"		"11140"
+		"expirytime"		"1592345200"
+		"freeweekend"		"1"
+		"starttime"		"1592325000"
+	}
+	"appids"
+	{
+		"0"		"7290"
+	}
+	"depotids"
+	{
+		"0"		"7291"
+	}
+	"appitems"
+	{
+	}
+}
