@@ -13,7 +13,7 @@ This plugin works by listening for [changes](https://steamdb.info/faq/#changenum
 - (Re)start ASF, you should get a message indicating that the plugin loaded successfully.
 
 > **Note**
-> This plugin is only tested to work with ASF-generic.  It may or may not work with other ASF variants.
+> This plugin is only tested to work with ASF-generic.  It may or may not work with other ASF variants, but feel free to report any issues you encounter.
 
 ## Usage
 
