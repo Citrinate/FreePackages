@@ -101,6 +101,8 @@ namespace FreePackages {
 				return;
 			}
 			
+			// Note: Not everything counts against the activation limit, ex: All playtests?, Some sub errors (dunno which), Maybe some app errors
+			// Might be worth revisiting later, but for now I feel comfortable just assuming everything counts
 			BotCache.AddActivation(DateTime.Now);
 
 			if (result == EResult.OK || result == EResult.Invalid) {
@@ -129,10 +131,9 @@ namespace FreePackages {
 				return await ClaimFreeSub(package.ID).ConfigureAwait(false);
 			}
 
-			// TODO
-			// if (package.Type == EPackageType.Demo) {
-			// 	return await ClaimFreeDemo(package.ID).ConfigureAwait(false);
-			// }
+			if (package.Type == EPackageType.Playtest) {
+				return await ClaimPlaytest(package.ID).ConfigureAwait(false);
+			}
 
 			return EResult.Invalid;
 		}
@@ -181,7 +182,7 @@ namespace FreePackages {
 				
 				if (hasPackages) {
 					// Replace the app with the appropriate package and when we try to activate that we'll find out for sure if we're rate limited or not
-					// Note: This is mostly wishful thinking. /api/appdetails rarely shows the free packages for free apps
+					// Note: This is mostly wishful thinking. /api/appdetails rarely shows the free packages for free apps (one example where it does: https://steamdb.info/app/2119270/)
 					Bot.ArchiLogger.LogGenericInfo(string.Format("ID: app/{0} | Status: Replaced with {1}", appID, String.Join(", ", appDetails!.Data!.Packages.Select(x => $"sub/{x}"))));
 					BotCache.AddChanges(packageIDs: appDetails.Data.Packages);
 
@@ -229,6 +230,38 @@ namespace FreePackages {
 			if (result != EResult.OK) {
 				return EResult.Invalid;
 			}
+
+			return EResult.OK;
+		}
+
+		private async Task<EResult> ClaimPlaytest(uint appID) {
+			PlaytestAccessResponse? response = await WebRequest.RequestPlaytestAccess(Bot, appID).ConfigureAwait(false);
+
+			if (response == null) {
+				// Playtest does not exist currently
+				Bot.ArchiLogger.LogGenericInfo(string.Format("ID: playtest/{0} | Status: Invalid", appID));
+
+				return EResult.Invalid;
+			}
+
+			if (!response.Success) {
+				// Not sure if/when this happens
+				Bot.ArchiLogger.LogGenericInfo(string.Format("ID: playtest/{0} | Status: Failed", appID));
+
+				return EResult.Invalid;
+			}
+
+			if (response.Granted == null) {
+				// Playtest has limited slots, account was added to the waitlist
+				Bot.ArchiLogger.LogGenericInfo(string.Format("ID: playtest/{0} | Status: Waitlisted", appID));
+				// This won't show up in our owned apps until we're accepted, save it so we don't retry
+				BotCache.AddWaitlistedPlaytest(appID);
+
+				return EResult.OK;
+			}
+
+			// Access to playtest granted
+			Bot.ArchiLogger.LogGenericInfo(string.Format("ID: playtest/{0} | Status: {1}", appID, EResult.OK));
 
 			return EResult.OK;
 		}

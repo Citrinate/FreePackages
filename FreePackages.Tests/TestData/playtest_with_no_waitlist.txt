@@ -1,0 +1,140 @@
+"appinfo"
+{
+	"appid"		"2437370"
+	"common"
+	{
+		"name"		"No Love Lost Playtest"
+		"type"		"Beta"
+		"parent"		"1873120"
+		"releasestate"		"released"
+		"oslist"		"windows"
+		"osarch"		"64"
+		"osextended"		""
+		"clienttga"		"46bea63ee70112935ebb604fcb71ea2353814a81"
+		"clienticon"		"061359ecc7b8fa6ee86f2a7d7bbcde19c8bff1cc"
+		"icon"		"421e0401264705791ba386b4a20f67e64a444a8c"
+		"small_capsule"
+		{
+			"english"		"capsule_231x87.jpg"
+		}
+		"header_image"
+		{
+			"english"		"header.jpg"
+		}
+		"library_assets"
+		{
+			"library_capsule"		"en"
+			"library_hero"		"en"
+			"library_logo"		"en"
+			"logo_position"
+			{
+				"pinned_position"		"BottomLeft"
+				"width_pct"		"50"
+				"height_pct"		"50"
+			}
+		}
+		"store_asset_mtime"		"1696362063"
+		"associations"
+		{
+		}
+		"primary_genre"		"0"
+		"category"
+		{
+		}
+		"steam_release_date"		"1698422345"
+		"community_hub_visible"		"1"
+		"gameid"		"2437370"
+		"exfgls"		"1"
+	}
+	"extended"
+	{
+		"playtest_type"		"1"
+	}
+	"config"
+	{
+		"installdir"		"No Love Lost Playtest"
+		"steamcontrollertemplateindex"		"4"
+		"steamdecktouchscreen"		"1"
+		"launch"
+		{
+			"0"
+			{
+				"executable"		"NoLoveLost.exe"
+				"type"		"default"
+				"config"
+				{
+					"oslist"		"windows"
+					"osarch"		"64"
+				}
+			}
+		}
+	}
+	"depots"
+	{
+		"228989"
+		{
+			"config"
+			{
+				"oslist"		"windows"
+			}
+			"depotfromapp"		"228980"
+			"sharedinstall"		"1"
+		}
+		"228990"
+		{
+			"config"
+			{
+				"oslist"		"windows"
+			}
+			"depotfromapp"		"228980"
+			"sharedinstall"		"1"
+		}
+		"2437371"
+		{
+			"manifests"
+			{
+				"public"
+				{
+					"gid"		"3472142450257562712"
+					"size"		"21118484092"
+					"download"		"7428149584"
+				}
+			}
+			"encryptedmanifests"
+			{
+				"nightly"
+				{
+					"gid"		"7BA2C1BEF7C7CC95FC921B4F8C362EF2"
+					"size"		"439BA1C73A1B25BB59D2C7D3AECAFD69"
+					"download"		"0A21FBF400C9655D1659FD4996E24C74"
+				}
+				"staging_pbe"
+				{
+					"gid"		"7533E4AFB48D23B23EBF3D450230568C"
+					"size"		"7D608F5F2459F42FC88B0901DAC9CAC0"
+					"download"		"1BC6D2C19289F77D9999B561A73C9BEF"
+				}
+			}
+		}
+		"branches"
+		{
+			"public"
+			{
+				"buildid"		"12535699"
+				"timeupdated"		"1698341167"
+			}
+			"nightly"
+			{
+				"buildid"		"12305578"
+				"pwdrequired"		"1"
+				"timeupdated"		"1695896696"
+			}
+			"staging_pbe"
+			{
+				"buildid"		"12535699"
+				"pwdrequired"		"1"
+				"timeupdated"		"1698266495"
+			}
+		}
+	}
+}

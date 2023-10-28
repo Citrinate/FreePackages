@@ -1,0 +1,5 @@
+"appinfo"
+{
+	"appid"		"2423350"
+	"public_only"		"1"
+}

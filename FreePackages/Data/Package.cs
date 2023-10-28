@@ -15,10 +15,9 @@ namespace FreePackages {
 		public Package(EPackageType type, uint id, ulong? startTime = null) {
 			Type = type;
 			ID = id;
-			StartTime = startTime;
 
-			if (StartTime == 0) {
-				StartTime = null;
+			if (startTime != null && startTime > 0) {
+				StartTime = startTime;
 			}
 		}
 	}
@@ -26,7 +25,7 @@ namespace FreePackages {
 	public enum EPackageType {
 		App = 0,
 		Sub = 1,
-		// Playtest = 2
+		Playtest = 2
 	}
 
 	public class PackageComparer : IEqualityComparer<Package> {

@@ -1,0 +1,333 @@
+"appinfo"
+{
+	"appid"		"2385860"
+	"common"
+	{
+		"name"		"TEKKEN 8 Playtest"
+		"type"		"Beta"
+		"parent"		"1778820"
+		"oslist"		"windows"
+		"osarch"		"64"
+		"osextended"		""
+		"clienticon"		"3ffacb2d80bbe1d77f006ce9244db1fc75ee7759"
+		"clienttga"		"6daaaf1942d064765301ce7a10ec5efe8947a4af"
+		"icon"		"9b40fccb40192f448b86225c54a2572f0ffb1937"
+		"releasestate"		"released"
+		"eulas"
+		{
+			"0"
+			{
+				"id"		"2385860_eula_0"
+				"name"		"TEKKEN 8 Playtest EULA"
+				"url"		"https://store.steampowered.com//eula/2385860_eula_0"
+				"version"		"2"
+			}
+		}
+		"small_capsule"
+		{
+			"english"		"capsule_231x87.jpg"
+		}
+		"header_image"
+		{
+			"english"		"header.jpg"
+		}
+		"library_assets"
+		{
+			"library_capsule"		"en"
+			"library_hero"		"en"
+			"library_logo"		"en"
+			"logo_position"
+			{
+				"pinned_position"		"CenterCenter"
+				"width_pct"		"43.837763147239684"
+				"height_pct"		"49.305555555555515"
+			}
+		}
+		"store_asset_mtime"		"1697420529"
+		"associations"
+		{
+		}
+		"primary_genre"		"0"
+		"category"
+		{
+		}
+		"steam_release_date"		"1685517669"
+		"community_hub_visible"		"1"
+		"gameid"		"2385860"
+		"exfgls"		"1"
+		"review_score"		"8"
+		"review_percentage"		"83"
+	}
+	"extended"
+	{
+		"betaforappid"		"1778820"
+	}
+	"config"
+	{
+		"installdir"		"TEKKEN 8 Playtest"
+		"launch"
+		{
+			"0"
+			{
+				"executable"		"Polaris.exe"
+				"config"
+				{
+					"oslist"		"windows"
+					"osarch"		"64"
+				}
+			}
+		}
+		"steamcontrollertouchtemplateindex"		"1"
+		"steamcontrollertouchconfigdetails"
+		{
+			"1912244110"
+			{
+				"controller_type"		"controller_mobile_touch"
+				"enabled_branches"		"default,d-deb,d-deb2,d-rel,d-rel2,d-tmp,d-tmp2,q-deb,q-deb2,q-rel,q-rel2"
+				"use_action_block"		"false"
+			}
+		}
+		"steamdecktouchscreen"		"1"
+		"steamcontrollertemplateindex"		"4"
+	}
+	"depots"
+	{
+		"228989"
+		{
+			"config"
+			{
+				"oslist"		"windows"
+			}
+			"depotfromapp"		"228980"
+			"sharedinstall"		"1"
+		}
+		"228990"
+		{
+			"config"
+			{
+				"oslist"		"windows"
+			}
+			"depotfromapp"		"228980"
+			"sharedinstall"		"1"
+		}
+		"2385861"
+		{
+			"manifests"
+			{
+				"public"
+				{
+					"gid"		"1680546738561089678"
+					"size"		"0"
+					"download"		"0"
+				}
+			}
+			"encryptedmanifests"
+			{
+				"d-deb"
+				{
+					"gid"		"5293C4D86158F43ACA47B50189EFFF9C"
+					"size"		"F948573243882F92BD32A0E128CA1A6F"
+					"download"		"557D6C458BEA643D98313F0E584F4B49"
+				}
+				"d-deb2"
+				{
+					"gid"		"BA396F2870DC051A2D79B9DDEBD2B6E9"
+					"size"		"F93B5403122D6A679415B90493EB1F14"
+					"download"		"242D5D5DCCB5C92710DDD989DDBD52F9"
+				}
+				"d-rel"
+				{
+					"gid"		"431AA2B7387EE52C41AE55DCAE722B32"
+					"size"		"F4B8EBB9A5E184A4F5DF0F63134749C5"
+					"download"		"4D794B84CD869F67CE6596204205C771"
+				}
+				"d-rel2"
+				{
+					"gid"		"67D6FDDB5CC3F49FCE63CB447AE60177"
+					"size"		"0C699001D38ACA240495DE3A91112F73"
+					"download"		"533A2D3C694E11F2075F20662EC94C82"
+				}
+				"d-tmp"
+				{
+					"gid"		"311D0161B6B893D165ADE86225DB9595"
+					"size"		"4AB05FAE65F18F39D07B5892A1F449CD"
+					"download"		"1EE0403B71DC28A817FF65DFC245DB88"
+				}
+				"d-tmp2"
+				{
+					"gid"		"E2B253E892F6ACF4A8DBCB28707737C4"
+					"size"		"36B5C25450C53923B61B5A6A3AE88D8D"
+					"download"		"B09C69AB89F9994CA3684AFAAA230526"
+				}
+				"q-deb"
+				{
+					"gid"		"5C67AC41EDC2F2030F93805C57A801A3"
+					"size"		"C67CFC4F80CE5298AA92413953BE7DB5"
+					"download"		"3EC8D548D43B01C1E2643BD4CEAF0725"
+				}
+				"q-deb2"
+				{
+					"gid"		"DE35183929D5A591D42988730D628C22"
+					"size"		"8FBB751F27B996049ACA3EDCE5BC3AA1"
+					"download"		"CA4D38216A24AFB92F11833E0CED80EA"
+				}
+				"q-rel"
+				{
+					"gid"		"25E0D4E208AAD44D26B9EA7952B584BF"
+					"size"		"7501F0A976D0E9736F258390A13131F0"
+					"download"		"8C3AC9ECA77870F959E458B46EBA160F"
+				}
+				"q-rel2"
+				{
+					"gid"		"DEF6338F75DD7B592388E9582BDA18DE"
+					"size"		"D5BC9CE0C6F3DA93691A7D29CA5AA399"
+					"download"		"D7E86224C8050A8F88414CC63EEA2CC7"
+				}
+			}
+		}
+		"2385862"
+		{
+			"manifests"
+			{
+				"public"
+				{
+					"gid"		"5161036145281376009"
+					"size"		"1568748443"
+					"download"		"276270208"
+				}
+			}
+			"encryptedmanifests"
+			{
+				"d-deb"
+				{
+					"gid"		"D7BCA3A023EF35476BC6B5C6593A1CD4"
+					"size"		"D96E7CA6EB6A66005902173242BB80AB"
+					"download"		"23E85FFDAC527932D603081A6B9881D7"
+				}
+				"d-deb2"
+				{
+					"gid"		"49866A75B97ECFE8DC36CFD53E1D2A84"
+					"size"		"D692A49582DBA9B3DDFAACB788B83DB5"
+					"download"		"A02F2F1E69676DEA19E77A871DB77EF1"
+				}
+				"d-rel"
+				{
+					"gid"		"C60D02A74D691BCA20A58B0CFABB304D"
+					"size"		"07CB1EC9513259331E440CC8E8D74E33"
+					"download"		"43FDF2079A28D532208872A3ABCE66BC"
+				}
+				"d-rel2"
+				{
+					"gid"		"15A89B5EA132A99CE145AFD26AED5EAE"
+					"size"		"926623AD5279B43E6B16305AAF0410B7"
+					"download"		"C1846ECCBCCC0AF96C47C8B1C159A8B4"
+				}
+				"d-tmp"
+				{
+					"gid"		"645CD7EDC3379653951829827A01DC05"
+					"size"		"A8DB5D6F29B22E463AC4DEC219F22009"
+					"download"		"D0030CD253B6E4470BC858FFEC833B4C"
+				}
+				"d-tmp2"
+				{
+					"gid"		"92BEFB029A0C68AC927F43976269B14D"
+					"size"		"86E5ADDC9C3ACBD34677940218D76C60"
+					"download"		"FDE35A23FA2B3E18CD36820CB0AD8E24"
+				}
+				"q-deb"
+				{
+					"gid"		"6D93487F6CBD65C2CEA3C74CEE3BE042"
+					"size"		"41B92314EF5E32F9B8FD5B3C8C65E6E4"
+					"download"		"8C2584A6BA3424C8128E7DEAF72D7D23"
+				}
+				"q-deb2"
+				{
+					"gid"		"CE7F7432CB033A98D976A1B7FA8CF2C0"
+					"size"		"963C778E729AC908975DB8E12A3F9701"
+					"download"		"54C13AC2E87F12833A836B1C5726DE3D"
+				}
+				"q-rel"
+				{
+					"gid"		"1F82248D4B1B83602701DCDF3F7866FC"
+					"size"		"59DD8099EB74A4D264D2C38FE4119A26"
+					"download"		"27CBA276E043B31F18C47CA041695563"
+				}
+				"q-rel2"
+				{
+					"gid"		"161ADA023A1F81A805C7862390343225"
+					"size"		"2B74D8C53C272444A72B514F20AF7FF1"
+					"download"		"B4EBD9EF16FE7D83590A4E7C6253EC92"
+				}
+			}
+		}
+		"baselanguages"		"english,german,french,italian,koreana,spanish,schinese,tchinese,russian,thai,japanese,polish,arabic,brazilian,latam"
+		"branches"
+		{
+			"public"
+			{
+				"buildid"		"12518005"
+				"timeupdated"		"1698127874"
+			}
+			"d-deb"
+			{
+				"buildid"		"11650316"
+				"pwdrequired"		"1"
+				"timeupdated"		"1688741273"
+			}
+			"d-deb2"
+			{
+				"buildid"		"12316042"
+				"pwdrequired"		"1"
+				"timeupdated"		"1695984149"
+			}
+			"d-rel"
+			{
+				"buildid"		"11649576"
+				"pwdrequired"		"1"
+				"timeupdated"		"1688735330"
+			}
+			"d-rel2"
+			{
+				"buildid"		"12316646"
+				"pwdrequired"		"1"
+				"timeupdated"		"1695988492"
+			}
+			"d-tmp"
+			{
+				"buildid"		"11943631"
+				"pwdrequired"		"1"
+				"timeupdated"		"1694001899"
+			}
+			"d-tmp2"
+			{
+				"buildid"		"12277324"
+				"pwdrequired"		"1"
+				"timeupdated"		"1695666113"
+			}
+			"q-deb"
+			{
+				"buildid"		"12298904"
+				"pwdrequired"		"1"
+				"timeupdated"		"1695882499"
+			}
+			"q-deb2"
+			{
+				"buildid"		"12316042"
+				"pwdrequired"		"1"
+				"timeupdated"		"1695992932"
+			}
+			"q-rel"
+			{
+				"buildid"		"12299459"
+				"pwdrequired"		"1"
+				"timeupdated"		"1695882443"
+			}
+			"q-rel2"
+			{
+				"buildid"		"12316646"
+				"pwdrequired"		"1"
+				"timeupdated"		"1695992899"
+			}
+		}
+	}
+}

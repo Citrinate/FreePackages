@@ -1,0 +1,33 @@
+"81948"
+{
+	"packageid"		"81948"
+	"billingtype"		"12"
+	"licensetype"		"1"
+	"status"		"0"
+	"extended"
+	{
+		"dontgrantifappidowned"		"218620"
+		"expirytime"		"1445706000"
+		"freeweekend"		"1"
+		"starttime"		"1444928400"
+	}
+	"appids"
+	{
+		"0"		"218620"
+	}
+	"depotids"
+	{
+		"0"		"218621"
+		"1"		"218622"
+		"2"		"218623"
+		"3"		"218624"
+		"4"		"218625"
+		"5"		"218626"
+		"6"		"218627"
+		"7"		"218628"
+		"8"		"218632"
+	}
+	"appitems"
+	{
+	}
+}

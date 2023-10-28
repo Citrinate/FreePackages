@@ -1,0 +1,22 @@
+"953346"
+{
+	"packageid"		"953346"
+	"billingtype"		"12"
+	"licensetype"		"1"
+	"status"		"0"
+	"extended"
+	{
+		"allowcrossregiontradingandgifting"		"false"
+	}
+	"appids"
+	{
+		"0"		"2660620"
+	}
+	"depotids"
+	{
+		"0"		"2660621"
+	}
+	"appitems"
+	{
+	}
+}

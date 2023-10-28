@@ -1,0 +1,115 @@
+"appinfo"
+{
+	"appid"		"2423370"
+	"common"
+	{
+		"name"		"Inu (Prototype) Playtest"
+		"type"		"Beta"
+		"parent"		"2423350"
+		"oslist"		"windows"
+		"osarch"		""
+		"osextended"		""
+		"icon"		"f3ee1d7e8aadc421d123617bd3c94800007d2a6e"
+		"clienttga"		"f7c83818ba159ddbed594cbf04caca0d4b9cb8d6"
+		"clienticon"		"51303d8fcc2279bd63c9172e516181297a77fcf3"
+		"releasestate"		"released"
+		"small_capsule"
+		{
+			"english"		"capsule_231x87.jpg"
+		}
+		"header_image"
+		{
+			"english"		"header.jpg"
+		}
+		"library_assets"
+		{
+			"library_capsule"		"en"
+			"library_hero"		"en"
+			"library_logo"		"en"
+			"logo_position"
+			{
+				"pinned_position"		"CenterCenter"
+				"width_pct"		"16.243194192377487"
+				"height_pct"		"52.43055555555554"
+			}
+		}
+		"store_asset_mtime"		"1684322449"
+		"associations"
+		{
+		}
+		"primary_genre"		"0"
+		"category"
+		{
+		}
+		"steam_release_date"		"1683587793"
+		"community_visible_stats"		"1"
+		"community_hub_visible"		"1"
+		"gameid"		"2423370"
+		"exfgls"		"1"
+	}
+	"config"
+	{
+		"installdir"		"Inu (Prototype) Playtest"
+		"launch"
+		{
+			"0"
+			{
+				"executable"		"GYMULATOR.exe"
+				"type"		"default"
+				"config"
+				{
+					"oslist"		"windows"
+				}
+			}
+		}
+	}
+	"depots"
+	{
+		"228989"
+		{
+			"config"
+			{
+				"oslist"		"windows"
+			}
+			"depotfromapp"		"228980"
+			"sharedinstall"		"1"
+		}
+		"228990"
+		{
+			"config"
+			{
+				"oslist"		"windows"
+			}
+			"depotfromapp"		"228980"
+			"sharedinstall"		"1"
+		}
+		"2423371"
+		{
+			"manifests"
+			{
+				"public"
+				{
+					"gid"		"7129052227263328365"
+					"size"		"451192463"
+					"download"		"302603504"
+				}
+			}
+		}
+		"2423372"
+		{
+			"config"
+			{
+				"oslist"		"windows"
+				"osarch"		"64"
+			}
+		}
+		"branches"
+		{
+			"public"
+			{
+				"buildid"		"12512996"
+				"timeupdated"		"1698079901"
+			}
+		}
+	}
+}

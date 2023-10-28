@@ -36,7 +36,7 @@ namespace FreePackages {
 
 			bool isEnabled = false;
 			uint? packageLimit = null;
-			FilterConfig? filter = null;
+			List<FilterConfig> filterConfigs = new();
 
 			foreach (KeyValuePair<string, JToken> configProperty in additionalConfigProperties) {
 				switch (configProperty.Key) {
@@ -55,15 +55,27 @@ namespace FreePackages {
 					}
 
 					case "FreePackagesFilter": {
-						filter = configProperty.Value.ToObject<FilterConfig>();
-						bot.ArchiLogger.LogGenericInfo("Free Packages Filter : " + JsonConvert.SerializeObject(filter));
+						FilterConfig? filter = configProperty.Value.ToObject<FilterConfig>();
+						if (filter != null) {
+							bot.ArchiLogger.LogGenericInfo("Free Packages Filter : " + JsonConvert.SerializeObject(filter));
+							filterConfigs.Add(filter);
+						}
+						break;
+					}
+					
+					case "FreePackagesFilters": {
+						List<FilterConfig>? filters = configProperty.Value.ToObject<List<FilterConfig>>();
+						if (filters != null) {
+							bot.ArchiLogger.LogGenericInfo("Free Packages Filters : " + JsonConvert.SerializeObject(filters));
+							filterConfigs.AddRange(filters);
+						}
 						break;
 					}
 				}
 			}
 			
 			if (isEnabled) {
-				await PackageHandler.AddHandler(bot, filter, packageLimit).ConfigureAwait(false);
+				await PackageHandler.AddHandler(bot, filterConfigs, packageLimit).ConfigureAwait(false);
 			}
 		}
 
@@ -71,13 +83,15 @@ namespace FreePackages {
 			return Task.FromResult(GlobalCache?.LastChangeNumber ?? 0);
 		}
 
-		public async Task OnPICSChanges(uint currentChangeNumber, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> appChanges, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> packageChanges) {
+		public Task OnPICSChanges(uint currentChangeNumber, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> appChanges, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> packageChanges) {
 			if (GlobalCache == null) {
 				throw new InvalidOperationException(nameof(GlobalCache));
 			}
 
-			await PackageHandler.OnPICSChanges(appChanges, packageChanges).ConfigureAwait(false);
+			PackageHandler.OnPICSChanges(appChanges, packageChanges);
 			GlobalCache.UpdateChangeNumber(currentChangeNumber);
+			
+			return Task.CompletedTask;
 		}
 
 		public async Task OnPICSChangesRestart(uint currentChangeNumber) {
@@ -92,8 +106,7 @@ namespace FreePackages {
 
 		public Task OnBotSteamCallbacksInit(Bot bot, CallbackManager callbackManager) {
 			callbackManager.Subscribe<SteamUser.AccountInfoCallback>(callback => OnAccountInfo(bot, callback));
-			// TODO: Check for free DLC on newly added games
-			// callbackManager.Subscribe<SteamApps.LicenseListCallback>(callback => OnLicenseList(bot, callback));
+			callbackManager.Subscribe<SteamApps.LicenseListCallback>(callback => OnLicenseList(bot, callback));
 
 			return Task.CompletedTask;
 		}
@@ -104,6 +117,10 @@ namespace FreePackages {
 
 		private static void OnAccountInfo(Bot bot, SteamUser.AccountInfoCallback callback) {
 			PackageHandler.OnAccountInfo(bot, callback);
+		}
+
+		private static void OnLicenseList (Bot bot, SteamApps.LicenseListCallback callback) {
+			PackageHandler.OnLicenseList(bot, callback);
 		}
 
 		public async Task OnBotLoggedOn(Bot bot) {

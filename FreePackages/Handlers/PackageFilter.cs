@@ -1,108 +1,45 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
-using ArchiSteamFarm.Localization;
-using ArchiSteamFarm.Steam;
 using SteamKit2;
 
 namespace FreePackages {
 	internal sealed class PackageFilter {
-		private readonly Bot Bot;
 		private readonly BotCache BotCache;
-		private readonly FilterConfig FilterConfig;
+		internal readonly List<FilterConfig> FilterConfigs;
 		private HashSet<uint>? OwnedAppIDs = null;
 		private UserData? UserData = null;
-		private string? Country = null;
-		private readonly Timer UserDataRefreshTimer;
+		private HashSet<uint> ImportedIgnoredAppIDs = new();
+		private HashSet<uint> ImportedIgnoredTags = new();
+		private HashSet<uint> ImportedIgnoredContentDescriptors = new();
+		internal string? Country = null;
 		internal bool Ready { get { return OwnedAppIDs != null && Country != null && UserData != null; }}
 
-		internal PackageFilter(Bot bot, BotCache botCache, FilterConfig filterConfig) {
-			Bot = bot;
+		internal PackageFilter(BotCache botCache, List<FilterConfig> filterConfigs) {
 			BotCache = botCache;
-			FilterConfig = filterConfig;
-			UserDataRefreshTimer = new Timer(async e => await UpdateUserData().ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
+			FilterConfigs = filterConfigs;
 		}
 
 		internal void UpdateAccountInfo(SteamUser.AccountInfoCallback callback) {
 			Country = callback.Country;
 		}
 		
-		internal async Task UpdateUserData() {
-			if (!Bot.IsConnectedAndLoggedOn) {
-				UserDataRefreshTimer.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(15));
-
-				return;
-			}
-
-			UserData? userData = await WebRequest.GetUserData(Bot).ConfigureAwait(false);
-			if (userData == null) {
-				UserDataRefreshTimer.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(15));
-				Bot.ArchiLogger.LogGenericError(String.Format(Strings.ErrorObjectIsNull, userData));
-
-				return;
-			}
-
-			if (FilterConfig.ImportStoreFilters) {
-				// TODO: don't merge these
-				FilterConfig.IgnoredAppIDs.UnionWith(userData.IgnoredApps.Where(x => x.Value == 0).Select(x => x.Key));
-				FilterConfig.IgnoredTags.UnionWith(userData.ExcludedTags.Select(x => x.TagID));
-				FilterConfig.IgnoredContentDescriptors.UnionWith(userData.ExcludedContentDescriptorIDs);
-			}
+		internal void UpdateUserData(UserData userData) {
+			UserData = userData;
+			ImportedIgnoredAppIDs = UserData.IgnoredApps.Where(x => x.Value == 0).Select(x => x.Key).ToHashSet();
+			ImportedIgnoredTags = UserData.ExcludedTags.Select(x => x.TagID).ToHashSet();
+			ImportedIgnoredContentDescriptors = UserData.ExcludedContentDescriptorIDs;
+			OwnedAppIDs = UserData.OwnedApps;
 
 			// Get all of the apps that are in each of the owned packages, and merge with explicitly owned apps
-			var ownedAppIDs = userData.OwnedApps;
-			var ownedPackageIDs = userData.OwnedPackages;
-			ownedAppIDs.UnionWith(ASF.GlobalDatabase!.PackagesDataReadOnly.Where(x => ownedPackageIDs.Contains(x.Key) && x.Value.AppIDs != null).SelectMany(x => x.Value.AppIDs!).ToHashSet<uint>());
-
-			OwnedAppIDs = ownedAppIDs;
-			UserData = userData;
-			UserDataRefreshTimer.Change(TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(15));
+			if (ASF.GlobalDatabase != null) {
+				var ownedPackageIDs = UserData.OwnedPackages;
+				OwnedAppIDs.UnionWith(ASF.GlobalDatabase.PackagesDataReadOnly.Where(x => ownedPackageIDs.Contains(x.Key) && x.Value.AppIDs != null).SelectMany(x => x.Value.AppIDs!).ToHashSet<uint>());
+			}
 		}
 
-		internal static bool IsFreeApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app) {
-			KeyValue kv = app.KeyValues;
-
-			if (kv["extended"]["isfreeapp"].AsBoolean()) {
-				return true;
-			}
-
-			EAppType type = kv["common"]["type"].AsEnum<EAppType>();
-
-			if (type == EAppType.Demo) {
-				return true;
-			}
-
-			// TODO: Playtest stuff
-			// if (type == EAppType.Beta) {
-			// 	return true;
-			// }
-
-			return false;
-		}
-
-		internal static bool IsAvailableApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app) {
-			KeyValue kv = app.KeyValues;
-
-			string? releaseState = kv["common"]["releasestate"].AsString();
-			if (releaseState != "released") {
-				// App not released yet
-				// Note: There's another seemingly relevant field: kv["common"]["steam_release_date"] 
-				// steam_release_date is not checked because an app can be "released", still have a future release date, and still be redeemed
-				// Example: https://steamdb.info/changelist/20505012/
-				return false;
-			}
-
-			return true;
-		}
-
-		internal bool IsRedeemableApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app, bool ignoreOwnsCheck = false) {
-			if (UserData == null) {
-				throw new InvalidOperationException(nameof(UserData));
-			}
-
+		internal bool IsRedeemableApp(FilterableApp app) {
 			if (OwnedAppIDs == null) {
 				throw new InvalidOperationException(nameof(OwnedAppIDs));
 			}
@@ -115,31 +52,26 @@ namespace FreePackages {
 			// For an app to be redeemable it needs a package that's also redeemable, but we can't see which packages grant an app
 			// Some examples: Deactivated demo: https://steamdb.info/app/1316010
 			// App isn't region locked but with package that is: https://steamdb.info/app/2147450
+			// Free games, but that can only be obtained from bundles with non-free games: https://steamdb.info/app/2119270/ https://steamdb.info/bundle/30994/
 
-			if (!ignoreOwnsCheck && OwnedAppIDs.Contains(app.ID)) {
+			if (OwnedAppIDs.Contains(app.ID)) {
 				// Already own this app
 				return false;
 			}
 
-			KeyValue kv = app.KeyValues;
-
-			uint mustOwnAppToPurchase = kv["extended"]["mustownapptopurchase"].AsUnsignedInteger();
-			if (mustOwnAppToPurchase > 0 && !OwnedAppIDs.Contains(mustOwnAppToPurchase)) {
+			if (app.MustOwnAppToPurchase > 0 && !OwnedAppIDs.Contains(app.MustOwnAppToPurchase)) {
 				// Missing a necessary app
 				return false;
 			}
 
-			string? restrictedCountries = kv["common"]["restricted_countries"].AsString();
-			if (restrictedCountries != null && restrictedCountries.ToUpper().Split(",").Contains(Country.ToUpper())) {
+			if (app.RestrictedCountries != null && app.RestrictedCountries.Contains(Country, StringComparer.OrdinalIgnoreCase)) {
 				// App is restricted in this bot's country
 				return false;
 			}
 
-			string? purchaseRestrictedCountries = kv["extended"]["purchaserestrictedcountries"].AsString();
-			if (purchaseRestrictedCountries != null) {
-				bool isPurchaseRestricted = purchaseRestrictedCountries.ToUpper().Split(" ").Contains(Country.ToUpper());
-				bool onlyAllowPurchaseFromRestricted = kv["extended"]["allowpurchasefromrestrictedcountries"].AsBoolean();
-				if (isPurchaseRestricted != onlyAllowPurchaseFromRestricted) {
+			if (app.PurchaseRestrictedCountries != null) {
+				bool isPurchaseRestricted = app.PurchaseRestrictedCountries.Contains(Country, StringComparer.OrdinalIgnoreCase);
+				if (isPurchaseRestricted != app.AllowPurchaseFromRestrictedCountries) {
 					// App is purchase restricted in this bot's country
 					return false;
 				}
@@ -148,151 +80,88 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsWantedApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app) {
-			KeyValue kv = app.KeyValues;
-
-			EAppType type = kv["common"]["type"].AsEnum<EAppType>();
-			if (FilterConfig.Types.Count > 0) {
-				if (!FilterConfig.Types.Contains(type.ToString())) {
-					// App isn't a wanted type
-					return false;
-				}
+		internal bool IsAppWantedByFilter(FilterableApp app, FilterConfig filter) {
+			if (filter.Types.Count > 0 && app.Type != EAppType.Beta && !app.HasType(filter.Types)) {
+				// Don't require user to specify they want playtests (Beta), this is already implied by the PlaytestMode filter
+				// App isn't a wanted type
+				return false;
 			}
 
-			if (FilterConfig.Categories.Count > 0) {
-				bool has_matching_category = kv["common"]["category"].Children.Any(category => UInt32.TryParse(category.Name?.Substring(9), out uint category_number) && FilterConfig.Categories.Contains(category_number)); // category numbers are stored in the name as "category_##"
-				if (!has_matching_category) {
-					// Unwanted due to missing categories
-					return false;
-				}
+			if (filter.Categories.Count > 0 && !app.HasCategory(filter.Categories)) {
+				// Unwanted due to missing categories
+				return false;
 			}
 
-			if (FilterConfig.Tags.Count > 0) {
-				bool has_matching_tag = kv["common"]["store_tags"].Children.Any(tag => FilterConfig.Tags.Contains(tag.AsUnsignedInteger()));
-				if (!has_matching_tag) {
-					// Unwanted due to missing tags
-					return false;
-				}
+			if (filter.Tags.Count > 0 && !app.HasTag(filter.Tags)) {
+				// Unwanted due to missing tags (also check parent app, because parents can have more tags defined)
+				return false;
 			}
 
-			if (FilterConfig.MinReviewScore > 0 && type != EAppType.Demo) {
-				// Not including demos here because demos don't really have review scores.  Technically they do, but only from abnormal behavior
-				uint review_score = kv["common"]["review_score"].AsUnsignedInteger();
-				if (review_score < FilterConfig.MinReviewScore) {
-					// Unwanted due to low or missing review score
-					return false;
-				}
+			if (filter.MinReviewScore > 0 && app.ReviewScore < filter.MinReviewScore && app.Type != EAppType.Demo && app.Type != EAppType.Beta) {
+				// Not including demos and playtests here because they don't really have review scores.  They can, but only from abnormal behavior
+				// Unwanted due to low or missing review score
+				return false;
 			}
 
-			// TODO: playtest stuff
-			// kv["extended"]["betaforappid"] or kv["common"]["parent"]
-			// kv["extended"]["playtest_type"]: 0 or undefined = waitlist, 1 = open signup
+			if (filter.Languages.Count > 0 && !app.HasLanguage(filter.Languages)) {
+				// Unwanted due to missing supported language
+				return false;
+			}
 
 			return true;
 		}
 
-		internal bool IsIgnoredApp(SteamApps.PICSProductInfoCallback.PICSProductInfo app) {
-			KeyValue kv = app.KeyValues;
+		internal bool IsAppIgnoredByFilter(FilterableApp app, FilterConfig filter) {
+			if (UserData == null) {
+				throw new InvalidOperationException(nameof(UserData));
+			}
 
-			EAppType type = kv["common"]["type"].AsEnum<EAppType>();
-			if (FilterConfig.IgnoredTypes.Contains(type.ToString())) {
+			if (app.HasType(filter.IgnoredTypes)) {
 				// App is an unwanted type
 				return true;
 			}
 
-			if (FilterConfig.IgnoredTags.Count > 0) {
-				bool has_matching_tag = kv["common"]["store_tags"].Children.Any(tag => FilterConfig.IgnoredTags.Contains(tag.AsUnsignedInteger()));
-				if (has_matching_tag) {
-					// App contains an unwanted tag
-					return true;
-				}
+			if (app.HasTag(filter.IgnoredTags)) {
+				// App contains an unwanted tag
+				return true;
 			}
 
-			if (FilterConfig.IgnoredCategories.Count > 0) {
-				bool has_matching_category = kv["common"]["category"].Children.Any(category => UInt32.TryParse(category.Name?.Substring(9), out uint category_number) && FilterConfig.IgnoredCategories.Contains(category_number)); // category numbers are stored in the name as "category_##"
-				if (has_matching_category) {
-					// App contains unwanted categories
-					return true;
-				}
+			if (app.HasCategory(filter.IgnoredCategories)) {
+				// App contains unwanted categories
+				return true;
 			}
 
-			if (FilterConfig.IgnoredContentDescriptors.Count > 0) {
-				bool has_matching_mature_content_descriptor = kv["common"]["content_descriptors"].Children.Any(content_descriptor => FilterConfig.IgnoredContentDescriptors.Contains(content_descriptor.AsUnsignedInteger()));
-				if (has_matching_mature_content_descriptor) {
-					// App contains an unwanted content descriptor
-					return true;
-				}
+			if (app.HasContentDescriptor(filter.IgnoredContentDescriptors)) {
+				// App contains an unwanted content descriptor (also check parent app, because parents can have more descriptors defined)
+				return true;
 			}
 
-			if (FilterConfig.IgnoredAppIDs.Contains(app.ID)) {
+			if (app.HasID(filter.IgnoredAppIDs)) {
 				// App is explicity ignored
 				return true;
 			}
 
-			return false;
-		}
+			if (filter.ImportStoreFilters) {
+				if (app.HasTag(ImportedIgnoredTags)) {
+					// App contains a tag which the user has ignored on Steam
+					return true;
+				}
 
-		internal static bool IsFreePackage(SteamApps.PICSProductInfoCallback.PICSProductInfo package) {
-			KeyValue kv = package.KeyValues;
+				if (app.HasContentDescriptor(ImportedIgnoredContentDescriptors)) {
+					// App contains a content descriptor which the user has ignored on Steam
+					return true;
+				}
 
-			var billingType = (EBillingType) kv["billingtype"].AsInteger();
-			if (billingType == EBillingType.FreeOnDemand || billingType == EBillingType.NoCost) {
-				return true;
+				if (app.HasID(ImportedIgnoredAppIDs)) {
+					// User has ignored this app on Steam
+					return true;
+				}
 			}
 
 			return false;
 		}
 
-		internal static bool IsAvailablePackage(SteamApps.PICSProductInfoCallback.PICSProductInfo package) {
-			KeyValue kv = package.KeyValues;			
-
-			if (kv["appids"].Children.Count == 0) {
-				// Package has no apps
-				return false;
-			}
-
-			if ((EPackageStatus) kv["status"].AsInteger() != EPackageStatus.Available) {
-				// Package is unavailable
-				return false;
-			}
-
-			if ((ELicenseType) kv["licensetype"].AsInteger() != ELicenseType.SinglePurchase) {
-				// Wrong license type
-				return false;
-			}
-
-			var expiryTime = kv["extended"]["expirytime"].AsUnsignedLong();
-			var now = DateUtils.DateTimeToUnixTime(DateTime.UtcNow);
-			if (expiryTime > 0 && expiryTime < now) {
-				// Package was only available for a limited time and is no longer available
-				return false;
-			}
-			
-			if (kv["extended"]["deactivated_demo"].AsBoolean()) {
-				// Demo package has been disabled
-				return false;
-			}
-
-			return true;
-		}
-
-		internal static bool IsAvailablePackageContents(SteamApps.PICSProductInfoCallback.PICSProductInfo package, IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> apps) {
-			KeyValue kv = package.KeyValues;
-
-			if (kv["appids"].Children.Count != apps.Count()) {
-				// Could not find all of the apps for this package
-				return false;
-			}
-
-			if (apps.Any(app => !IsAvailableApp(app))) {
-				// At least one of the apps in this package isn't available
-				return false;
-			}
-
-			return true;
-		}
-
-		internal bool IsRedeemablePackage(SteamApps.PICSProductInfoCallback.PICSProductInfo package, IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> apps) {			
+		internal bool IsRedeemablePackage(FilterablePackage package) {			
 			if (UserData == null) {
 				throw new InvalidOperationException(nameof(UserData));
 			}
@@ -310,71 +179,121 @@ namespace FreePackages {
 				return false;
 			}
 
-			if (apps.All(x => OwnedAppIDs.Contains(x.ID))) {
+			if (package.PackageContents.All(x => OwnedAppIDs.Contains(x.ID))) {
 				// Already own all of the apps in this package
 				return false;
 			}
 
-			KeyValue kv = package.KeyValues;
-
-			uint dontGrantIfAppidOwned = kv["extended"]["dontgrantifappidowned"].AsUnsignedInteger();
-			if (dontGrantIfAppidOwned > 0 && OwnedAppIDs.Contains(dontGrantIfAppidOwned)) {
+			if (package.DontGrantIfAppIDOwned > 0 && OwnedAppIDs.Contains(package.DontGrantIfAppIDOwned)) {
 				// Don't own required app
 				return false;
 			}
 
-			string? restrictedCountries = kv["extended"]["restrictedcountries"].AsString();
-			if (restrictedCountries != null) {
-				bool isRestricted = restrictedCountries.ToUpper().Split(" ").Contains(Country.ToUpper());
-				bool onlyAllowRestricted = kv["extended"]["onlyallowrestrictedcountries"].AsBoolean();
-				if (isRestricted != onlyAllowRestricted) {
+			if (package.RestrictedCountries != null) {
+				bool isRestricted = package.RestrictedCountries.Contains(Country, StringComparer.OrdinalIgnoreCase);
+				if (isRestricted != package.OnlyAllowRestrictedCountries) {
 					// Package is restricted in this bot's country
 					return false;
 				}
 			}
 
-			string? purchaseRestrictedCountries = kv["extended"]["purchaserestrictedcountries"].AsString();
-			if (purchaseRestrictedCountries != null) {
-				bool isPurchaseRestricted = purchaseRestrictedCountries.ToUpper().Split(" ").Contains(Country.ToUpper());
-				bool onlyAllowPurchaseFromRestricted = kv["extended"]["allowpurchasefromrestrictedcountries"].AsBoolean();
-				if (isPurchaseRestricted != onlyAllowPurchaseFromRestricted) {
+			if (package.PurchaseRestrictedCountries != null) {
+				bool isPurchaseRestricted = package.PurchaseRestrictedCountries.Contains(Country, StringComparer.OrdinalIgnoreCase);
+				if (isPurchaseRestricted != package.AllowPurchaseFromRestrictedCountries) {
 					// Package is purchase restricted in this bot's country
 					return false;
 				}
 			}
 
-			if (apps.Any(app => !IsRedeemableApp(app, ignoreOwnsCheck: true))) {
-				// At least one of the apps in this package isn't redeemable
+			if (package.PackageContents.Any(app => !OwnedAppIDs.Contains(app.ID) && !IsRedeemableApp(app))) {
+				// At least one of the unowned apps in this package isn't redeemable
 				return false;
 			}
 
 			return true;
 		}
 
-		internal bool IsWantedPackage(SteamApps.PICSProductInfoCallback.PICSProductInfo package, IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> apps) {
-			KeyValue kv = package.KeyValues;
-
-			bool has_wanted_app = apps.Any(app => IsWantedApp(app));
-			if (!has_wanted_app) {
+		internal bool IsPackageWantedByFilter(FilterablePackage package, FilterConfig filter) {
+			bool hasWantedApp = package.PackageContents.Any(app => IsAppWantedByFilter(app, filter));
+			if (!hasWantedApp) {
 				return false;
 			}
 
 			return true;
 		}
 
-		internal bool IsIgnoredPackage(SteamApps.PICSProductInfoCallback.PICSProductInfo package, IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> apps) {
-			KeyValue kv = package.KeyValues;
-
-			if (FilterConfig.IgnoreFreeWeekends && kv["extended"]["freeweekend"].AsBoolean()) {
+		internal bool IsPackageIgnoredByFilter(FilterablePackage package, FilterConfig filter) {
+			if (filter.IgnoreFreeWeekends && package.FreeWeekend) {
 				return true;
 			}
 
-			bool has_ignored_app = apps.Any(app => IsIgnoredApp(app));
-			if (has_ignored_app) {
+			bool hasIgnoredApp = package.PackageContents.Any(app => IsAppIgnoredByFilter(app, filter));
+			if (hasIgnoredApp) {
 				return true;
 			}
 
 			return false;
 		}
+
+		internal bool IsRedeemablePlaytest(FilterableApp app) {
+			// More than half of playtests we try to join will be invalid.
+			// Some of these will be becase there's no free packages (which we can't determine here), Ex: playtest is activated by key: https://steamdb.info/sub/858277/
+			// For most, There seems to be no difference at all between invalid playtest and valid ones.  The only way to resolve these would be to scrape the parent's store page.
+
+			if (app.Parent == null) {
+				return false;
+			}
+
+			if (!IsRedeemableApp(app)) {
+				return false;
+			}
+
+			if (app.Parent.Hidden) {
+				// Hidden app
+				return false;
+			}
+
+			if (BotCache.WaitlistedPlaytests.Contains(app.Parent.ID)) {
+				// We're already on the waitlist for this playtest
+				return false;
+			}
+			
+			return true;
+		}
+
+		internal bool IsPlaytestWantedByFilter(FilterableApp app, FilterConfig filter) {
+			if (app.Parent == null) {
+				return false;
+			}
+
+			if (filter.PlaytestMode == EPlaytestMode.None) {
+				// User doesnt want any playtests
+				return false;
+			}
+
+			if (!IsAppWantedByFilter(app, filter)) {
+				return false;
+			}
+
+			// playtest_type 0 = limited (default)
+			bool wantsLimitedPlaytests = (filter.PlaytestMode & EPlaytestMode.Limited) == EPlaytestMode.Limited;
+			if (app.PlayTestType == 0 && !wantsLimitedPlaytests) {
+				// User doesn't want limited playtests
+				return false;
+			}
+
+			// playtest_type 1 = unlimited
+			bool wantsUnlimitedPlaytests = (filter.PlaytestMode & EPlaytestMode.Unlimited) == EPlaytestMode.Unlimited;
+			if (app.PlayTestType == 1 && !wantsUnlimitedPlaytests) {
+				// User doesn't want unlimited playtests
+				return false;
+			}
+
+			return true;
+		}
+
+		internal bool IsWantedApp(FilterableApp app) => FilterConfigs.Count == 0 || FilterConfigs.Any(filter => IsAppWantedByFilter(app, filter) && !IsAppIgnoredByFilter(app, filter));
+		internal bool IsWantedPackage(FilterablePackage package) => FilterConfigs.Count == 0 || FilterConfigs.Any(filter => IsPackageWantedByFilter(package, filter) && !IsPackageIgnoredByFilter(package, filter));
+		internal bool IsWantedPlaytest(FilterableApp app) => FilterConfigs.Count > 0 && FilterConfigs.Any(filter => IsPlaytestWantedByFilter(app, filter) && !IsAppIgnoredByFilter(app, filter));
 	}
 }
