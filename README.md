@@ -28,7 +28,7 @@ You can enable the plugin per individual bot by adding `EnableFreePackages` to t
 
 ### Changing the hourly package limit
 
-A maximum of 50 packages can be activated per hour.  By default, this plugin will use at most 40 of those hourly activations and will resume where it left off if it's ever interrupted.  You can control this limit by adding `FreePackagesPerHour` to your individual bot's config files of `uint` type with default value of 40.
+A maximum of 50 packages can be activated per hour.  By default, this plugin will use at most 40 of those hourly activations and will resume where it left off if it's ever interrupted.  You can control this limit by adding `FreePackagesPerHour` to your individual bot's config files of `uint` type.
 
 > **Note**
 > I don't recommend raising this value.  The default is 40 to let you manually redeem packages without having to fight with the plugin.  It's also not always possible for the plugin to tell when it's being rate-limited, and so it's best to avoid ever getting rate-limited.
@@ -37,79 +37,27 @@ A maximum of 50 packages can be activated per hour.  By default, this plugin wil
 
 ### Enabling package filters
 
-By default, the plugin will attempt to activate all free packages.  You can control what kinds of packages are activated by adding `FreePackagesFilter` to your individual bot's config files with the following structure:
+By default, the plugin will attempt to activate all free non-playtest packages.  You can control what kinds of packages are activated by adding `FreePackagesFilters` to your individual bot's config files with the following structure:
 
 ```json
-"FreePackagesFilter": {
-    "ImportStoreFilters": false,
-    "Types": [],
-    "Tags": [],
-    "Categories": [],
-    "IgnoredTypes": [],
-    "IgnoredTags": [],
-    "IgnoredCategories": [],
-    "IgnoredContentDescriptors": [],
-    "IgnoredAppIDs": [],
-    "IgnoreFreeWeekends": false,
-    "MinReviewScore": 0,
-},
+"FreePackagesFilters": [{
+  "Types": [],
+  "Tags": [],
+  "Categories": [],
+  "Languages": [],
+  "MinReviewScore": 0,
+  "IgnoredContentDescriptors": [],
+  "IgnoredTypes": [],
+  "IgnoredTags": [],
+  "IgnoredCategories": [],
+  "IgnoredAppIDs": [],
+  "ImportStoreFilters": false,
+  "IgnoreFreeWeekends": false,
+  "PlaytestMode": 0,
+}],
 ```
 
-<details>
-  <summary>Examples</summary>
-
-  ```json
-  "ImportStoreFilters": true,
-  ```
-
-  ```json
-  "Types": ["Game"],
-  ```
-
-  ```json
-  "Tags": [492, 1664, 5432],
-  ```
-
-  ```json
-  "Categories": [1, 22],
-  ```
-
-  ```json
-  "IgnoredTypes": ["Demo", "Application"],
-  ```
-
-  ```json
-  "IgnoredTags": [4085],
-  ```
-
-  ```json
-  "IgnoredCategories": [35],
-  ```
-
-  ```json
-  "IgnoredContentDescriptors": [3, 4],
-  ```
-
-  ```json
-  "IgnoredAppIDs": [440, 730],
-  ```
-
-  ```json
-  "IgnoreFreeWeekends": true,
-  ```
-
-  ```json
-  "MinReviewScore": 8,
-  ```
-</details>
-
 All filter options are explained below:
-
----
-
-#### ImportStoreFilters
-
-`bool` type with default value of `false`.  If set to `true`, the plugin will use the ignored games, ignored tags, and ignored content descriptor settings you use on the Steam storefront, in addition to any other filters you define.
 
 ---
 
@@ -124,7 +72,7 @@ All filter options are explained below:
 `HashSet<uint>` type with default value of `[]`.  Packages must contain an app with at least one of these `TagIDs` or they will not be added to your account.  You can leave this empty to allow for all tags.  A list of tags can be found [here](https://steamdb.info/tags/).  The `TagID` will be at the end of the URL.  For example, the `TagID` for the [Indie](https://steamdb.info/tag/492/) tag is 492.
 
 > **Note**
-> The "Profile Features Limited" tag presented by SteamDB is not a real tag that Steam uses.  There is no way for this plugin to detect whether or not an app has limited profile features.
+> The "Profile Features Limited" tag presented by SteamDB is not a real tag that Steam uses.  This plugin does not detect whether or not an app has limited profile features.
 
 ---
 
@@ -194,21 +142,139 @@ All filter options are explained below:
 
 ---
 
-#### IgnoredTypes
+#### Languages
 
-`HashSet<string>` type with default value of `[]`.  Packages containing apps with any of the `TypeNames` specified here will not be added to your account.  Refer to [Types](#types) for more information about `TypeNames`.
+`HashSet<string>` type with default value of `[]`.  Packages must contain an app with support for at least one of these `LanguageIDs` or they will not be added to your account.  You can leave this empty to allow for all languages.
+
+<details>
+  <summary>List of Language IDs</summary>
+
+  Language ID | Language
+  --- | ---
+  afrikaans | Afrikaans
+  albanian | Albanian
+  amharic | Amharic
+  arabic | Arabic
+  armenian | Armenian
+  assamese | Assamese
+  azerbaijani | Azerbaijani
+  bangla | Bangla
+  basque | Basque
+  belarusian | Belarusian
+  bosnian | Bosnian
+  bulgarian | Bulgarian
+  catalan | Catalan
+  cherokee | Cherokee
+  croatian | Croatian
+  czech | Czech
+  danish | Danish
+  dari | Dari
+  dutch | Dutch
+  english | English
+  estonian | Estonian
+  filipino | Filipino
+  finnish | Finnish
+  french | French
+  galician | Galician
+  georgian | Georgian
+  german | German
+  greek | Greek
+  gujarati | Gujarati
+  hausa | Hausa
+  hebrew | Hebrew
+  hindi | Hindi
+  hungarian | Hungarian
+  icelandic | Icelandic
+  igbo | Igbo
+  irish | Irish
+  italian | Italian
+  japanese | Japanese
+  kannada | Kannada
+  kazakh | Kazakh
+  khmer | Khmer
+  kinyarwanda | Kinyarwanda
+  konkani | Konkani
+  koreana | Korean
+  kyrgyz | Kyrgyz
+  kiche | K'iche'
+  latvian | Latvian
+  lithuanian | Lithuanian
+  luxembourgish | Luxembourgish
+  macedonian | Macedonian
+  malay | Malay
+  malayalam | Malayalam
+  maltese | Maltese
+  maori | Maori
+  marathi | Marathi
+  mongolian | Mongolian
+  nepali | Nepali
+  norwegian | Norwegian
+  odia | Odia
+  persian | Persian
+  polish | Polish
+  portuguese | Portuguese - Portugal
+  gurmukhi | Punjabi (Gurmukhi)
+  shahmukhi | Punjabi (Shahmukhi)
+  quechua | Quechua
+  romanian | Romanian
+  russian | Russian
+  scots | Scots
+  serbian | Serbian
+  schinese | Simplified Chinese
+  sindhi | Sindhi
+  sinhala | Sinhala
+  slovak | Slovak
+  slovenian | Slovenian
+  sorani | Sorani
+  sotho | Sotho
+  latam | Spanish - Latin America
+  spanish | Spanish - Spain
+  swahili | Swahili
+  swedish | Swedish
+  tajik | Tajik
+  tamil | Tamil
+  tatar | Tatar
+  telugu | Telugu
+  thai | Thai
+  tigrinya | Tigrinya
+  tchinese | Traditional Chinese
+  tswana | Tswana
+  turkish | Turkish
+  turkmen | Turkmen
+  ukrainian | Ukrainian
+  urdu | Urdu
+  uyghur | Uyghur
+  uzbek | Uzbek
+  valencian | Valencian
+  vietnamese | Vietnamese
+  welsh | Welsh
+  wolof | Wolof
+  xhosa | Xhosa
+  yoruba | Yoruba
+  zulu | Zulu
+</details>
 
 ---
 
-#### IgnoredTags
+#### MinReviewScore
 
-`HashSet<uint>` type with default value of `[]`.  Packages containing apps with any of these `TagIDs` will not be added to your account.  Refer to [Tags](#tags) for more information about `TagIDs`.
+`uint` type with default value of `0`.  Packages must contain an app with a `ReviewScore` greater than or equal to this or they will not be added to your account.  You can leave this blank or set it to `0` to allow for all values.  A `ReviewScore` is not the same as the percentage of positive reviews.  This number ranges from 1 to 9.  Refer to the list below for more information.  This filter is not applied to demos or playtests as they can't normally be reviewed.
 
----
+<details>
+  <summary>List of Review Scores</summary>
 
-#### IgnoredCategories
-
-`HashSet<uint>` type with default value of `[]`.  Packages containing apps with any of these `CategoryIDs` will not be added to your account.  Refer to [Categories](#categories) for more information about `CategoryIDs`.
+  Review Score | Description | # of Reviews | % of Positive Reviews 
+  --- | --- | --- | ---
+  1 | Overwhelmingly Negative | 500+ | 0%-19%
+  2 | Very Negative | 50-499 | 0%-19%
+  3 | Negative | 1-49 | 0%-19%
+  4 | Mostly Negative | 1-49 | 20%-39%
+  5 | Mixed | 1-49 | 40%-69%
+  6 | Mostly Positive | 1-49 | 70%-79%
+  7 | Positive | 1-49 | 80%-100%
+  8 | Very Positive | 50-499 | 80%-100%
+  9 | Overwhelmingly Positive | 500+ | 80%-100%
+</details>
 
 ---
 
@@ -230,9 +296,33 @@ All filter options are explained below:
 
 ---
 
+#### IgnoredTypes
+
+`HashSet<string>` type with default value of `[]`.  Packages containing apps with any of the `TypeNames` specified here will not be added to your account.  Refer to [Types](#types) for more information about `TypeNames`.
+
+---
+
+#### IgnoredTags
+
+`HashSet<uint>` type with default value of `[]`.  Packages containing apps with any of these `TagIDs` will not be added to your account.  Refer to [Tags](#tags) for more information about `TagIDs`.
+
+---
+
+#### IgnoredCategories
+
+`HashSet<uint>` type with default value of `[]`.  Packages containing apps with any of these `CategoryIDs` will not be added to your account.  Refer to [Categories](#categories) for more information about `CategoryIDs`.
+
+---
+
 #### IgnoredAppIDs
 
 `HashSet<uint>` type with default value of `[]`.  Packages containing apps with any of these `AppIDs` will not be added to your account.
+
+---
+
+#### ImportStoreFilters
+
+`bool` type with default value of `false`.  If set to `true`, the plugin will use the ignored games, ignored tags, and ignored content descriptor settings you use on the Steam storefront, in addition to any other filters you define.
 
 ---
 
@@ -242,25 +332,49 @@ All filter options are explained below:
 
 ---
 
-#### MinReviewScore
+#### PlaytestMode
 
-`uint` type with default value of `0`.  Packages must contain an app with a `ReviewScore` greater than or equal to this or they will not be added to your account.  You can leave this blank or set it to `0` to allow for all values.  A `ReviewScore` is not the same as the percentage of positive reviews.  This number ranges from 1 to 9.  Refer to the list below for more information.  This filter is not applied to demos as they can't normally be reviewed.
+`uint` type with default value of `0`.  Some or all playtests will be ignored based on the provided value.
 
 <details>
-  <summary>List of Review Scores</summary>
+  <summary>List of Playtest Modes</summary>
 
-  Review Score | Description | # of Reviews | % of Positive Reviews 
-  --- | --- | --- | ---
-  1 | Overwhelmingly Negative | 500+ | 0%-19%
-  2 | Very Negative | 50-499 | 0%-19%
-  3 | Negative | 1-49 | 0%-19%
-  4 | Mostly Negative | 1-49 | 20%-39%
-  5 | Mixed | 1-49 | 40%-69%
-  6 | Mostly Positive | 1-49 | 70%-79%
-  7 | Positive | 1-49 | 80%-100%
-  8 | Very Positive | 50-499 | 80%-100%
-  9 | Overwhelmingly Positive | 500+ | 80%-100%
+  Playtest Modes | Description
+  --- | ---
+  0 | Ignore all playtests
+  1 | Include only unlimited playtests 
+  2 | Include only limited playtests
+  3 | Include all playtests
 </details>
+
+> **Note**
+> Only one of your bots may use the `PlaytestMode` filter option.  As some playtests have a limited number of slots, this is an artificial restriction I've put in place to limit how many slots a single person can occupy.
+
+---
+
+### Using multiple package filters
+
+You can define as many filters as you'd like, and packages that pass any one of your filters will be added to your account.  For example, with the three filters below we can allow for any of:
+
+  - Free Games with Steam Trading Cards, but without nudity, and ignoring free weekends
+  - Free Games or Playtests which have English or French language support, and Puzzle or Programming tags
+  - All Free DLC
+
+```json
+"FreePackagesFilters": [{
+  "Types": ["Game"],
+  "Categories": [29],
+  "IgnoredContentDescriptors": [3, 4],
+  "IgnoreFreeWeekends": false,
+},{
+  "Types": ["Game"],
+  "Tags": [1664, 5432],
+  "Languages": ["english", "french"],
+  "PlaytestMode": 3,
+},{
+  "Types": ["DLC"],
+}],
+```
 
 ---
 
@@ -286,7 +400,7 @@ Command | Alias |
 
 ### Userscript
 
-You can use the [Free Packages Importer userscript](https://github.com/Citrinate/FreePackages/tree/main/FreePackagesImporter) to import packages from SteamDB's [free packages tool](https://steamdb.info/freepackages/).
+You can use [this userscript](https://github.com/Citrinate/FreePackages/tree/main/FreePackagesImporter) to import packages from SteamDB's [free packages tool](https://steamdb.info/freepackages/).
 
 ---
 
@@ -294,10 +408,10 @@ You can use the [Free Packages Importer userscript](https://github.com/Citrinate
 
 API | Method | Parameters | Description
 --- | --- | --- | ---
-`/Api/FreePackages/{botName}/GetChangesSince`|`GET`|`changeNumber`|Request changes for apps and packages since a given change number
+`/Api/FreePackages/{botNames}/GetChangesSince/{changeNumber}`|`GET`||Request changes for apps and packages since a given change number
 `/Api/FreePackages/{botName}/GetOwnedApps`|`GET`|`showNames`|Retrieves all apps owned by the given bot
 `/Api/FreePackages/{botName}/GetOwnedPackages`|`GET`| |Retrieves all packages owned by the given bot
-`/Api/FreePackages/{botName}/GetProductInfo`|`GET`|`appIDs`, `packageIDs`|Request product information for a list of apps or packages
+`/Api/FreePackages/{botNames}/GetProductInfo`|`GET`|`appIDs`, `packageIDs`|Request product information for a list of apps or packages
 `/Api/FreePackages/{botNames}/QueueLicenses`|`POST`|`appIDs`, `packageIDs`, `useFilter`|Adds the given appIDs and packageIDs to the given bot's package queue
 `/Api/FreePackages/{botName}/RequestFreeAppLicense`|`GET`|`appIDs`|Request a free license for given appIDs
 `/Api/FreePackages/{botName}/RequestFreeSubLicense`|`GET`|`subID`|Request a free license for given subID
