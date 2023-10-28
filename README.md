@@ -365,7 +365,7 @@ You can define as many filters as you'd like, and packages that pass any one of 
   "Types": ["Game"],
   "Categories": [29],
   "IgnoredContentDescriptors": [3, 4],
-  "IgnoreFreeWeekends": false,
+  "IgnoreFreeWeekends": true,
 },{
   "Types": ["Game"],
   "Tags": [1664, 5432],
