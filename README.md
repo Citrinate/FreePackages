@@ -1,4 +1,4 @@
-# Free Package Plugin for ArchiSteamFarm
+# Free Packages Plugin for ArchiSteamFarm
 
 ## Introduction
 
