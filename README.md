@@ -408,10 +408,12 @@ You can use [this userscript](https://github.com/Citrinate/FreePackages/tree/mai
 
 API | Method | Parameters | Description
 --- | --- | --- | ---
-`/Api/FreePackages/{botNames}/GetChangesSince/{changeNumber}`|`GET`||Request changes for apps and packages since a given change number
+`/Api/FreePackages/{botNames}/GetChangesSince/{changeNumber}`|`GET`| |Request changes for apps and packages since a given change number [^1]
 `/Api/FreePackages/{botName}/GetOwnedApps`|`GET`|`showNames`|Retrieves all apps owned by the given bot
 `/Api/FreePackages/{botName}/GetOwnedPackages`|`GET`| |Retrieves all packages owned by the given bot
-`/Api/FreePackages/{botNames}/GetProductInfo`|`GET`|`appIDs`, `packageIDs`|Request product information for a list of apps or packages
+`/Api/FreePackages/{botNames}/GetProductInfo`|`GET`|`appIDs`, `packageIDs`|Request product information for a list of apps or packages [^1]
 `/Api/FreePackages/{botNames}/QueueLicenses`|`POST`|`appIDs`, `packageIDs`, `useFilter`|Adds the given appIDs and packageIDs to the given bot's package queue
 `/Api/FreePackages/{botName}/RequestFreeAppLicense`|`GET`|`appIDs`|Request a free license for given appIDs
 `/Api/FreePackages/{botName}/RequestFreeSubLicense`|`GET`|`subID`|Request a free license for given subID
+
+[^1]: Responses are not dependent on the account used to make these requests.  You may provide multiple `botNames`, and the first available bot will be used to make the request.
