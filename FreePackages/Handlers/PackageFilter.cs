@@ -26,17 +26,19 @@ namespace FreePackages {
 		}
 		
 		internal void UpdateUserData(UserData userData) {
-			UserData = userData;
-			ImportedIgnoredAppIDs = UserData.IgnoredApps.Where(x => x.Value == 0).Select(x => x.Key).ToHashSet();
-			ImportedIgnoredTags = UserData.ExcludedTags.Select(x => x.TagID).ToHashSet();
-			ImportedIgnoredContentDescriptors = UserData.ExcludedContentDescriptorIDs;
-			OwnedAppIDs = UserData.OwnedApps;
+			ImportedIgnoredAppIDs = userData.IgnoredApps.Where(x => x.Value == 0).Select(x => x.Key).ToHashSet();
+			ImportedIgnoredTags = userData.ExcludedTags.Select(x => x.TagID).ToHashSet();
+			ImportedIgnoredContentDescriptors = userData.ExcludedContentDescriptorIDs;
 
 			// Get all of the apps that are in each of the owned packages, and merge with explicitly owned apps
+			var ownedAppIDs = userData.OwnedApps;
 			if (ASF.GlobalDatabase != null) {
-				var ownedPackageIDs = UserData.OwnedPackages;
-				OwnedAppIDs.UnionWith(ASF.GlobalDatabase.PackagesDataReadOnly.Where(x => ownedPackageIDs.Contains(x.Key) && x.Value.AppIDs != null).SelectMany(x => x.Value.AppIDs!).ToHashSet<uint>());
+				var ownedPackageIDs = userData.OwnedPackages;
+				ownedAppIDs.UnionWith(ASF.GlobalDatabase.PackagesDataReadOnly.Where(x => ownedPackageIDs.Contains(x.Key) && x.Value.AppIDs != null).SelectMany(x => x.Value.AppIDs!).ToHashSet<uint>());
 			}
+
+			OwnedAppIDs = ownedAppIDs;
+			UserData = userData;
 		}
 
 		internal bool IsRedeemableApp(FilterableApp app) {
