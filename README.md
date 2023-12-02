@@ -275,7 +275,8 @@ All filter options are explained below:
   6 | Mostly Positive | 1-49 | 70%-79%
   7 | Positive | 1-49 | 80%-100%
   8 | Very Positive | 50-499 | 80%-100%
-  9 | Overwhelmingly Positive | 500+ | 80%-100%
+  8 | Very Positive | 500+ | 80%-94%
+  9 | Overwhelmingly Positive | 500+ | 95%-100%
 </details>
 
 ---
