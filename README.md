@@ -270,9 +270,9 @@ All filter options are explained below:
   1 | Overwhelmingly Negative | 500+ | 0%-19%
   2 | Very Negative | 50-499 | 0%-19%
   3 | Negative | 1-49 | 0%-19%
-  4 | Mostly Negative | 1-49 | 20%-39%
-  5 | Mixed | 1-49 | 40%-69%
-  6 | Mostly Positive | 1-49 | 70%-79%
+  4 | Mostly Negative | - | 20%-39%
+  5 | Mixed | - | 40%-69%
+  6 | Mostly Positive | - | 70%-79%
   7 | Positive | 1-49 | 80%-100%
   8 | Very Positive | 50-499 | 80%-100%
   8 | Very Positive | 500+ | 80%-94%
