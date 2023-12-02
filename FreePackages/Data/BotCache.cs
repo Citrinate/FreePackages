@@ -28,7 +28,7 @@ namespace FreePackages {
 		internal ConcurrentHashSet<uint> NewOwnedPackages = new();
 
 		[JsonProperty(Required = Required.DisallowNull)]
-		internal ConcurrentHashSet<uint> LastPackagesAdded = new();
+		internal ConcurrentHashSet<uint> SeenPackages = new();
 
 		[JsonProperty(Required = Required.DisallowNull)]
 		internal ConcurrentHashSet<uint> WaitlistedPlaytests = new();
@@ -204,9 +204,8 @@ namespace FreePackages {
 			Utilities.InBackground(Save);
 		}
 
-		internal void UpdateLastPackagesAdded(HashSet<uint> lastPackagesAdded) {
-			LastPackagesAdded.IntersectWith(lastPackagesAdded);
-			LastPackagesAdded.UnionWith(lastPackagesAdded);
+		internal void UpdateSeenPackages(HashSet<uint> seenPackages) {
+			SeenPackages.UnionWith(seenPackages);
 
 			Utilities.InBackground(Save);
 		}

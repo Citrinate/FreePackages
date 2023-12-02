@@ -570,10 +570,14 @@ namespace FreePackages {
 		}
 
 		internal void HandleLicenseList(SteamApps.LicenseListCallback callback) {
-			DateTime recent = DateTime.UtcNow.AddMinutes(-1);
-			HashSet<uint> lastPackagesAdded = callback.LicenseList.Where(license => license.TimeCreated > recent).Select(license => license.PackageID).ToHashSet();
-			BotCache.AddChanges(newOwnedPackageIDs: lastPackagesAdded.Except(BotCache.LastPackagesAdded).ToHashSet());
-			BotCache.UpdateLastPackagesAdded(lastPackagesAdded);
+			HashSet<uint> ownedPackageIDs = callback.LicenseList.Select(license => license.PackageID).ToHashSet();
+			HashSet<uint> newOwnedPackageIDs = ownedPackageIDs.Except(BotCache.SeenPackages).ToHashSet();
+
+			if (BotCache.SeenPackages.Count > 0) {
+				BotCache.AddChanges(newOwnedPackageIDs: newOwnedPackageIDs);
+			}
+
+			BotCache.UpdateSeenPackages(newOwnedPackageIDs);
 		}
 
 		internal string GetStatus() {
