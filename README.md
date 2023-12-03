@@ -1,6 +1,6 @@
 # Free Packages Plugin for ArchiSteamFarm
 
-[![Check out my other ArchiSteamFarm plugins](https://img.shields.io/badge/Check%20out%20my%20other%20ArchiSteamFarm%20plugins-blue?style=flat-square&logo=github)](https://github.com/stars/Citrinate/lists/archisteamfarm-plugins) ![GitHub all releases](https://img.shields.io/github/downloads/Citrinate/FreePackages/total?style=flat-square)
+[![Check out my other ArchiSteamFarm plugins](https://img.shields.io/badge/Check%20out%20my%20other%20ArchiSteamFarm%20plugins-blue?logo=github)](https://github.com/stars/Citrinate/lists/archisteamfarm-plugins) ![GitHub all releases](https://img.shields.io/github/downloads/Citrinate/FreePackages/total?logo=github&label=Downloads)
 
 ## Introduction
 
