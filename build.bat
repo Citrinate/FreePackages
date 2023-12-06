@@ -36,22 +36,3 @@ if ERRORLEVEL 1 (
 :zip
 7z a -tzip -mx7 .\out\%CurrDirName%.zip .\out\%CurrDirName%
 rmdir /Q /S out\%CurrDirName%
-
-rem release generic-netf version
-rem comment section below if you don't target netf ASF version
-
-dotnet publish -c "Release" -f "net48" -o "out/generic-netf"
-mkdir .\out\%CurrDirName%
-copy .\out\generic-netf\%CurrDirName%.dll .\out\%CurrDirName%
-rem comment section below (downto :zipnetf label) if you don't want to include documentation 
-if not exist README.md (goto zipnetf)
-where /q pandoc.exe
-if ERRORLEVEL 1 (
-  copy README.md .\out\%CurrDirName%
-  goto zipnetf
-) else (
-  pandoc  --metadata title="%CurrDirName%" --standalone --columns 2000 -f markdown -t html --embed-resources --standalone -c .\github-pandoc.css -o .\out\%CurrDirName%\README.html README.md
-)
-:zipnetf
-7z a -tzip -mx7 .\out\%CurrDirName%-netf.zip .\out\%CurrDirName%
-rmdir /Q /S out\%CurrDirName%
