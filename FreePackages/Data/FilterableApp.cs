@@ -130,29 +130,36 @@ namespace FreePackages {
 			return types.Contains(Type.ToString(), StringComparer.OrdinalIgnoreCase);
 		}
 
-		internal bool HasTag(IEnumerable<uint> tags) {
+		internal bool HasTag(IEnumerable<uint> tags, bool requireAll = false) {
 			if (tags.Count() == 0) {
 				return false;
 			}
 
-			if (AppTags.Any(tag => tags.Contains(tag))) {
+			if ((!requireAll && AppTags.Any(tag => tags.Contains(tag)))
+				|| (requireAll && tags.All(tag => AppTags.Contains(tag)))
+			) {
 				return true;
 			}
 
 			// Also check parent app, because parents can have additional tags defined
-			if (Parent != null && Parent.AppTags.Any(tag => tags.Contains(tag))) {
+			if (Parent != null && (
+				(!requireAll && Parent.AppTags.Any(tag => tags.Contains(tag)))
+				|| (requireAll && tags.All(tag => Parent.AppTags.Contains(tag)))
+			)) {
 				return true;
 			}
 
 			return false;
 		}
 
-		internal bool HasCategory(IEnumerable<uint> categories) {
+		internal bool HasCategory(IEnumerable<uint> categories, bool requireAll = false) {
 			if (categories.Count() == 0) {
 				return false;
 			}
 
-			if (Category.Any(category => categories.Contains(category))) {
+			if ((!requireAll && Category.Any(category => categories.Contains(category)))
+				|| (requireAll && categories.All(category => Category.Contains(category)))
+			) {
 				return true;
 			}
 
@@ -160,7 +167,10 @@ namespace FreePackages {
 			// This may lead to unintended fitlering, but not doing it may also lead to unintended filtering.
 			// Don't use parent categories if the app has categories of its own defined, but the parent has more.
 			// It could be that the parent naturally has more categories, for example a demo without achievement and a parent with achievements.
-			if (Category.Count == 0 && Parent != null && Parent.Category.Any(category => categories.Contains(category))) {
+			if (Category.Count == 0 && Parent != null && (
+				(!requireAll && Parent.Category.Any(category => categories.Contains(category)))
+				|| (requireAll && categories.All(category => Parent.Category.Contains(category)))
+			)) {
 				return true;
 			}
 

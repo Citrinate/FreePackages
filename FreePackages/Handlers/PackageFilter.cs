@@ -89,12 +89,12 @@ namespace FreePackages {
 				return false;
 			}
 
-			if (filter.Categories.Count > 0 && !app.HasCategory(filter.Categories)) {
+			if (filter.Categories.Count > 0 && !app.HasCategory(filter.Categories, filter.RequireAllCategories)) {
 				// Unwanted due to missing categories
 				return false;
 			}
 
-			if (filter.Tags.Count > 0 && !app.HasTag(filter.Tags)) {
+			if (filter.Tags.Count > 0 && !app.HasTag(filter.Tags, filter.RequireAllTags)) {
 				// Unwanted due to missing tags (also check parent app, because parents can have more tags defined)
 				return false;
 			}
