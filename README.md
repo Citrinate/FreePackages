@@ -47,14 +47,18 @@ By default, the plugin will attempt to activate all free non-playtest packages. 
   "Tags": [],
   "Categories": [],
   "Languages": [],
+  "Systems": [],
   "MinReviewScore": 0,
   "IgnoredContentDescriptors": [],
   "IgnoredTypes": [],
   "IgnoredTags": [],
   "IgnoredCategories": [],
   "IgnoredAppIDs": [],
+  "RequireAllTags": false,
+  "RequireAllCategories": false,
   "ImportStoreFilters": false,
   "IgnoreFreeWeekends": false,
+  "NoCostOnly": false,
   "PlaytestMode": 0,
 }],
 ```
@@ -258,6 +262,12 @@ All filter options are explained below:
 
 ---
 
+#### Systems
+
+`HashSet<string>` type with default value of `[]`.  Packages must contain an app with support for one of the `SystemNames` specified here or they will not be added to your account.  You can leave this empty to allow for all systems.  The available `SystemNames` for filtering are: `"Windows"`, `"MacOS"`, `"Linux"`, `"DeckVerified"`, `"DeckPlayable"`, `"DeckUnsupported"`, `"DeckUnknown"`
+
+---
+
 #### MinReviewScore
 
 `uint` type with default value of `0`.  Packages must contain an app with a `ReviewScore` greater than or equal to this or they will not be added to your account.  You can leave this at `0` to allow for all values.  A `ReviewScore` may range from 1 to 9 and is not the same as the percentage of positive reviews.  Refer to the list below for more information.  This filter is not applied to demos or playtests as they can't normally be reviewed.
@@ -323,6 +333,18 @@ All filter options are explained below:
 
 ---
 
+#### RequireAllTags
+
+`bool` type with default value of `false`.  If set to `true`, packages must contain an app with **all** of the `TagIDs` specified in the [Tags](#tags) filter or they will not be added to your account.
+
+---
+
+#### RequireAllCategories
+
+`bool` type with default value of `false`.  If set to `true`, packages must contain an app with **all** of the `CategoryIDs` specified in the [Categories](#categories) filter or they will not be added to your account.
+
+---
+
 #### ImportStoreFilters
 
 `bool` type with default value of `false`.  If set to `true`, the filter will also use the ignored games, ignored tags, and ignored content descriptor settings you use on the Steam storefront.
@@ -332,6 +354,12 @@ All filter options are explained below:
 #### IgnoreFreeWeekends
 
 `bool` type with default value of `false`.  Free weekend packages will be ignored if set to `true`.
+
+---
+
+#### NoCostOnly
+
+`bool` type with default value of `false`.  If set to `true`, only "No Cost" packages will be added to your account.  "No Cost" packages tend to be those which are free for only a limited time, and can also sometimes give a +1 to your owned games count.
 
 ---
 
