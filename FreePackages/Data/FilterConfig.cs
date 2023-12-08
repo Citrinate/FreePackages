@@ -49,6 +49,9 @@ namespace FreePackages {
 		[JsonProperty(Required = Required.Default)]
 		internal bool RequireAllCategories = false;
 		
+		[JsonProperty(Required = Required.Default)]
+		internal bool NoCostOnly = false;
+
 		[JsonConstructor]
 		internal FilterConfig() { }
 	}
