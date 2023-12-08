@@ -110,6 +110,11 @@ namespace FreePackages {
 				return false;
 			}
 
+			if (filter.Systems.Count > 0 && !app.HasSystem(filter.Systems)) {
+				// Unwanted due to missing supported systems
+				return false;
+			}
+
 			return true;
 		}
 

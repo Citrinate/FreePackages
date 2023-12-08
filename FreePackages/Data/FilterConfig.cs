@@ -52,6 +52,9 @@ namespace FreePackages {
 		[JsonProperty(Required = Required.Default)]
 		internal bool NoCostOnly = false;
 
+		[JsonProperty(Required = Required.Default)]
+		internal HashSet<string> Systems = new();
+
 		[JsonConstructor]
 		internal FilterConfig() { }
 	}
