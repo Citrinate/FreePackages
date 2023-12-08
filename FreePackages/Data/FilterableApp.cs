@@ -24,6 +24,7 @@ namespace FreePackages {
 		internal uint ReviewScore;
 		internal string? ListOfDLC;
 		internal uint PlayTestType;
+		internal uint MasterSubGrantingApp;
 		internal bool Hidden;
 
 		internal FilterableApp(SteamApps.PICSProductInfoCallback.PICSProductInfo productInfo) : this(productInfo.ID, productInfo.KeyValues) {}
@@ -45,6 +46,7 @@ namespace FreePackages {
 			ReviewScore = kv["common"]["review_score"].AsUnsignedInteger();
 			ListOfDLC = kv["extended"]["listofdlc"].AsString();
 			PlayTestType = kv["extended"]["playtest_type"].AsUnsignedInteger();
+			MasterSubGrantingApp = kv["common"]["mastersubs_granting_app"].AsUnsignedInteger();
 			Hidden = kv["common"] == KeyValue.Invalid;
 
 			// I only want the parents for playtests and demos (because they share a store page with their parents and so should inherit some of their parents properties)
@@ -85,6 +87,15 @@ namespace FreePackages {
 
 			// Playtest
 			if (Type == EAppType.Beta) {
+				return true;
+			}
+
+			return false;
+		}
+
+		internal bool IsPossiblyFree() {
+			if (MasterSubGrantingApp > 0) {
+				// Free for EA Play subscribers
 				return true;
 			}
 

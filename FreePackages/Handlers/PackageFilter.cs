@@ -79,6 +79,11 @@ namespace FreePackages {
 				}
 			}
 
+			if (app.MasterSubGrantingApp > 0 && !OwnedAppIDs.Contains(app.MasterSubGrantingApp) && !app.IsFree()) {
+				// EA Play game, but we don't have an EA Play subscription
+				return false;
+			}
+
 			return true;
 		}
 

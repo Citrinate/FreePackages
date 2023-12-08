@@ -195,7 +195,7 @@ namespace FreePackages {
 
 				// Filter out non-free apps
 				apps.RemoveAll(app => {
-					if (!app.IsFree() || !app.IsAvailable()) {
+					if (!(app.IsFree() || app.IsPossiblyFree()) || !app.IsAvailable()) {
 						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(appID: app.ID));
 
 						return true;
