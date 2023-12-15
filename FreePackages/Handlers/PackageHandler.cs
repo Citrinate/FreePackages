@@ -578,6 +578,7 @@ namespace FreePackages {
 			}
 
 			BotCache.UpdateSeenPackages(newOwnedPackageIDs);
+			UserDataRefreshTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(15));
 		}
 
 		internal string GetStatus() {
