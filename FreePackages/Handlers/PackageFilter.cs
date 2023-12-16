@@ -303,7 +303,7 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool OnlyPackages(FilterConfig filter) {
+		internal bool FilterOnlyAllowsPackages(FilterConfig filter) {
 			if (filter.NoCostOnly) {
 				// NoCost is a property value that only applies to packages, so ignore all non-packages
 				return true;
@@ -312,8 +312,8 @@ namespace FreePackages {
 			return false;
 		}
 
-		internal bool IsWantedApp(FilterableApp app) => FilterConfigs.Count == 0 || FilterConfigs.Any(filter => !OnlyPackages(filter) && IsAppWantedByFilter(app, filter) && !IsAppIgnoredByFilter(app, filter));
+		internal bool IsWantedApp(FilterableApp app) => FilterConfigs.Count == 0 || FilterConfigs.Any(filter => !FilterOnlyAllowsPackages(filter) && IsAppWantedByFilter(app, filter) && !IsAppIgnoredByFilter(app, filter));
 		internal bool IsWantedPackage(FilterablePackage package) => FilterConfigs.Count == 0 || FilterConfigs.Any(filter => IsPackageWantedByFilter(package, filter) && !IsPackageIgnoredByFilter(package, filter));
-		internal bool IsWantedPlaytest(FilterableApp app) => FilterConfigs.Count > 0 && FilterConfigs.Any(filter => !OnlyPackages(filter) && IsPlaytestWantedByFilter(app, filter) && !IsAppIgnoredByFilter(app, filter));
+		internal bool IsWantedPlaytest(FilterableApp app) => FilterConfigs.Count > 0 && FilterConfigs.Any(filter => !FilterOnlyAllowsPackages(filter) && IsPlaytestWantedByFilter(app, filter) && !IsAppIgnoredByFilter(app, filter));
 	}
 }
