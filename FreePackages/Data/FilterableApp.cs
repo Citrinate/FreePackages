@@ -24,6 +24,8 @@ namespace FreePackages {
 		internal uint ReviewScore;
 		internal string? ListOfDLC;
 		internal uint PlayTestType;
+		internal List<string>? OSList;
+		internal uint DeckCompatibility;
 		internal bool Hidden;
 
 		internal FilterableApp(SteamApps.PICSProductInfoCallback.PICSProductInfo productInfo) : this(productInfo.ID, productInfo.KeyValues) {}
@@ -49,6 +51,8 @@ namespace FreePackages {
 			ReviewScore = kv["common"]["review_score"].AsUnsignedInteger();
 			ListOfDLC = kv["extended"]["listofdlc"].AsString();
 			PlayTestType = kv["extended"]["playtest_type"].AsUnsignedInteger();
+			OSList = kv["common"]["oslist"].AsString()?.ToUpper().Split(",").ToList();
+			DeckCompatibility = kv["common"]["steam_deck_compatibility"]["category"].AsUnsignedInteger();
 			Hidden = kv["common"] == KeyValue.Invalid;
 
 			// I only want the parents for playtests and demos (because they share a store page with their parents and so should inherit some of their parents properties)
@@ -134,29 +138,36 @@ namespace FreePackages {
 			return types.Contains(Type.ToString(), StringComparer.OrdinalIgnoreCase);
 		}
 
-		internal bool HasTag(IEnumerable<uint> tags) {
+		internal bool HasTag(IEnumerable<uint> tags, bool requireAll = false) {
 			if (tags.Count() == 0) {
 				return false;
 			}
 
-			if (AppTags.Any(tag => tags.Contains(tag))) {
+			if ((!requireAll && AppTags.Any(tag => tags.Contains(tag)))
+				|| (requireAll && tags.All(tag => AppTags.Contains(tag)))
+			) {
 				return true;
 			}
 
 			// Also check parent app, because parents can have additional tags defined
-			if (Parent != null && Parent.AppTags.Any(tag => tags.Contains(tag))) {
+			if (Parent != null && (
+				(!requireAll && Parent.AppTags.Any(tag => tags.Contains(tag)))
+				|| (requireAll && tags.All(tag => Parent.AppTags.Contains(tag)))
+			)) {
 				return true;
 			}
 
 			return false;
 		}
 
-		internal bool HasCategory(IEnumerable<uint> categories) {
+		internal bool HasCategory(IEnumerable<uint> categories, bool requireAll = false) {
 			if (categories.Count() == 0) {
 				return false;
 			}
 
-			if (Category.Any(category => categories.Contains(category))) {
+			if ((!requireAll && Category.Any(category => categories.Contains(category)))
+				|| (requireAll && categories.All(category => Category.Contains(category)))
+			) {
 				return true;
 			}
 
@@ -164,7 +175,10 @@ namespace FreePackages {
 			// This may lead to unintended fitlering, but not doing it may also lead to unintended filtering.
 			// Don't use parent categories if the app has categories of its own defined, but the parent has more.
 			// It could be that the parent naturally has more categories, for example a demo without achievement and a parent with achievements.
-			if (Category.Count == 0 && Parent != null && Parent.Category.Any(category => categories.Contains(category))) {
+			if (Category.Count == 0 && Parent != null && (
+				(!requireAll && Parent.Category.Any(category => categories.Contains(category)))
+				|| (requireAll && categories.All(category => Parent.Category.Contains(category)))
+			)) {
 				return true;
 			}
 
@@ -202,6 +216,34 @@ namespace FreePackages {
 			// Don't check the parent's langauge if the app has languages of its own, but the parent has more.
 			// It could be that the parent app naturally has more language support, in demos for example (ex: Grounded Demo supports only English while the full release supports more languages https://steamdb.info/app/1316010/ , https://steamcommunity.com/app/962130/discussions/0/2440336502396337163/)
 			if (SupportedLanguages.Count == 0 && Parent != null && Parent.SupportedLanguages.Any(language => languages.Contains(language, StringComparer.OrdinalIgnoreCase))) {
+				return true;
+			}
+
+			return false;
+		}
+
+		internal bool HasSystem(IEnumerable<string> systems) {
+			if (systems.Count() == 0) {
+				return false;
+			}
+
+			if (OSList != null && OSList.Any(system => systems.Contains(system, StringComparer.OrdinalIgnoreCase))) {
+				return true;
+			}
+
+			if (DeckCompatibility == 3 && systems.Contains("DeckVerified", StringComparer.OrdinalIgnoreCase)) {
+				return true;
+			}
+
+			if (DeckCompatibility == 2 && systems.Contains("DeckPlayable", StringComparer.OrdinalIgnoreCase)) {
+				return true;
+			}
+
+			if (DeckCompatibility == 1 && systems.Contains("DeckUnsupported", StringComparer.OrdinalIgnoreCase)) {
+				return true;
+			}
+
+			if (DeckCompatibility == 0 && systems.Contains("DeckUnknown", StringComparer.OrdinalIgnoreCase)) {
 				return true;
 			}
 

@@ -54,6 +54,15 @@ public class Filters {
 
 		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
 
+		Filter.RequireAllTags = true;
+
+		Assert.IsFalse(PackageFilter.IsAppWantedByFilter(app, Filter));
+
+		Filter.Tags.Remove(8000);
+		Filter.Tags.Add(19);
+
+		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
+
 		Filter.IgnoredTags.Add(113);
 
 		Assert.IsTrue(PackageFilter.IsAppIgnoredByFilter(app, Filter));
@@ -71,6 +80,15 @@ public class Filters {
 		demo.AddParent(demoParent);
 
 		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(demo, Filter));
+
+		Filter.RequireAllTags = true;
+		Filter.Tags.Add(19);
+
+		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(demo, Filter));
+
+		Filter.Tags.Add(8000);
+
+		Assert.IsFalse(PackageFilter.IsAppWantedByFilter(demo, Filter));
 	}
 
 	[TestMethod]
@@ -82,6 +100,15 @@ public class Filters {
 		Assert.IsFalse(PackageFilter.IsAppWantedByFilter(app, Filter));
 
 		Filter.Categories.Add(8);
+
+		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
+
+		Filter.RequireAllCategories = true;
+
+		Assert.IsFalse(PackageFilter.IsAppWantedByFilter(app, Filter));
+
+		Filter.Categories.Remove(8000);
+		Filter.Categories.Add(1);
 
 		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
 
@@ -102,6 +129,15 @@ public class Filters {
 		playtest.AddParent(playtestParent);
 
 		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(playtest, Filter));
+
+		Filter.RequireAllCategories = true;
+		Filter.Categories.Add(1);
+
+		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(playtest, Filter));
+
+		Filter.Categories.Add(8000);
+
+		Assert.IsFalse(PackageFilter.IsAppWantedByFilter(playtest, Filter));
 	}
 
 	[TestMethod]
@@ -306,5 +342,57 @@ public class Filters {
 		Assert.IsFalse(packageFilter.IsAppIgnoredByFilter(app, filterB));
 
 		Assert.IsTrue(packageFilter.IsWantedApp(app));
+	}
+
+	[TestMethod]
+	public void CanFilterAppBySystem() {
+		var deck_verified_app = new FilterableApp(KeyValue.LoadAsText("app_with_deck_verified.txt"));
+		var deck_playable_app = new FilterableApp(KeyValue.LoadAsText("app_with_deck_playable.txt"));
+		var deck_unsuppored_app = new FilterableApp(KeyValue.LoadAsText("app_with_deck_unsupported.txt"));
+		var deck_unknown_app = new FilterableApp(KeyValue.LoadAsText("app_with_deck_unknown.txt"));
+
+		Assert.AreEqual(deck_verified_app.DeckCompatibility, (uint) 3);
+		Assert.AreEqual(deck_playable_app.DeckCompatibility, (uint) 2);
+		Assert.AreEqual(deck_unsuppored_app.DeckCompatibility, (uint) 1);
+		Assert.AreEqual(deck_unknown_app.DeckCompatibility, (uint) 0);
+
+		Filter.Systems.Add("DeckVerified");
+		Filter.Systems.Add("DeckPlayable");
+		Filter.Systems.Add("DeckUnsupported");
+		Filter.Systems.Add("DeckUnknown");
+
+		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(deck_verified_app, Filter));
+		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(deck_playable_app, Filter));
+		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(deck_unsuppored_app, Filter));
+		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(deck_unknown_app, Filter));
+
+		Filter.Systems.Remove("DeckVerified");
+		Filter.Systems.Remove("DeckPlayable");
+		Filter.Systems.Remove("DeckUnsupported");
+		Filter.Systems.Remove("DeckUnknown");
+
+		var windows_app = new FilterableApp(KeyValue.LoadAsText("app_with_type.txt"));
+
+		Filter.Systems.Add("Foo");
+
+		Assert.IsFalse(PackageFilter.IsAppWantedByFilter(windows_app, Filter));
+
+		Filter.Systems.Add("WiNdOwS");
+
+		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(windows_app, Filter));
+	}
+
+	[TestMethod]
+	public void CanFilterPackageByNoCost() {
+		var free_package = new FilterablePackage(KeyValue.LoadAsText("package_which_is_free.txt"));
+		var no_cost_package = new FilterablePackage(KeyValue.LoadAsText("package_which_is_no_cost.txt"));
+
+		Assert.IsFalse(PackageFilter.FilterOnlyAllowsPackages(Filter));
+
+		Filter.NoCostOnly = true;
+
+		Assert.IsTrue(PackageFilter.IsPackageIgnoredByFilter(free_package, Filter));
+		Assert.IsFalse(PackageFilter.IsPackageIgnoredByFilter(no_cost_package, Filter));
+		Assert.IsTrue(PackageFilter.FilterOnlyAllowsPackages(Filter));
 	}
 }

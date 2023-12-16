@@ -89,12 +89,12 @@ namespace FreePackages {
 				return false;
 			}
 
-			if (filter.Categories.Count > 0 && !app.HasCategory(filter.Categories)) {
+			if (filter.Categories.Count > 0 && !app.HasCategory(filter.Categories, filter.RequireAllCategories)) {
 				// Unwanted due to missing categories
 				return false;
 			}
 
-			if (filter.Tags.Count > 0 && !app.HasTag(filter.Tags)) {
+			if (filter.Tags.Count > 0 && !app.HasTag(filter.Tags, filter.RequireAllTags)) {
 				// Unwanted due to missing tags (also check parent app, because parents can have more tags defined)
 				return false;
 			}
@@ -107,6 +107,11 @@ namespace FreePackages {
 
 			if (filter.Languages.Count > 0 && !app.HasLanguage(filter.Languages)) {
 				// Unwanted due to missing supported language
+				return false;
+			}
+
+			if (filter.Systems.Count > 0 && !app.HasSystem(filter.Systems)) {
+				// Unwanted due to missing supported systems
 				return false;
 			}
 
@@ -225,6 +230,10 @@ namespace FreePackages {
 		}
 
 		internal bool IsPackageIgnoredByFilter(FilterablePackage package, FilterConfig filter) {
+			if (filter.NoCostOnly && package.BillingType != EBillingType.NoCost) {
+				return true;
+			}
+
 			if (filter.IgnoreFreeWeekends && package.FreeWeekend) {
 				return true;
 			}
@@ -294,8 +303,17 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsWantedApp(FilterableApp app) => FilterConfigs.Count == 0 || FilterConfigs.Any(filter => IsAppWantedByFilter(app, filter) && !IsAppIgnoredByFilter(app, filter));
+		internal bool FilterOnlyAllowsPackages(FilterConfig filter) {
+			if (filter.NoCostOnly) {
+				// NoCost is a property value that only applies to packages, so ignore all non-packages
+				return true;
+			}
+
+			return false;
+		}
+
+		internal bool IsWantedApp(FilterableApp app) => FilterConfigs.Count == 0 || FilterConfigs.Any(filter => !FilterOnlyAllowsPackages(filter) && IsAppWantedByFilter(app, filter) && !IsAppIgnoredByFilter(app, filter));
 		internal bool IsWantedPackage(FilterablePackage package) => FilterConfigs.Count == 0 || FilterConfigs.Any(filter => IsPackageWantedByFilter(package, filter) && !IsPackageIgnoredByFilter(package, filter));
-		internal bool IsWantedPlaytest(FilterableApp app) => FilterConfigs.Count > 0 && FilterConfigs.Any(filter => IsPlaytestWantedByFilter(app, filter) && !IsAppIgnoredByFilter(app, filter));
+		internal bool IsWantedPlaytest(FilterableApp app) => FilterConfigs.Count > 0 && FilterConfigs.Any(filter => !FilterOnlyAllowsPackages(filter) && IsPlaytestWantedByFilter(app, filter) && !IsAppIgnoredByFilter(app, filter));
 	}
 }

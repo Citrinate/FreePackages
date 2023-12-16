@@ -68,6 +68,8 @@ get_sub 81948 "package_with_free_weekend"
 get_sub 907539 "package_with_single_app"
 get_app 1086940 "package_with_single_app_app_1"
 
+get_sub 44911 "package_which_is_no_cost"
+
 # For app testing
 
 get_app 440 "app_which_is_free"
@@ -86,6 +88,11 @@ get_app 34330 "app_with_dlc"
 
 get_app 2423370 "playtest_with_hidden_parent"
 get_app 2423350 "playtest_with_hidden_parent_parent"
+
+get_app 1086940 "app_with_deck_verified"
+get_app 30 "app_with_deck_playable"
+get_app 43160 "app_with_deck_unsupported"
+get_app 1449570 "app_with_deck_unknown"
 
 # For package testing
 

@@ -43,6 +43,18 @@ namespace FreePackages {
 		[JsonProperty(Required = Required.Default)]
 		internal EPlaytestMode PlaytestMode = EPlaytestMode.None;
 
+		[JsonProperty(Required = Required.Default)]
+		internal bool RequireAllTags = false;
+		
+		[JsonProperty(Required = Required.Default)]
+		internal bool RequireAllCategories = false;
+		
+		[JsonProperty(Required = Required.Default)]
+		internal bool NoCostOnly = false;
+
+		[JsonProperty(Required = Required.Default)]
+		internal HashSet<string> Systems = new();
+
 		[JsonConstructor]
 		internal FilterConfig() { }
 	}
