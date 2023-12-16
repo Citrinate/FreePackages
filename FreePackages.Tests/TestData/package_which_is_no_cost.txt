@@ -1,0 +1,26 @@
+"44911"
+{
+	"packageid"		"44911"
+	"billingtype"		"0"
+	"licensetype"		"1"
+	"status"		"2"
+	"extended"
+	{
+		"allowpurchasefromrestrictedcountries"		"0"
+		"purchaserestrictedcountries"		"RU"
+	}
+	"appids"
+	{
+		"0"		"304050"
+	}
+	"depotids"
+	{
+		"0"		"304051"
+		"1"		"304052"
+		"2"		"304053"
+		"3"		"845241"
+	}
+	"appitems"
+	{
+	}
+}

@@ -1,0 +1,198 @@
+"appinfo"
+{
+	"appid"		"1449570"
+	"common"
+	{
+		"name"		"The Godkiller - Chapter 1"
+		"type"		"Game"
+		"oslist"		"windows,macos"
+		"osarch"		"64"
+		"osextended"		"macos64"
+		"logo"		"b78da74c67e28465eacc544a73c080d7911bd2b7"
+		"logo_small"		"b78da74c67e28465eacc544a73c080d7911bd2b7_thumb"
+		"icon"		"df7c384136a9238fb2e6bb64f0e3b088cf89b093"
+		"clienticon"		"cc86603c8e78c3be9e0db868fba59d40cf58db11"
+		"clienttga"		"56fbea877b170a0b694fdaeced136e27d0599353"
+		"releasestate"		"released"
+		"content_descriptors"
+		{
+			"0"		"5"
+		}
+		"has_adult_content"		"1"
+		"controller_support"		"full"
+		"small_capsule"
+		{
+			"english"		"capsule_231x87.jpg"
+		}
+		"header_image"
+		{
+			"english"		"header.jpg"
+		}
+		"library_assets"
+		{
+			"library_capsule"		"en"
+			"library_hero"		"en"
+			"library_logo"		"en"
+			"logo_position"
+			{
+				"pinned_position"		"BottomLeft"
+				"width_pct"		"28.139534883720927"
+				"height_pct"		"50"
+			}
+		}
+		"store_asset_mtime"		"1639703272"
+		"associations"
+		{
+			"0"
+			{
+				"type"		"developer"
+				"name"		"Seespace Labs"
+			}
+			"1"
+			{
+				"type"		"publisher"
+				"name"		"Seespace Labs"
+			}
+			"2"
+			{
+				"type"		"franchise"
+				"name"		"The Godkiller"
+			}
+		}
+		"primary_genre"		"25"
+		"genres"
+		{
+			"0"		"25"
+			"1"		"23"
+		}
+		"category"
+		{
+			"category_2"		"1"
+			"category_28"		"1"
+			"category_22"		"1"
+		}
+		"supported_languages"
+		{
+			"english"
+			{
+				"supported"		"true"
+				"full_audio"		"true"
+				"subtitles"		"true"
+			}
+		}
+		"steam_release_date"		"1640997940"
+		"community_visible_stats"		"1"
+		"community_hub_visible"		"1"
+		"gameid"		"1449570"
+		"store_tags"
+		{
+			"0"		"3834"
+			"1"		"71389"
+			"2"		"14139"
+			"3"		"1730"
+			"4"		"1664"
+			"5"		"7208"
+			"6"		"1697"
+			"7"		"4791"
+			"8"		"5923"
+			"9"		"1710"
+			"10"		"4137"
+			"11"		"1742"
+			"12"		"4252"
+			"13"		"5030"
+			"14"		"6129"
+			"15"		"15277"
+			"16"		"21"
+			"17"		"4145"
+			"18"		"7569"
+			"19"		"4182"
+		}
+		"review_score"		"7"
+		"review_percentage"		"80"
+	}
+	"extended"
+	{
+		"developer"		"Seespace Labs"
+		"publisher"		"Seespace Labs"
+		"homepage"		"https://seespacelabs.com/the-godkiller"
+	}
+	"config"
+	{
+		"installdir"		"The Godkiller - Chapter 1"
+		"launch"
+		{
+			"0"
+			{
+				"executable"		"TheGodkiller.exe"
+				"type"		"default"
+				"config"
+				{
+					"oslist"		"windows"
+					"osarch"		"64"
+				}
+			}
+			"1"
+			{
+				"executable"		"GKMac.app"
+				"type"		"default"
+				"config"
+				{
+					"oslist"		"macos"
+				}
+			}
+		}
+		"steamcontrollertemplateindex"		"4"
+	}
+	"depots"
+	{
+		"1449572"
+		{
+			"config"
+			{
+				"oslist"		"windows"
+				"osarch"		"64"
+			}
+			"manifests"
+			{
+				"public"
+				{
+					"gid"		"6045382254555983484"
+					"size"		"1848353385"
+					"download"		"539606832"
+				}
+			}
+		}
+		"1449573"
+		{
+			"config"
+			{
+				"oslist"		"macos"
+				"osarch"		"64"
+			}
+			"manifests"
+			{
+				"public"
+				{
+					"gid"		"175808732097216509"
+					"size"		"2572486826"
+					"download"		"1243113664"
+				}
+			}
+		}
+		"branches"
+		{
+			"public"
+			{
+				"buildid"		"8297538"
+				"timeupdated"		"1646186033"
+			}
+		}
+	}
+	"ufs"
+	{
+		"quota"		"10000000"
+		"maxnumfiles"		"100"
+		"hidecloudui"		"1"
+		"ignoreexternalfiles"		"1"
+	}
+}
