@@ -41,7 +41,7 @@ namespace FreePackages {
 			UserData = userData;
 		}
 
-		internal bool IsRedeemableApp(FilterableApp app) {
+		internal bool IsRedeemableApp(FilterableApp app, HashSet<uint>? includedAppIDs = null) {
 			if (OwnedAppIDs == null) {
 				throw new InvalidOperationException(nameof(OwnedAppIDs));
 			}
@@ -61,7 +61,7 @@ namespace FreePackages {
 				return false;
 			}
 
-			if (app.MustOwnAppToPurchase > 0 && !OwnedAppIDs.Contains(app.MustOwnAppToPurchase)) {
+			if (app.MustOwnAppToPurchase > 0 && !OwnedAppIDs.Contains(app.MustOwnAppToPurchase) && (includedAppIDs == null || !includedAppIDs.Contains(app.MustOwnAppToPurchase))) {
 				// Missing a necessary app
 				return false;
 			}
@@ -212,7 +212,7 @@ namespace FreePackages {
 				}
 			}
 
-			if (package.PackageContents.Any(app => !OwnedAppIDs.Contains(app.ID) && !IsRedeemableApp(app))) {
+			if (package.PackageContents.Any(app => !OwnedAppIDs.Contains(app.ID) && !IsRedeemableApp(app, package.PackageContentIDs))) {
 				// At least one of the unowned apps in this package isn't redeemable
 				return false;
 			}
