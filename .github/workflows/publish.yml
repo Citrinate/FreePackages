@@ -1,0 +1,83 @@
+name: publish
+
+on: [push, pull_request]
+
+env:
+  PLUGIN_NAME: "FreePackages"
+  DOTNET_SDK_VERSION: 8.0
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.1.1
+        with:
+          submodules: recursive
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4.0.0
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
+
+      - name: Verify .NET Core
+        run: dotnet --info
+
+      - name: Prepare for publishing
+        run: dotnet restore
+
+      - name: Run FreePackages.Tests
+        run: dotnet test FreePackages.Tests -p:ContinuousIntegrationBuild=true --nologo
+
+      - name: Publish
+        run: |
+          dotnet publish ${{ env.PLUGIN_NAME }} -c "Release" -o "out/generic" -p:ContinuousIntegrationBuild=true --nologo
+          mkdir -p ./out/dist/${{ env.PLUGIN_NAME }}
+          cp ./out/generic/${{ env.PLUGIN_NAME }}.dll ./out/dist/${{ env.PLUGIN_NAME }}
+
+      - name: Create README
+        uses: docker://pandoc/core:3.1
+        with:
+          args: --metadata title="${{ env.PLUGIN_NAME }}" --standalone --columns 2000 -f markdown -t html --embed-resources --standalone -c ./github-pandoc.css -o ./out/dist/${{ env.PLUGIN_NAME }}/README.html README.md
+
+      - name: Upload ${{ env.PLUGIN_NAME }}
+        uses: actions/upload-artifact@v4.0.0
+        with:
+          name: ${{ env.PLUGIN_NAME }}
+          path: out/dist
+
+  release:
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+    needs: publish
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.1.1
+
+      - name: Download ${{ env.PLUGIN_NAME }} artifact
+        uses: actions/download-artifact@v4.1.0
+        with:
+          name: ${{ env.PLUGIN_NAME }}
+          path: out
+
+      - name: Create Zip
+        run: |
+          cd out
+          7z a -tzip -mx7 ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
+
+      - name: Create ${{ env.PLUGIN_NAME }} GitHub release
+        uses: ncipollo/release-action@v1.13.0
+        with:
+          artifacts: out/${{ env.PLUGIN_NAME }}.zip
+          artifactContentType: application/zip
+          name: ${{ env.PLUGIN_NAME }} V${{ github.ref_name }}
+          tag: ${{ github.ref_name }}
+          bodyFile: .github/RELEASE_TEMPLATE.md
+          token: ${{ secrets.GITHUB_TOKEN }}
+          makeLatest: false
+          prerelease: true
+          draft: true

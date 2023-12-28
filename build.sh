@@ -45,7 +45,7 @@ fi
 ## release generic version
 dotnet restore
 sync
-dotnet publish -c "Release" -f net8.0 -o "out/generic" "/p:LinkDuringPublish=false"
+dotnet publish FreePackages -c "Release" -f net8.0 -o "out/generic" "/p:LinkDuringPublish=false"
 mkdir ./out/$plugin_name
 cp ./out/generic/$plugin_name.dll ./out/$plugin_name
 if [[ -f "README.md" ]]; then
