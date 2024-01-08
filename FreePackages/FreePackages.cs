@@ -27,6 +27,8 @@ namespace FreePackages {
 			if (GlobalCache == null) {
 				GlobalCache = await GlobalCache.CreateOrLoad().ConfigureAwait(false);
 			}
+
+			CardApps.Update();
 		}
 
 		public async Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JToken>? additionalConfigProperties = null) {

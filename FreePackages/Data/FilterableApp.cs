@@ -55,6 +55,11 @@ namespace FreePackages {
 			DeckCompatibility = kv["common"]["steam_deck_compatibility"]["category"].AsUnsignedInteger();
 			Hidden = kv["common"] == KeyValue.Invalid;
 
+			// Fix the category for games which do have trading cards, but which don't have the trading card category, Ex: https://steamdb.info/app/316260/
+			if (CardApps.AppIDs.Contains(ID) && !Category.Contains(29)) {
+				Category.Add(29);
+			}
+
 			// I only want the parents for playtests and demos (because they share a store page with their parents and so should inherit some of their parents properties)
 			if (Type == EAppType.Beta || Type == EAppType.Demo) {
 				uint parentID = 0;
