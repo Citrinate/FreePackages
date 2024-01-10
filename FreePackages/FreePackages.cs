@@ -14,7 +14,7 @@ namespace FreePackages {
 	public sealed class FreePackages : IASF, IBotModules, ISteamPICSChanges, IBotSteamClient, IBotConnection, IBotCommand2 {
 		public string Name => nameof(FreePackages);
 		public Version Version => typeof(FreePackages).Assembly.GetName().Version ?? new Version("0");
-		private static GlobalCache? GlobalCache;
+		internal static GlobalCache? GlobalCache;
 
 		public Task OnLoaded() {
 			ASF.ArchiLogger.LogGenericInfo("Free Packages ASF Plugin by Citrinate");
@@ -86,24 +86,13 @@ namespace FreePackages {
 		}
 
 		public Task OnPICSChanges(uint currentChangeNumber, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> appChanges, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> packageChanges) {
-			if (GlobalCache == null) {
-				throw new InvalidOperationException(nameof(GlobalCache));
-			}
-
-			PackageHandler.OnPICSChanges(appChanges, packageChanges);
-			GlobalCache.UpdateChangeNumber(currentChangeNumber);
+			PICSHandler.OnPICSChanges(currentChangeNumber, appChanges, packageChanges);
 			
 			return Task.CompletedTask;
 		}
 
 		public async Task OnPICSChangesRestart(uint currentChangeNumber) {
-			if (GlobalCache == null) {
-				throw new InvalidOperationException(nameof(GlobalCache));
-			}
-
-			ASF.ArchiLogger.LogGenericDebug(String.Format("PICS restarted, skipping from change number {0} to {1}", GlobalCache.LastChangeNumber, currentChangeNumber));
-			await PackageHandler.OnPICSRestart(GlobalCache.LastChangeNumber).ConfigureAwait(false);
-			GlobalCache.UpdateChangeNumber(currentChangeNumber);
+			await PICSHandler.OnPICSRestart(currentChangeNumber).ConfigureAwait(false);
 		}
 
 		public Task OnBotSteamCallbacksInit(Bot bot, CallbackManager callbackManager) {
