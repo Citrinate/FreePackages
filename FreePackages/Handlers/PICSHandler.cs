@@ -10,7 +10,7 @@ using SteamKit2;
 namespace FreePackages {
 	internal static class PICSHandler {
 		private static SemaphoreSlim PICSChangesSemaphore = new SemaphoreSlim(1, 1);
-		private const int PICSChangesLimitingDelaySeconds = 5;
+		private const int PICSChangesLimitingDelaySeconds = 10;
 
 		internal static void OnPICSChanges(uint currentChangeNumber, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> appChanges, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> packageChanges) {
 			if (FreePackages.GlobalCache == null) {

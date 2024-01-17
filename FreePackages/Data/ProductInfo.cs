@@ -10,7 +10,7 @@ using SteamKit2;
 namespace FreePackages {
 	internal static class ProductInfo {
 		private static SemaphoreSlim ProductInfoSemaphore = new SemaphoreSlim(1, 1);
-		private const int ProductInfoLimitingDelaySeconds = 5;
+		private const int ProductInfoLimitingDelaySeconds = 10;
 		private const int ItemsPerProductInfoRequest = 255;
 
 		internal async static Task<List<SteamApps.PICSProductInfoCallback>?> GetProductInfo(HashSet<uint>? appIDs = null, HashSet<uint>? packageIDs = null, Func<List<SteamApps.PICSProductInfoCallback>, Task>? onFetchProductInfoCallback = null) {
