@@ -98,8 +98,13 @@ namespace FreePackages {
 		public Task OnBotSteamCallbacksInit(Bot bot, CallbackManager callbackManager) {
 			callbackManager.Subscribe<SteamUser.AccountInfoCallback>(callback => OnAccountInfo(bot, callback));
 			callbackManager.Subscribe<SteamApps.LicenseListCallback>(callback => OnLicenseList(bot, callback));
+			callbackManager.Subscribe<SteamApps.PICSChangesCallback>(callback => PICSChangeDebug(bot, callback));
 
 			return Task.CompletedTask;
+		}
+
+		public static void PICSChangeDebug(Bot bot, SteamApps.PICSChangesCallback callback) {
+			ASF.ArchiLogger.LogGenericDebug(String.Format("PICS CHANGE: {0}, Apps: {1}, Packages: {2}, App Reset: {3}, Package Reset: {4}", callback.LastChangeNumber, callback.AppChanges.Count, callback.PackageChanges.Count, callback.RequiresFullAppUpdate, callback.RequiresFullPackageUpdate));
 		}
 
 		public Task<IReadOnlyCollection<ClientMsgHandler>?> OnBotSteamHandlersInit(Bot bot) {
@@ -115,6 +120,7 @@ namespace FreePackages {
 		}
 
 		public async Task OnBotLoggedOn(Bot bot) {
+			PICSHandler.StartBigPICSLookout();
 			await PackageHandler.OnBotLoggedOn(bot).ConfigureAwait(false);
 		}
 
