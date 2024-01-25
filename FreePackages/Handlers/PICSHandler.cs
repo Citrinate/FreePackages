@@ -73,7 +73,9 @@ namespace FreePackages {
 				}
 			}
 
-			FreePackages.GlobalCache.UpdateChangeNumber(currentChangeNumber);
+			if (currentChangeNumber > FreePackages.GlobalCache.LastChangeNumber) {
+				FreePackages.GlobalCache.UpdateChangeNumber(currentChangeNumber);
+			}
 		}
 
 		private async static Task<SteamApps.PICSChangesCallback?> FindOldestPICSChanges(uint minValidChangeNumber, uint maxValidChangeNumber, bool findApps) {
