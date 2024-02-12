@@ -238,7 +238,9 @@ namespace FreePackages {
 
 				// Filter out any packages which contain unavailable apps
 				packages.RemoveAll(package => {
-					if (!package.IsAvailablePackageContents()) {
+					if (!package.IsAvailablePackageContents() && package.BillingType != EBillingType.NoCost) {
+						// Ignore this check for NoCost packages; assume that everything is available
+						// Ex: https://steamdb.info/sub/1011710 is redeemable even though it contains https://steamdb.info/app/235901/ (which as of Feb 12 2024 is some unknown app)
 						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(packageID: package.ID));
 
 						if (!package.IsNew) {
