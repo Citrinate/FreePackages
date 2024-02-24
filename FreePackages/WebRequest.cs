@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Integration;
 using ArchiSteamFarm.Web.Responses;
-using Newtonsoft.Json.Linq;
 using SteamKit2;
 
 namespace FreePackages {
@@ -28,9 +28,9 @@ namespace FreePackages {
 			await AppDetailsSemaphore.WaitAsync().ConfigureAwait(false);
 			try {
 				Uri request = new(ArchiWebHandler.SteamStoreURL, String.Format("/api/appdetails/?appids={0}", appID));
-				ObjectResponse<JObject>? appDetailsResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JObject>(request).ConfigureAwait(false);
+				ObjectResponse<JsonObject>? appDetailsResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonObject>(request).ConfigureAwait(false);
 				
-				return appDetailsResponse?.Content?.Properties().First().Value.ToObject<AppDetails>();
+				return JsonSerializer.Deserialize<AppDetails>(appDetailsResponse?.Content?[appID.ToString()]);
 			} finally {
 				Utilities.InBackground(
 					async() => {

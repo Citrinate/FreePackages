@@ -1,41 +1,58 @@
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace FreePackages {
 	internal sealed class UserData {
-		[JsonProperty(PropertyName = "rgOwnedPackages", Required = Required.Always)]
-		internal HashSet<uint> OwnedPackages = new();
+		[JsonInclude]
+		[JsonPropertyName("rgOwnedPackages")]
+		[JsonRequired]
+		internal HashSet<uint> OwnedPackages { get; private init; } = new();
 
-		[JsonProperty(PropertyName = "rgOwnedApps", Required = Required.Always)]
-		internal HashSet<uint> OwnedApps = new();
+		[JsonInclude]
+		[JsonPropertyName("rgOwnedApps")]
+		[JsonRequired]
+		internal HashSet<uint> OwnedApps { get; private init; } = new();
 
-		[JsonProperty(PropertyName = "rgIgnoredApps", Required = Required.Always)]
+		[JsonInclude]
+		[JsonPropertyName("rgIgnoredApps")]
+		[JsonRequired]
 		[JsonConverter(typeof(EmptyArrayOrDictionaryConverter))]
-		internal Dictionary<uint, uint> IgnoredApps = new();
+		internal Dictionary<uint, uint> IgnoredApps { get; private init; } = new();
 
-		[JsonProperty(PropertyName = "rgExcludedTags", Required = Required.Always)]
-		internal List<Tag> ExcludedTags = new();
+		[JsonInclude]
+		[JsonPropertyName("rgExcludedTags")]
+		[JsonRequired]
+		internal List<Tag> ExcludedTags { get; private init; } = new();
 
-		[JsonProperty(PropertyName = "rgExcludedContentDescriptorIDs", Required = Required.Always)]
-		internal HashSet<uint> ExcludedContentDescriptorIDs = new();
+		[JsonInclude]
+		[JsonPropertyName("rgExcludedContentDescriptorIDs")]
+		[JsonRequired]
+		internal HashSet<uint> ExcludedContentDescriptorIDs { get; private init; } = new();
 
 		[JsonExtensionData]
-		internal Dictionary<string, JToken> AdditionalData = new();
+		[JsonInclude]
+		internal Dictionary<string, JsonElement> AdditionalData { get; private init; } = new();
 
 		[JsonConstructor]
 		internal UserData() {}
 	}
 
 	internal sealed class Tag {
-		[JsonProperty(PropertyName = "tagid", Required = Required.Always)]
+		[JsonInclude]
+		[JsonPropertyName("tagid")]
+		[JsonRequired]
 		internal uint TagID = 0;
 
-		[JsonProperty(PropertyName = "name", Required = Required.Always)]
+		[JsonInclude]
+		[JsonPropertyName("name")]
+		[JsonRequired]
 		internal string Name = "";
 
-		[JsonProperty(PropertyName = "timestamp_added", Required = Required.Always)]
+		[JsonInclude]
+		[JsonPropertyName("timestamp_added")]
+		[JsonRequired]
 		internal uint TimestampAdded = 0;
 
 		[JsonConstructor]
@@ -43,30 +60,26 @@ namespace FreePackages {
 	}
 
 	// https://stackoverflow.com/questions/12221950/how-to-deserialize-object-that-can-be-an-array-or-a-dictionary-with-newtonsoft
-	public class EmptyArrayOrDictionaryConverter : JsonConverter {
-		public override bool CanConvert(Type objectType) {
-			return objectType.IsAssignableFrom(typeof(Dictionary<string, object>));
-		}
+	public class EmptyArrayOrDictionaryConverter : JsonConverter<Dictionary<uint, uint>> {
+		public override Dictionary<uint, uint> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+			if (reader.TokenType == JsonTokenType.StartObject) {
+				var dictionary = JsonSerializer.Deserialize<Dictionary<uint, uint>>(ref reader, options);
+				if (dictionary == null) {
+					throw new JsonException();
+				}
 
-		public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) {
-			JToken token = JToken.Load(reader);
-			if (token.Type == JTokenType.Object) {
-				return token.ToObject(objectType, serializer);
-			} else if (token.Type == JTokenType.Array) {
-				if (!token.HasValues) {
-					// create empty dictionary
-					return Activator.CreateInstance(objectType);
+				return dictionary;
+			} else if (reader.TokenType == JsonTokenType.StartArray) {
+				reader.Read();
+				if (reader.TokenType == JsonTokenType.EndArray) {
+					return new Dictionary<uint, uint>();
 				}
 			}
 
-			throw new JsonSerializationException("Object or empty array expected");
+			throw new JsonException();
 		}
 
-		public override bool CanWrite {
-			get { return false; }
-		}
-			
-		public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer) {
+		public override void Write(Utf8JsonWriter writer, Dictionary<uint, uint> value, JsonSerializerOptions options) {
 			throw new NotImplementedException();
 		}
 	}

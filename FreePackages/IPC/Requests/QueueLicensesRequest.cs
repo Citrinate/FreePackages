@@ -1,16 +1,16 @@
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace FreePackages.IPC {
 	public sealed class QueueLicensesRequest {
-		[JsonProperty(Required = Required.Default)]
-		public HashSet<uint>? AppIDs = null;
+		[JsonInclude]
+		public HashSet<uint>? AppIDs { get; private init; } = null;
 
-		[JsonProperty(Required = Required.Default)]
-		public HashSet<uint>? PackageIDs = null;
+		[JsonInclude]
+		public HashSet<uint>? PackageIDs { get; private init; } = null;
 
-		[JsonProperty(Required = Required.Default)]
-		public bool UseFilter = true;
+		[JsonInclude]
+		public bool UseFilter { get; private init; } = true;
 
 		[JsonConstructor]
 		private QueueLicensesRequest() { }

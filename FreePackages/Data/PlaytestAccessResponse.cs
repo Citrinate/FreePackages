@@ -1,13 +1,16 @@
-
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace FreePackages {
 	internal sealed class PlaytestAccessResponse {
-		[JsonProperty(PropertyName = "granted", Required = Required.AllowNull)]
-		internal bool? Granted = null;
+		[JsonInclude]
+		[JsonPropertyName("granted")]
+		[JsonRequired]
+		internal bool? Granted  { get; private init; } = null;
 
-		[JsonProperty(PropertyName = "success", Required = Required.Always)]
-		internal bool Success = false;
+		[JsonInclude]
+		[JsonPropertyName("success")]
+		[JsonRequired]
+		internal bool Success  { get; private init; } = false;
 
 		[JsonConstructor]
 		internal PlaytestAccessResponse() {}

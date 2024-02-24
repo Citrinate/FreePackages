@@ -1,13 +1,15 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using SteamKit2;
 
 namespace FreePackages {
 	public sealed class FreeSubResponse {
-		[JsonProperty(PropertyName = "Result")]
-		EResult Result;
+		[JsonInclude]
+		[JsonPropertyName("Result")]
+		public EResult Result { get; private init; }
 
-		[JsonProperty(PropertyName = "PurchaseResultDetail")]
-		EPurchaseResultDetail PurchaseResultDetail;
+		[JsonInclude]
+		[JsonPropertyName("PurchaseResultDetail")]
+		public EPurchaseResultDetail PurchaseResultDetail { get; private init; }
 
 		public FreeSubResponse(EResult result, EPurchaseResultDetail purchaseResultDetail) {
 			Result = result;

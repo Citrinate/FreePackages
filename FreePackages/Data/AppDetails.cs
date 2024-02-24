@@ -1,42 +1,51 @@
 using System.Collections.Generic;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace FreePackages {
 	internal sealed class AppDetails {
-		[JsonProperty(PropertyName = "success", Required = Required.Always)]
-		internal bool Success = false;
+		[JsonInclude]
+		[JsonPropertyName("success")]
+		[JsonRequired]
+		internal bool Success { get; private init; } = false;
 
-		[JsonProperty(PropertyName = "data", Required = Required.Default)]
-		internal AppDetailsData? Data = null;
+		[JsonInclude]
+		[JsonPropertyName("data")]
+		internal AppDetailsData? Data { get; private init; } = null;
 
 		[JsonConstructor]
 		internal AppDetails() {}
 	}
 
 	internal sealed class AppDetailsData {
-		[JsonProperty(PropertyName = "is_free", Required = Required.Default)]
-		internal bool IsFree = false;
+		[JsonInclude]
+		[JsonPropertyName("is_free")]
+		internal bool IsFree { get; private init; } = false;
 
-		[JsonProperty(PropertyName = "packages", Required = Required.Default)]
-		internal HashSet<uint> Packages = new();
+		[JsonInclude]
+		[JsonPropertyName("packages")]
+		internal HashSet<uint> Packages { get; private init; } = new();
 
-		[JsonProperty(PropertyName = "release_date", Required = Required.Default)]
-		internal AppDetailsReleaseDate? ReleaseDate = null;
+		[JsonInclude]
+		[JsonPropertyName("release_date")]
+		internal AppDetailsReleaseDate? ReleaseDate { get; private init; } = null;
 
+		[JsonInclude]
 		[JsonExtensionData]
-		internal Dictionary<string, JToken> AdditionalData = new();
+		internal Dictionary<string, JsonElement> AdditionalData { get; private init; } = new();
 
 		[JsonConstructor]
 		internal AppDetailsData() {}
 	}
 
 	internal sealed class AppDetailsReleaseDate {
-		[JsonProperty(PropertyName = "coming_soon", Required = Required.Default)]
-		internal bool ComingSoon = true;
+		[JsonInclude]
+		[JsonPropertyName("coming_soon")]
+		internal bool ComingSoon { get; private init; } = true;
 
+		[JsonInclude]
 		[JsonExtensionData]
-		internal Dictionary<string, JToken> AdditionalData = new();
+		internal Dictionary<string, JsonElement> AdditionalData { get; private init; } = new();
 
 		[JsonConstructor]
 		internal AppDetailsReleaseDate() {}
