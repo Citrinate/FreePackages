@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.IO;
+using ArchiSteamFarm.Helpers.Json;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json;
 using SteamKit2;
 
 namespace FreePackages.Tests;
@@ -15,13 +15,13 @@ public class Apps {
 	[TestInitialize]
 	public void InitializePackageFilter () {
 		PackageFilter = new PackageFilter(new BotCache(), new List<FilterConfig>());
-		PackageFilter.UpdateUserData(JsonConvert.DeserializeObject<UserData>(File.ReadAllText("userdata_empty.json")));
+		PackageFilter.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<UserData>());
 		PackageFilter.Country = "FOO";
 	}
 
 	[TestCleanup]
 	public void CleanupPackageFilter() {
-		PackageFilter.UpdateUserData(JsonConvert.DeserializeObject<UserData>(File.ReadAllText("userdata_empty.json")));
+		PackageFilter.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<UserData>());
 		PackageFilter.Country = "FOO";
 	}
 
@@ -51,7 +51,7 @@ public class Apps {
 	[TestMethod]
 	public void CanDetectRedeemableAppWithAppRequirement() {
 		var app = new FilterableApp(KeyValue.LoadAsText("app_with_required_app.txt"));
-		var userData = JsonConvert.DeserializeObject<UserData>(File.ReadAllText("userdata_empty.json"));
+		var userData = File.ReadAllText("userdata_empty.json").ToJsonObject<UserData>();
 		userData.OwnedApps.Add(1086940);
 		PackageFilter.UpdateUserData(userData);
 
