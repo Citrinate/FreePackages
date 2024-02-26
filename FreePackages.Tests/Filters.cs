@@ -395,4 +395,23 @@ public class Filters {
 		Assert.IsFalse(PackageFilter.IsPackageIgnoredByFilter(no_cost_package, Filter));
 		Assert.IsTrue(PackageFilter.FilterOnlyAllowsPackages(Filter));
 	}
+
+	[TestMethod]
+	public void CanFilterByWishlist() {
+		var app = new FilterableApp(KeyValue.LoadAsText("app_which_is_free.txt"));
+
+		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
+
+		Filter.WishlistOnly = true;
+
+		Assert.IsFalse(PackageFilter.IsAppWantedByFilter(app, Filter));
+
+		PackageFilter.UpdateUserData(JsonConvert.DeserializeObject<UserData>(File.ReadAllText("userdata_with_wishlist_apps.json")));
+
+		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
+
+		PackageFilter.UpdateUserData(JsonConvert.DeserializeObject<UserData>(File.ReadAllText("userdata_with_followed_apps.json")));
+
+		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
+	}
 }

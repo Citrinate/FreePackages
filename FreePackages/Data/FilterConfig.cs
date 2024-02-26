@@ -55,6 +55,9 @@ namespace FreePackages {
 		[JsonInclude]
 		internal HashSet<string> Systems { get; set; } = new();
 
+		[JsonProperty(Required = Required.Default)]
+		internal bool WishlistOnly = false;
+
 		[JsonConstructor]
 		internal FilterConfig() { }
 	}

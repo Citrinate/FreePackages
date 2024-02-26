@@ -83,6 +83,10 @@ namespace FreePackages {
 		}
 
 		internal bool IsAppWantedByFilter(FilterableApp app, FilterConfig filter) {
+			if (UserData == null) {
+				throw new InvalidOperationException(nameof(UserData));
+			}
+
 			if (filter.Types.Count > 0 && app.Type != EAppType.Beta && !app.HasType(filter.Types)) {
 				// Don't require user to specify they want playtests (Beta), this is already implied by the PlaytestMode filter
 				// App isn't a wanted type
@@ -112,6 +116,11 @@ namespace FreePackages {
 
 			if (filter.Systems.Count > 0 && !app.HasSystem(filter.Systems)) {
 				// Unwanted due to missing supported systems
+				return false;
+			}
+
+			if (filter.WishlistOnly && !UserData.WishlistedApps.Contains(app.ID) && !UserData.FollowedApps.Contains(app.ID)) {
+				// Unwated to due not being wishlisted or followed on the Steam storefront
 				return false;
 			}
 
