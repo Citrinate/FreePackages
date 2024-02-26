@@ -57,6 +57,7 @@ By default, the plugin will attempt to activate all free non-playtest packages. 
   "RequireAllTags": false,
   "RequireAllCategories": false,
   "ImportStoreFilters": false,
+  "WishlistOnly": false,
   "IgnoreFreeWeekends": false,
   "NoCostOnly": false,
   "PlaytestMode": 0,
@@ -348,6 +349,12 @@ All filter options are explained below:
 #### ImportStoreFilters
 
 `bool` type with default value of `false`.  If set to `true`, the filter will also use the ignored games, ignored tags, and ignored content descriptor settings you use on the Steam storefront.
+
+---
+
+#### WishlistOnly
+
+`bool` type with default value of `false`.  If set to `true`, packages must contain an app your account has wishlisted or followed on the Steam storefront or they will not be added to your account.
 
 ---
 
