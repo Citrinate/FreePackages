@@ -406,11 +406,11 @@ public class Filters {
 
 		Assert.IsFalse(PackageFilter.IsAppWantedByFilter(app, Filter));
 
-		PackageFilter.UpdateUserData(JsonConvert.DeserializeObject<UserData>(File.ReadAllText("userdata_with_wishlist_apps.json")));
+		PackageFilter.UpdateUserData(File.ReadAllText("userdata_with_wishlist_apps.json").ToJsonObject<UserData>());
 
 		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
 
-		PackageFilter.UpdateUserData(JsonConvert.DeserializeObject<UserData>(File.ReadAllText("userdata_with_followed_apps.json")));
+		PackageFilter.UpdateUserData(File.ReadAllText("userdata_with_followed_apps.json").ToJsonObject<UserData>());
 
 		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
 	}

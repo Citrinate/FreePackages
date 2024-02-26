@@ -31,11 +31,15 @@ namespace FreePackages {
 		[JsonRequired]
 		internal HashSet<uint> ExcludedContentDescriptorIDs { get; private init; } = new();
 
-		[JsonProperty(PropertyName = "rgWishlist", Required = Required.Always)]
-		internal HashSet<uint> WishlistedApps = new();
+		[JsonInclude]
+		[JsonPropertyName("rgWishlist")]
+		[JsonRequired]
+		internal HashSet<uint> WishlistedApps { get; private init; } = new();
 
-		[JsonProperty(PropertyName = "rgFollowedApps", Required = Required.Always)]
-		internal HashSet<uint> FollowedApps = new();
+		[JsonInclude]
+		[JsonPropertyName("rgFollowedApps")]
+		[JsonRequired]
+		internal HashSet<uint> FollowedApps { get; private init; } = new();
 
 		[JsonExtensionData]
 		[JsonInclude]
