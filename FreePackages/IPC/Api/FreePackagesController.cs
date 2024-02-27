@@ -164,18 +164,10 @@ namespace FreePackages.IPC {
 				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
 			}
 
-			if (PackageQueue.AddFreeLicense == null) {
-				return BadRequest(new GenericResponse(false, "Couldn't find ArchiWebHandler.AddFreeLicense method"));
-			}
-
 			EResult result;
 			EPurchaseResultDetail purchaseResult;
 			try {
-				var res = (Task<(EResult, EPurchaseResultDetail)>) PackageQueue.AddFreeLicense.Invoke(bot.ArchiWebHandler, new object[]{subID})!;
-				await res;
-				var a = res.Result;
-
-				(result, purchaseResult) = res.Result;
+				(result, purchaseResult) = await bot.Actions.AddFreeLicensePackage(subID).ConfigureAwait(false);
 			} catch (Exception e) {
 				bot.ArchiLogger.LogGenericWarningException(e);
 

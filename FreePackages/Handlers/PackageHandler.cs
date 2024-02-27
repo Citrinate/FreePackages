@@ -44,7 +44,6 @@ namespace FreePackages {
 			try {
 				if (filterConfigs.Any(filterConfig => filterConfig.PlaytestMode != EPlaytestMode.None)) {
 					// Only allow 1 bot to request playtests
-					// int numBotsThatIncludePlaytests = Handlers.Values.Where(x => x.PackageFilter.FilterConfig.PlaytestMode != EPlaytestMode.None).Count();
 					int numBotsThatIncludePlaytests = Handlers.Values.Where(x => x.PackageFilter.FilterConfigs.Any(filterConfig => filterConfig.PlaytestMode != EPlaytestMode.None)).Count();
 					if (numBotsThatIncludePlaytests > 0) {
 						filterConfigs.ForEach(filterConfig => filterConfig.PlaytestMode = EPlaytestMode.None);

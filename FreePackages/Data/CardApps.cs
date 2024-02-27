@@ -46,7 +46,8 @@ namespace FreePackages {
 
 		private sealed class Badges {
 			[JsonExtensionData]
-			internal Dictionary<string, JsonElement> Data = new();
+			[JsonInclude]
+			internal Dictionary<string, JsonElement> Data { get; private init; } = new();
 		}
 	}
 }
