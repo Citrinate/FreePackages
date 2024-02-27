@@ -228,7 +228,7 @@ namespace FreePackages {
 				return EResult.Invalid;
 			}
 
-			if (!response.Success) {
+			if (response.Success != 1) {
 				// Not sure if/when this happens
 				Bot.ArchiLogger.LogGenericInfo(string.Format("ID: playtest/{0} | Status: Failed", appID));
 

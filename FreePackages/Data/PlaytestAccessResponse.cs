@@ -5,12 +5,12 @@ namespace FreePackages {
 		[JsonInclude]
 		[JsonPropertyName("granted")]
 		[JsonRequired]
-		internal bool? Granted  { get; private init; } = null;
+		internal int? Granted  { get; private init; } = null;
 
 		[JsonInclude]
 		[JsonPropertyName("success")]
 		[JsonRequired]
-		internal bool Success  { get; private init; } = false;
+		internal int Success  { get; private init; } = 0;
 
 		[JsonConstructor]
 		internal PlaytestAccessResponse() {}
