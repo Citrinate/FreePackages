@@ -38,7 +38,7 @@ Under certain conditions, activating a free package while playing a game on Stea
 ```
 
 > **Note**
-> This applies when your account is playing a game outside of ASF, and does not apply when ASF is farming cards or if the `play` command is used.
+> This applies when your account is playing a game outside of ASF, and does not apply when ASF is farming cards or if the `play` command is used.  Your library being locked through Family Sharing will also prevent package activation.  You likely don't want to enable this if you run idle games 24/7, or your library is otherwise almost always in use, or you only run ASF rarely.
 
 ---
 
