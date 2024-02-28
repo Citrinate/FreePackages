@@ -29,7 +29,7 @@ You can enable the plugin per individual bot by adding `EnableFreePackages` to t
 
 ---
 
-### Pause package activations while playing a game
+### Pausing package activations while playing a game
 
 Under certain conditions, activating a free package while playing a game on Steam can cause the game to temporarily freeze.  You can prevent the plugin from activating packages while you're in-game by adding `PauseFreePackagesWhilePlaying` to your individual bot's config file.  It's recommended that you use this for any accounts you play games on:
 
