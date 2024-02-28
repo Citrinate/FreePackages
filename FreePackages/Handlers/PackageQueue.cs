@@ -19,6 +19,7 @@ namespace FreePackages {
 		private const int DelayBetweenActivationsSeconds = 5;
 		private readonly uint ActivationsPerHour = 40;
 		private const uint MaxActivationsPerHour = 50; // Steam's imposed limit
+		private bool PauseWhilePlaying = false;
 		internal static MethodInfo? AddFreeLicense;
 
 		static PackageQueue() {
@@ -28,9 +29,10 @@ namespace FreePackages {
 			}
 		}
 
-		internal PackageQueue(Bot bot, BotCache botCache, uint? packageLimit) {
+		internal PackageQueue(Bot bot, BotCache botCache, uint? packageLimit, bool pauseWhilePlaying) {
 			Bot = bot;
 			BotCache = botCache;
+			PauseWhilePlaying = pauseWhilePlaying;
 
 			if (packageLimit != null) {
 				ActivationsPerHour = Math.Min(packageLimit.Value, MaxActivationsPerHour);
@@ -78,6 +80,13 @@ namespace FreePackages {
 				Bot.ArchiLogger.LogGenericInfo(String.Format("Pausing free package activations until {0:T}", resumeTime));
 				UpdateTimer(resumeTime);
 				
+				return;
+			}
+
+			if (PauseWhilePlaying && !Bot.IsPlayingPossible) {
+				// Don't activate anything while the user is playing a game (does not apply to ASF card farming)
+				UpdateTimer(DateTime.Now.AddMinutes(1));
+
 				return;
 			}
 
@@ -271,6 +280,10 @@ namespace FreePackages {
 
 			int activationsPastHour = Math.Min(BotCache.NumActivationsPastHour(), (int) MaxActivationsPerHour);
 			responses.Add(String.Format("{0} free packages queued.  {1}/{2} hourly activations used.", BotCache.Packages.Count, activationsPastHour, ActivationsPerHour));
+
+			if (PauseWhilePlaying && !Bot.IsPlayingPossible) {
+				responses.Add("Activations are now paused as the account is being used to play a game.");
+			}
 
 			if (activationsPastHour >= ActivationsPerHour) {
 				DateTime resumeTime = BotCache.GetLastActivation()!.Value.AddHours(1).AddMinutes(1);

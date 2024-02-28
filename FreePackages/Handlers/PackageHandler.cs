@@ -21,11 +21,11 @@ namespace FreePackages {
 		private static SemaphoreSlim AddHandlerSemaphore = new SemaphoreSlim(1, 1);
 		private static SemaphoreSlim ProcessChangesSemaphore = new SemaphoreSlim(1, 1);
 
-		private PackageHandler(Bot bot, BotCache botCache, List<FilterConfig> filterConfigs, uint? packageLimit) {
+		private PackageHandler(Bot bot, BotCache botCache, List<FilterConfig> filterConfigs, uint? packageLimit, bool pauseWhilePlaying) {
 			Bot = bot;
 			BotCache = botCache;
 			PackageFilter = new PackageFilter(botCache, filterConfigs);
-			PackageQueue = new PackageQueue(bot, botCache, packageLimit);
+			PackageQueue = new PackageQueue(bot, botCache, packageLimit, pauseWhilePlaying);
 			UserDataRefreshTimer = new Timer(async e => await FetchUserData().ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
 		}
 
@@ -34,7 +34,7 @@ namespace FreePackages {
 			UserDataRefreshTimer.Dispose();
 		}
 
-		internal static async Task AddHandler(Bot bot, List<FilterConfig> filterConfigs, uint? packageLimit) {
+		internal static async Task AddHandler(Bot bot, List<FilterConfig> filterConfigs, uint? packageLimit, bool pauseWhilePlaying) {
 			if (Handlers.ContainsKey(bot.BotName)) {
 				Handlers[bot.BotName].Dispose();
 				Handlers.TryRemove(bot.BotName, out PackageHandler? _);
@@ -59,7 +59,7 @@ namespace FreePackages {
 					botCache = new(cacheFilePath);
 				}
 
-				Handlers.TryAdd(bot.BotName, new PackageHandler(bot, botCache, filterConfigs, packageLimit));
+				Handlers.TryAdd(bot.BotName, new PackageHandler(bot, botCache, filterConfigs, packageLimit, pauseWhilePlaying));
 			} finally {
 				AddHandlerSemaphore.Release();
 			}

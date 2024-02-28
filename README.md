@@ -26,6 +26,20 @@ You can enable the plugin per individual bot by adding `EnableFreePackages` to t
 ```json
 "EnableFreePackages": true,
 ```
+
+---
+
+### Pause package activations while playing a game
+
+Under certain conditions, activating a free package while playing a game on Steam can cause the game to temporarily freeze.  You can prevent the plugin from activating packages while you're in-game by adding `PauseFreePackagesWhilePlaying` to your individual bot's config file.  It's recommended that you use this for any accounts you play games on:
+
+```json
+"PauseFreePackagesWhilePlaying": true,
+```
+
+> **Note**
+> This applies when your account is playing a game outside of ASF, and does not apply when ASF is farming cards or if the `play` command is used.
+
 ---
 
 ### Changing the hourly package limit
@@ -57,6 +71,7 @@ By default, the plugin will attempt to activate all free non-playtest packages. 
   "RequireAllTags": false,
   "RequireAllCategories": false,
   "ImportStoreFilters": false,
+  "WishlistOnly": false,
   "IgnoreFreeWeekends": false,
   "NoCostOnly": false,
   "PlaytestMode": 0,
@@ -348,6 +363,12 @@ All filter options are explained below:
 #### ImportStoreFilters
 
 `bool` type with default value of `false`.  If set to `true`, the filter will also use the ignored games, ignored tags, and ignored content descriptor settings you use on the Steam storefront.
+
+---
+
+#### WishlistOnly
+
+`bool` type with default value of `false`.  If set to `true`, packages must contain an app your account has wishlisted or followed on the Steam storefront or they will not be added to your account.
 
 ---
 
