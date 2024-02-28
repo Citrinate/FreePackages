@@ -38,6 +38,7 @@ namespace FreePackages {
 
 			bool isEnabled = false;
 			uint? packageLimit = null;
+			bool pauseWhilePlaying = false;
 			List<FilterConfig> filterConfigs = new();
 
 			foreach (KeyValuePair<string, JsonElement> configProperty in additionalConfigProperties) {
@@ -45,6 +46,14 @@ namespace FreePackages {
 					case "EnableFreePackages" when (configProperty.Value.ValueKind == JsonValueKind.True || configProperty.Value.ValueKind == JsonValueKind.False): {
 						isEnabled = configProperty.Value.GetBoolean();
 						bot.ArchiLogger.LogGenericInfo("Enable Free Packages : " + isEnabled.ToString());
+						break;
+					}
+					
+					case "PauseFreePackagesWhilePlaying" when configProperty.Value.Type == JTokenType.Boolean: {
+						if (configProperty.Value.ToObject<bool>()) {
+							pauseWhilePlaying = true;
+						}
+						bot.ArchiLogger.LogGenericInfo("Pause Free Packages While Playing : " + isEnabled.ToString());
 						break;
 					}
 
@@ -75,7 +84,7 @@ namespace FreePackages {
 			}
 			
 			if (isEnabled) {
-				await PackageHandler.AddHandler(bot, filterConfigs, packageLimit).ConfigureAwait(false);
+				await PackageHandler.AddHandler(bot, filterConfigs, packageLimit, pauseWhilePlaying).ConfigureAwait(false);
 			}
 		}
 
