@@ -49,10 +49,8 @@ namespace FreePackages {
 						break;
 					}
 					
-					case "PauseFreePackagesWhilePlaying" when configProperty.Value.Type == JTokenType.Boolean: {
-						if (configProperty.Value.ToObject<bool>()) {
-							pauseWhilePlaying = true;
-						}
+					case "PauseFreePackagesWhilePlaying" when (configProperty.Value.ValueKind == JsonValueKind.True || configProperty.Value.ValueKind == JsonValueKind.False): {
+						pauseWhilePlaying = configProperty.Value.GetBoolean();
 						bot.ArchiLogger.LogGenericInfo("Pause Free Packages While Playing : " + isEnabled.ToString());
 						break;
 					}
