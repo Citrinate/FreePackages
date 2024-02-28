@@ -31,14 +31,14 @@ You can enable the plugin per individual bot by adding `EnableFreePackages` to t
 
 ### Pausing package activations while playing a game
 
-Under certain conditions, activating a free package while playing a game on Steam can cause the game to temporarily freeze.  You can prevent the plugin from activating packages while you're in-game by adding `PauseFreePackagesWhilePlaying` to your individual bot's config file.  It's recommended that you use this for any accounts you play games on:
+Under certain conditions, activating a free package while playing a game on Steam can cause the game to temporarily freeze.  You can prevent the plugin from activating packages while you're in-game by adding `PauseFreePackagesWhilePlaying` to your individual bot's config file.  It's recommended you use this for any account you play games on:
 
 ```json
 "PauseFreePackagesWhilePlaying": true,
 ```
 
 > **Note**
-> This applies when your account is playing a game outside of ASF, and does not apply when ASF is farming cards or if the `play` command is used.  Your library being locked through Family Sharing will also prevent package activation.  You likely don't want to enable this if you run idle games 24/7, or your library is otherwise almost always in use, or you only run ASF rarely.
+> This applies when your account is playing a game outside of ASF, and does not apply when ASF is idling a game.  Your library being locked through Family Sharing will also prevent package activation.  You likely don't want to enable this if you run idle games 24/7, or your library is otherwise almost always in use, or you only run ASF rarely.
 
 ---
 
