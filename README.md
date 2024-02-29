@@ -402,6 +402,9 @@ All filter options are explained below:
 > **Note**
 > Only one of your bots may use the `PlaytestMode` filter option.  As some playtests have a limited number of slots, this is an artificial restriction I've put in place to limit how many slots a single person can occupy.
 
+> **Note**
+> If you use `PauseFreePackagesWhilePlaying`, be aware that when it comes to limited playtests, the plugin cannot control when the playtest package is added to your account.  When or if this happens is decided by the game's developer, and so it's possible that a package will be added to your account while you're playing a game.
+
 ---
 
 ### Using multiple package filters
