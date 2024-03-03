@@ -8,6 +8,7 @@ using ArchiSteamFarm.Plugins.Interfaces;
 using SteamKit2;
 using System.Text.Json;
 using ArchiSteamFarm.Helpers.Json;
+using System.Reflection;
 
 namespace FreePackages {
 	[Export(typeof(IPlugin))]
@@ -15,13 +16,30 @@ namespace FreePackages {
 		public string Name => nameof(FreePackages);
 		public Version Version => typeof(FreePackages).Assembly.GetName().Version ?? new Version("0");
 		internal static GlobalCache? GlobalCache;
+		private bool ASFEnhanceEnabled = false;
 
 		public Task OnLoaded() {
 			ASF.ArchiLogger.LogGenericInfo("Free Packages ASF Plugin by Citrinate");
+
+			// ASFEnhanced Adapter https://github.com/chr233/ASFEnhanceAdapterDemoPlugin
+			var flag = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+			var handler = typeof(Commands).GetMethod(nameof(Commands.Response), flag);
+			const string pluginId = nameof(FreePackages);
+			const string cmdPrefix = "FREEPACKAGES";
+			const string repoName = "Citrinate/FreePackages";
+			var registered = AdapterBridge.InitAdapter(Name, pluginId, cmdPrefix, repoName, handler);
+			ASFEnhanceEnabled = registered;
+
 			return Task.CompletedTask;
 		}
 
-		public Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0) => Task.FromResult(Commands.Response(bot, access, steamID, message, args));
+		public Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0) {
+			if (ASFEnhanceEnabled) {
+				return Task.FromResult<string?>(null);
+			}
+			
+			return Task.FromResult(Commands.Response(bot, access, steamID, message, args));
+		}
 
 		public async Task OnASFInit(IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
 			if (GlobalCache == null) {
