@@ -14,7 +14,7 @@ This plugin works by listening for [changes](https://steamdb.info/faq/#changenum
 - Unpack the downloaded .zip file to the `plugins` folder inside your ASF folder.
 - (Re)start ASF, you should get a message indicating that the plugin loaded successfully.
 
-> **Note**
+> [!NOTE]
 > This plugin is only tested to work with ASF-generic.  It may or may not work with other ASF variants, but feel free to report any issues you may encounter.
 
 ## Usage
@@ -37,7 +37,7 @@ Under certain conditions, activating a free package while playing a game on Stea
 "PauseFreePackagesWhilePlaying": true,
 ```
 
-> **Note**
+> [!NOTE]
 > This applies when your account is playing a game outside of ASF, and does not apply when ASF is idling a game.  Your library being locked through Family Sharing will also prevent package activation.  You likely don't want to enable this if you run idle games 24/7, or your library is otherwise almost always in use, or you only run ASF rarely.
 
 ---
@@ -46,7 +46,7 @@ Under certain conditions, activating a free package while playing a game on Stea
 
 A maximum of 50 packages can be activated per hour.  By default, this plugin will use at most 40 of those hourly activations and will resume where it left off if it's ever interrupted.  You can control this limit by adding `FreePackagesPerHour` to your individual bot's config files of `uint` type.
 
-> **Note**
+> [!NOTE]
 > I don't recommend raising this value.  The default is 40 to let you manually redeem packages without having to fight with the plugin.  It's also not always possible for the plugin to tell when it's being rate-limited, and so it's best to avoid ever getting rate-limited.
 
 ---
@@ -92,7 +92,7 @@ All filter options are explained below:
 
 `HashSet<uint>` type with default value of `[]`.  Packages must contain an app with at least one of these `TagIDs` or they will not be added to your account.  You can leave this empty to allow for all tags.  A list of tags can be found [here](https://steamdb.info/tags/).  The `TagID` will be at the end of the URL.  For example, the `TagID` for the [Indie](https://steamdb.info/tag/492/) tag is 492.
 
-> **Note**
+> [!NOTE]
 > The "Profile Features Limited" tag presented by SteamDB is not a real tag that Steam uses.  This plugin does not detect whether or not an app has limited profile features.
 
 ---
@@ -399,10 +399,10 @@ All filter options are explained below:
   3 | Include all playtests
 </details>
 
-> **Note**
+> [!NOTE]
 > Only one of your bots may use the `PlaytestMode` filter option.  As some playtests have a limited number of slots, this is an artificial restriction I've put in place to limit how many slots a single person can occupy.
 
-> **Note**
+> [!NOTE]
 > If you use `PauseFreePackagesWhilePlaying`, be aware that when it comes to limited playtests, the plugin cannot control when the playtest package is added to your account.  When or if this happens is decided by the game's developer, and so it's possible that a package will be added to your account while you're playing a game.
 
 ---
