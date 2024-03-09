@@ -23,8 +23,8 @@ internal static class AdapterBridge {
 					}
 				}
 			}
-		} catch (Exception ex) {
-			ASF.ArchiLogger.LogGenericException(ex, "Community with ASFEnhance failed");
+		} catch (Exception) {
+			ASF.ArchiLogger.LogGenericDebug("Could not find ASFEnhance plugin");
 		}
 		
 		return false;
