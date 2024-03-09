@@ -22,6 +22,9 @@ namespace FreePackages {
 			switch (args.Length) {
 				case 1:
 					switch (args[0].ToUpperInvariant()) {
+						case "FREEPACKAGES" when access >= EAccess.FamilySharing:
+							return String.Format("{0} {1}", nameof(FreePackages), (typeof(FreePackages).Assembly.GetName().Version ?? new Version("0")).ToString());
+
 						case "CLEARFREEPACKAGESQUEUE":
 							return ResponseClearQueue(bot, access);
 

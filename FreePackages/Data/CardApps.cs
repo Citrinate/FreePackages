@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Web.Responses;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace FreePackages {
 	internal static class CardApps {
@@ -46,7 +46,8 @@ namespace FreePackages {
 
 		private sealed class Badges {
 			[JsonExtensionData]
-			internal Dictionary<string, JToken> Data = new();
+			[JsonInclude]
+			internal Dictionary<string, JsonElement> Data { get; private init; } = new();
 		}
 	}
 }

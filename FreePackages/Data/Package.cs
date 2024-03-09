@@ -1,15 +1,20 @@
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace FreePackages {
 	public sealed class Package {
-		[JsonProperty(Required = Required.DisallowNull)]
-		public EPackageType Type;
-		[JsonProperty(Required = Required.DisallowNull)]
-		public uint ID;
-		[JsonProperty(Required = Required.AllowNull)]
-		public ulong? StartTime = null;
+		[JsonInclude]
+		[JsonRequired]
+		public EPackageType Type { get; private init; }
+
+		[JsonInclude]
+		[JsonRequired]
+		public uint ID { get; private init; }
+
+		[JsonInclude]
+		[JsonRequired]
+		public ulong? StartTime { get; private init; } = null;
 		
 		[JsonConstructor]
 		public Package(EPackageType type, uint id, ulong? startTime = null) {

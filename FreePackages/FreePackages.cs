@@ -5,9 +5,10 @@ using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Plugins.Interfaces;
-using Newtonsoft.Json.Linq;
 using SteamKit2;
-using Newtonsoft.Json;
+using System.Text.Json;
+using ArchiSteamFarm.Helpers.Json;
+using System.Reflection;
 
 namespace FreePackages {
 	[Export(typeof(IPlugin))]
@@ -15,15 +16,32 @@ namespace FreePackages {
 		public string Name => nameof(FreePackages);
 		public Version Version => typeof(FreePackages).Assembly.GetName().Version ?? new Version("0");
 		internal static GlobalCache? GlobalCache;
+		private bool ASFEnhanceEnabled = false;
 
 		public Task OnLoaded() {
 			ASF.ArchiLogger.LogGenericInfo("Free Packages ASF Plugin by Citrinate");
+
+			// ASFEnhanced Adapter https://github.com/chr233/ASFEnhanceAdapterDemoPlugin
+			var flag = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+			var handler = typeof(Commands).GetMethod(nameof(Commands.Response), flag);
+			const string pluginId = nameof(FreePackages);
+			const string cmdPrefix = "FREEPACKAGES";
+			const string repoName = "Citrinate/FreePackages";
+			var registered = AdapterBridge.InitAdapter(Name, pluginId, cmdPrefix, repoName, handler);
+			ASFEnhanceEnabled = registered;
+
 			return Task.CompletedTask;
 		}
 
-		public Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0) => Task.FromResult(Commands.Response(bot, access, steamID, message, args));
+		public Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0) {
+			if (ASFEnhanceEnabled) {
+				return Task.FromResult<string?>(null);
+			}
+			
+			return Task.FromResult(Commands.Response(bot, access, steamID, message, args));
+		}
 
-		public async Task OnASFInit(IReadOnlyDictionary<string, JToken>? additionalConfigProperties = null) {
+		public async Task OnASFInit(IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
 			if (GlobalCache == null) {
 				GlobalCache = await GlobalCache.CreateOrLoad().ConfigureAwait(false);
 			}
@@ -31,7 +49,7 @@ namespace FreePackages {
 			CardApps.Update();
 		}
 
-		public async Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JToken>? additionalConfigProperties = null) {
+		public async Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
 			if (additionalConfigProperties == null) {
 				return;
 			}
@@ -41,43 +59,39 @@ namespace FreePackages {
 			bool pauseWhilePlaying = false;
 			List<FilterConfig> filterConfigs = new();
 
-			foreach (KeyValuePair<string, JToken> configProperty in additionalConfigProperties) {
+			foreach (KeyValuePair<string, JsonElement> configProperty in additionalConfigProperties) {
 				switch (configProperty.Key) {
-					case "EnableFreePackages" when configProperty.Value.Type == JTokenType.Boolean: {
-						if (configProperty.Value.ToObject<bool>()) {
-							isEnabled = true;
-						}
+					case "EnableFreePackages" when (configProperty.Value.ValueKind == JsonValueKind.True || configProperty.Value.ValueKind == JsonValueKind.False): {
+						isEnabled = configProperty.Value.GetBoolean();
 						bot.ArchiLogger.LogGenericInfo("Enable Free Packages : " + isEnabled.ToString());
 						break;
 					}
 					
-					case "PauseFreePackagesWhilePlaying" when configProperty.Value.Type == JTokenType.Boolean: {
-						if (configProperty.Value.ToObject<bool>()) {
-							pauseWhilePlaying = true;
-						}
+					case "PauseFreePackagesWhilePlaying" when (configProperty.Value.ValueKind == JsonValueKind.True || configProperty.Value.ValueKind == JsonValueKind.False): {
+						pauseWhilePlaying = configProperty.Value.GetBoolean();
 						bot.ArchiLogger.LogGenericInfo("Pause Free Packages While Playing : " + isEnabled.ToString());
 						break;
 					}
 
-					case "FreePackagesPerHour" when configProperty.Value.Type == JTokenType.Integer: {
-						packageLimit = configProperty.Value.ToObject<uint>();
+					case "FreePackagesPerHour" when configProperty.Value.ValueKind == JsonValueKind.Number: {
+						packageLimit = configProperty.Value.GetUInt32();
 						bot.ArchiLogger.LogGenericInfo("Free Packages Per Hour : " + packageLimit.ToString());
 						break;
 					}
 
 					case "FreePackagesFilter": {
-						FilterConfig? filter = configProperty.Value.ToObject<FilterConfig>();
+						FilterConfig? filter = configProperty.Value.ToJsonObject<FilterConfig>();
 						if (filter != null) {
-							bot.ArchiLogger.LogGenericInfo("Free Packages Filter : " + JsonConvert.SerializeObject(filter));
+							bot.ArchiLogger.LogGenericInfo("Free Packages Filter : " + JsonSerializer.Serialize(filter));
 							filterConfigs.Add(filter);
 						}
 						break;
 					}
 					
 					case "FreePackagesFilters": {
-						List<FilterConfig>? filters = configProperty.Value.ToObject<List<FilterConfig>>();
+						List<FilterConfig>? filters = configProperty.Value.ToJsonObject<List<FilterConfig>>();
 						if (filters != null) {
-							bot.ArchiLogger.LogGenericInfo("Free Packages Filters : " + JsonConvert.SerializeObject(filters));
+							bot.ArchiLogger.LogGenericInfo("Free Packages Filters : " + JsonSerializer.Serialize(filters));
 							filterConfigs.AddRange(filters);
 						}
 						break;

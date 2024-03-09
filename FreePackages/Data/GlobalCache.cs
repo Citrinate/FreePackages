@@ -1,23 +1,28 @@
 using System;
 using System.IO;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Helpers;
+using ArchiSteamFarm.Helpers.Json;
 using ArchiSteamFarm.Localization;
-using Newtonsoft.Json;
 
 namespace FreePackages {
 	internal sealed class GlobalCache : SerializableFile {
 		private static string SharedFilePath => Path.Combine(ArchiSteamFarm.SharedInfo.ConfigDirectory, $"{nameof(FreePackages)}.cache");
 
-		[JsonProperty(Required = Required.DisallowNull)]
-		internal uint LastChangeNumber;
+		[JsonInclude]
+		[JsonRequired]
+		internal uint LastChangeNumber { get; private set; }
 		
 		public bool ShouldSerializeLastChangeNumber() => LastChangeNumber > 0;
 
+		[JsonConstructor]
 		internal GlobalCache() {
 			FilePath = SharedFilePath;
 		}
+
+		protected override Task Save() => Save(this);
 
 		internal static async Task<GlobalCache?> CreateOrLoad() {
 			if (!File.Exists(SharedFilePath)) {
@@ -34,7 +39,7 @@ namespace FreePackages {
 					return null;
 				}
 
-				globalCache = JsonConvert.DeserializeObject<GlobalCache>(json);
+				globalCache = json.ToJsonObject<GlobalCache>();
 			} catch (Exception e) {
 				ASF.ArchiLogger.LogGenericException(e);
 

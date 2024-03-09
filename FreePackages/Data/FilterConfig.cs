@@ -1,62 +1,62 @@
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace FreePackages {
 	internal sealed class FilterConfig {
-		[JsonProperty(Required = Required.Default)]
-		internal bool ImportStoreFilters = false;
+		[JsonInclude]
+		internal bool ImportStoreFilters { get; set; } = false;
 
-		[JsonProperty(Required = Required.Default)]
-		internal HashSet<string> Types = new();
+		[JsonInclude]
+		internal HashSet<string> Types { get; set; } = new();
 
-		[JsonProperty(Required = Required.Default)]
-		internal HashSet<uint> Categories = new();
+		[JsonInclude]
+		internal HashSet<uint> Categories { get; set; } = new();
 
-		[JsonProperty(Required = Required.Default)]
-		internal HashSet<uint> Tags = new();
+		[JsonInclude]
+		internal HashSet<uint> Tags { get; set; } = new();
 
-		[JsonProperty(Required = Required.Default)]
-		internal HashSet<string> IgnoredTypes = new();
+		[JsonInclude]
+		internal HashSet<string> IgnoredTypes { get; set; } = new();
 
-		[JsonProperty(Required = Required.Default)]
-		internal HashSet<uint> IgnoredTags = new();
+		[JsonInclude]
+		internal HashSet<uint> IgnoredTags { get; set; } = new();
 
-		[JsonProperty(Required = Required.Default)]
-		internal HashSet<uint> IgnoredCategories = new();
+		[JsonInclude]
+		internal HashSet<uint> IgnoredCategories { get; set; } = new();
 
-		[JsonProperty(Required = Required.Default)]
-		internal HashSet<uint> IgnoredContentDescriptors = new();
+		[JsonInclude]
+		internal HashSet<uint> IgnoredContentDescriptors { get; set; } = new();
 
-		[JsonProperty(Required = Required.Default)]
-		internal HashSet<uint> IgnoredAppIDs = new();
+		[JsonInclude]
+		internal HashSet<uint> IgnoredAppIDs { get; set; } = new();
 
-		[JsonProperty(Required = Required.Default)]
-		internal bool IgnoreFreeWeekends = false;
+		[JsonInclude]
+		internal bool IgnoreFreeWeekends { get; set; } = false;
 
-		[JsonProperty(Required = Required.Default)]
-		internal uint MinReviewScore = 0;
+		[JsonInclude]
+		internal uint MinReviewScore { get; set; } = 0;
 
-		[JsonProperty(Required = Required.Default)]
-		internal HashSet<string> Languages = new();
+		[JsonInclude]
+		internal HashSet<string> Languages { get; set; } = new();
 
-		[JsonProperty(Required = Required.Default)]
-		internal EPlaytestMode PlaytestMode = EPlaytestMode.None;
+		[JsonInclude]
+		internal EPlaytestMode PlaytestMode { get; set; } = EPlaytestMode.None;
 
-		[JsonProperty(Required = Required.Default)]
-		internal bool RequireAllTags = false;
+		[JsonInclude]
+		internal bool RequireAllTags { get; set; } = false;
 		
-		[JsonProperty(Required = Required.Default)]
-		internal bool RequireAllCategories = false;
+		[JsonInclude]
+		internal bool RequireAllCategories { get; set; } = false;
 		
-		[JsonProperty(Required = Required.Default)]
-		internal bool NoCostOnly = false;
+		[JsonInclude]
+		internal bool NoCostOnly { get; set; } = false;
 
-		[JsonProperty(Required = Required.Default)]
-		internal HashSet<string> Systems = new();
+		[JsonInclude]
+		internal HashSet<string> Systems { get; set; } = new();
 
-		[JsonProperty(Required = Required.Default)]
-		internal bool WishlistOnly = false;
+		[JsonInclude]
+		internal bool WishlistOnly { get; set; } = false;
 
 		[JsonConstructor]
 		internal FilterConfig() { }

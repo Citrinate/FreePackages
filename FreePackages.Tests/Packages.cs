@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
+using ArchiSteamFarm.Helpers.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json;
 using SteamKit2;
 
 namespace FreePackages.Tests;
@@ -14,13 +14,13 @@ public class Packages {
 	[TestInitialize]
 	public void InitializePackageFilter () {
 		PackageFilter = new PackageFilter(new BotCache(), new List<FilterConfig>());
-		PackageFilter.UpdateUserData(JsonConvert.DeserializeObject<UserData>(File.ReadAllText("userdata_empty.json")));
+		PackageFilter.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<UserData>());
 		PackageFilter.Country = "FOO";
 	}
 
 	[TestCleanup]
 	public void CleanupPackageFilter() {
-		PackageFilter.UpdateUserData(JsonConvert.DeserializeObject<UserData>(File.ReadAllText("userdata_empty.json")));
+		PackageFilter.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<UserData>());
 		PackageFilter.Country = "FOO";
 	}
 

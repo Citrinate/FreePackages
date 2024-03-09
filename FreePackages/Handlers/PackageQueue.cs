@@ -2,12 +2,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
-using ArchiSteamFarm.Steam.Integration;
 using SteamKit2;
 
 namespace FreePackages {
@@ -20,14 +18,6 @@ namespace FreePackages {
 		private readonly uint ActivationsPerHour = 40;
 		private const uint MaxActivationsPerHour = 50; // Steam's imposed limit
 		private bool PauseWhilePlaying = false;
-		internal static MethodInfo? AddFreeLicense;
-
-		static PackageQueue() {
-			AddFreeLicense = typeof(ArchiWebHandler).GetMethods(BindingFlags.NonPublic|BindingFlags.Public|BindingFlags.Instance).FirstOrDefault(x => x.Name == "AddFreeLicense");
-			if (AddFreeLicense == null) {
-				ASF.ArchiLogger.LogGenericError("Couldn't find ArchiWebHandler.AddFreeLicense method");
-			}
-		}
 
 		internal PackageQueue(Bot bot, BotCache botCache, uint? packageLimit, bool pauseWhilePlaying) {
 			Bot = bot;
@@ -210,16 +200,10 @@ namespace FreePackages {
 		}
 
 		private async Task<EResult> ClaimFreeSub(uint subID) {
-			if (AddFreeLicense == null) {
-				return EResult.Invalid;
-			}
-
 			EResult result;
 			EPurchaseResultDetail purchaseResult;
 			try {
-				var res = (Task<(EResult, EPurchaseResultDetail)>) AddFreeLicense.Invoke(Bot.ArchiWebHandler, new object[]{subID})!;
-				await res;
-				(result, purchaseResult) = res.Result;
+				(result, purchaseResult) = await Bot.Actions.AddFreeLicensePackage(subID).ConfigureAwait(false);
 			} catch (Exception e) {
 				Bot.ArchiLogger.LogGenericException(e);
 
@@ -253,7 +237,7 @@ namespace FreePackages {
 				return EResult.Invalid;
 			}
 
-			if (!response.Success) {
+			if (response.Success != 1) {
 				// Not sure if/when this happens
 				Bot.ArchiLogger.LogGenericInfo(string.Format("ID: playtest/{0} | Status: Failed", appID));
 

@@ -2,36 +2,44 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Collections;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Helpers;
+using ArchiSteamFarm.Helpers.Json;
 using ArchiSteamFarm.Localization;
-using Newtonsoft.Json;
 using SteamKit2;
 
 namespace FreePackages {
 	internal sealed class BotCache : SerializableFile {
-		[JsonProperty(Required = Required.DisallowNull)]
-		internal ConcurrentHashSet<Package> Packages { get; } = new(new PackageComparer());
+		[JsonInclude]
+		[JsonDisallowNull]
+		internal ConcurrentHashSet<Package> Packages { get; private set; } = new(new PackageComparer());
 
-		[JsonProperty(Required = Required.DisallowNull)]
-		internal ConcurrentHashSet<DateTime> Activations = new();
+		[JsonInclude]
+		[JsonDisallowNull]
+		internal ConcurrentHashSet<DateTime> Activations { get; private set; } = new();
 
-		[JsonProperty(Required = Required.DisallowNull)]
-		internal ConcurrentHashSet<uint> ChangedApps = new();
+		[JsonInclude]
+		[JsonDisallowNull]
+		internal ConcurrentHashSet<uint> ChangedApps { get; private set; } = new();
 
-		[JsonProperty(Required = Required.DisallowNull)]
-		internal ConcurrentHashSet<uint> ChangedPackages = new();
+		[JsonInclude]
+		[JsonDisallowNull]
+		internal ConcurrentHashSet<uint> ChangedPackages { get; private set; } = new();
 
-		[JsonProperty(Required = Required.DisallowNull)]
-		internal ConcurrentHashSet<uint> NewOwnedPackages = new();
+		[JsonInclude]
+		[JsonDisallowNull]
+		internal ConcurrentHashSet<uint> NewOwnedPackages { get; private set; } = new();
 
-		[JsonProperty(Required = Required.DisallowNull)]
-		internal ConcurrentHashSet<uint> SeenPackages = new();
+		[JsonInclude]
+		[JsonDisallowNull]
+		internal ConcurrentHashSet<uint> SeenPackages { get; private set; } = new();
 
-		[JsonProperty(Required = Required.DisallowNull)]
-		internal ConcurrentHashSet<uint> WaitlistedPlaytests = new();
+		[JsonInclude]
+		[JsonDisallowNull]
+		internal ConcurrentHashSet<uint> WaitlistedPlaytests { get; private set; } = new();
 
 		[JsonConstructor]
 		internal BotCache() { }
@@ -43,6 +51,8 @@ namespace FreePackages {
 
 			FilePath = filePath;
 		}
+
+		protected override Task Save() => Save(this);
 
 		internal static async Task<BotCache?> CreateOrLoad(string filePath) {
 			if (string.IsNullOrEmpty(filePath)) {
@@ -63,7 +73,7 @@ namespace FreePackages {
 					return null;
 				}
 
-				botCache = JsonConvert.DeserializeObject<BotCache>(json);
+				botCache = json.ToJsonObject<BotCache>();
 			} catch (Exception e) {
 				ASF.ArchiLogger.LogGenericException(e);
 
