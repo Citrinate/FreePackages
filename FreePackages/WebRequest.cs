@@ -28,9 +28,9 @@ namespace FreePackages {
 			await AppDetailsSemaphore.WaitAsync().ConfigureAwait(false);
 			try {
 				Uri request = new(ArchiWebHandler.SteamStoreURL, String.Format("/api/appdetails/?appids={0}", appID));
-				ObjectResponse<JsonObject>? appDetailsResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonObject>(request).ConfigureAwait(false);
+				ObjectResponse<Dictionary<uint, AppDetails>>? appDetailsResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<Dictionary<uint, AppDetails>>(request).ConfigureAwait(false);
 				
-				return JsonSerializer.Deserialize<AppDetails>(appDetailsResponse?.Content?[appID.ToString()]);
+				return appDetailsResponse?.Content?[appID];
 			} finally {
 				Utilities.InBackground(
 					async() => {
