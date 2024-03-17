@@ -11,8 +11,9 @@ using ArchiSteamFarm.Helpers.Json;
 
 namespace FreePackages {
 	[Export(typeof(IPlugin))]
-	public sealed class FreePackages : IASF, IBotModules, ISteamPICSChanges, IBotSteamClient, IBotConnection, IBotCommand2 {
+	public sealed class FreePackages : IASF, IBotModules, ISteamPICSChanges, IBotSteamClient, IBotConnection, IBotCommand2, IGitHubPluginUpdates {
 		public string Name => nameof(FreePackages);
+		public string RepositoryName => "Citrinate/FreePackages";
 		public Version Version => typeof(FreePackages).Assembly.GetName().Version ?? new Version("0");
 		internal static GlobalCache? GlobalCache;
 
