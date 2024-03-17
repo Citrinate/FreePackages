@@ -8,7 +8,6 @@ using ArchiSteamFarm.Plugins.Interfaces;
 using SteamKit2;
 using System.Text.Json;
 using ArchiSteamFarm.Helpers.Json;
-using System.Reflection;
 
 namespace FreePackages {
 	[Export(typeof(IPlugin))]
@@ -19,14 +18,6 @@ namespace FreePackages {
 
 		public Task OnLoaded() {
 			ASF.ArchiLogger.LogGenericInfo("Free Packages ASF Plugin by Citrinate");
-
-			// ASFEnhanced Adapter https://github.com/chr233/ASFEnhanceAdapterDemoPlugin
-			var flag = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-			var handler = typeof(AdapterBridge).GetMethod(nameof(AdapterBridge.Response), flag);
-			const string pluginId = nameof(FreePackages);
-			const string cmdPrefix = "FREEPACKAGES";
-			const string repoName = "Citrinate/FreePackages";
-			AdapterBridge.InitAdapter(Name, pluginId, cmdPrefix, repoName, handler);
 
 			return Task.CompletedTask;
 		}
