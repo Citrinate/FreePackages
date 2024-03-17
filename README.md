@@ -446,6 +446,7 @@ Command | Access | Description
 
 Command | Alias |
 --- | --- |
+`freepackages`|`FamilySharing`|Prints version of plugin.
 `queuestatus`|`qstatus`
 `queuestatus asf`|`qsa`
 `queuelicense`|`queuelicence`, `qlicense`, `qlicence`
