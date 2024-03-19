@@ -23,6 +23,7 @@ namespace FreePackages {
 		internal List<string>? PurchaseRestrictedCountries;
 		internal bool AllowPurchaseFromRestrictedCountries;
 		internal bool FreeWeekend;
+		internal bool BetaTesterPackage;
 		
 		internal FilterablePackage(SteamApps.PICSProductInfoCallback.PICSProductInfo productInfo, bool isNew = false) : this(productInfo.ID, productInfo.KeyValues, isNew) {}
 		internal FilterablePackage(KeyValue kv, bool isNew = false) : this(Convert.ToUInt32(kv.Name), kv, isNew) {}
@@ -42,6 +43,7 @@ namespace FreePackages {
 			PurchaseRestrictedCountries = kv["extended"]["purchaserestrictedcountries"].AsString()?.ToUpper().Split(" ").ToList();
 			AllowPurchaseFromRestrictedCountries = kv["extended"]["allowpurchasefromrestrictedcountries"].AsBoolean();
 			FreeWeekend = kv["extended"]["freeweekend"].AsBoolean();
+			BetaTesterPackage = kv["extended"]["betatesterpackage"].AsBoolean();
 		}
 
 		internal void AddPackageContents(IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> productInfos) => AddPackageContents(productInfos.Select(productInfo => (productInfo.ID, productInfo.KeyValues)));
@@ -101,6 +103,11 @@ namespace FreePackages {
 			
 			if (DeactivatedDemo) {
 				// Demo package has been disabled
+				return false;
+			}
+
+			if (BetaTesterPackage) {
+				// Playtests can't be activated through packages
 				return false;
 			}
 
