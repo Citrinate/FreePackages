@@ -14,6 +14,7 @@ namespace FreePackages {
 		internal string? ReleaseState;
 		internal string? State;
 		internal uint MustOwnAppToPurchase;
+		internal uint DLCForAppID;
 		internal List<string>? RestrictedCountries;
 		internal List<string>? PurchaseRestrictedCountries;
 		internal bool AllowPurchaseFromRestrictedCountries;
@@ -41,6 +42,7 @@ namespace FreePackages {
 			ReleaseState = kv["common"]["releasestate"].AsString();
 			State = kv["extended"]["state"].AsString();
 			MustOwnAppToPurchase = kv["extended"]["mustownapptopurchase"].AsUnsignedInteger();
+			DLCForAppID = kv["extended"]["dlcforappid"].AsUnsignedInteger();
 			RestrictedCountries = kv["common"]["restricted_countries"].AsString()?.ToUpper().Split(",").ToList();
 			PurchaseRestrictedCountries = kv["extended"]["purchaserestrictedcountries"].AsString()?.ToUpper().Split(" ").ToList();
 			AllowPurchaseFromRestrictedCountries = kv["extended"]["allowpurchasefromrestrictedcountries"].AsBoolean();
