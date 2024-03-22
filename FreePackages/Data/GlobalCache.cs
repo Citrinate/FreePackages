@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Helpers;
 using ArchiSteamFarm.Helpers.Json;
-using ArchiSteamFarm.Localization;
 
 namespace FreePackages {
 	internal sealed class GlobalCache : SerializableFile {
@@ -34,7 +33,7 @@ namespace FreePackages {
 				string json = await File.ReadAllTextAsync(SharedFilePath).ConfigureAwait(false);
 
 				if (string.IsNullOrEmpty(json)) {
-					ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorIsEmpty, nameof(json)));
+					ASF.ArchiLogger.LogGenericError(string.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(json)));
 
 					return null;
 				}

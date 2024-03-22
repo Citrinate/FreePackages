@@ -7,6 +7,7 @@
     <LangVersion>latest</LangVersion>
     <TargetFramework>net8.0</TargetFramework>
     <Deterministic>true</Deterministic>
+    <CoreCompileDependsOn>PrepareResources;$(CompileDependsOn)</CoreCompileDependsOn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +20,18 @@
 
   <ItemGroup>
       <InternalsVisibleTo Include="FreePackages.Tests" />
+  </ItemGroup>
+
+  <!-- https://www.paraesthesia.com/archive/2022/09/30/strongly-typed-resources-with-net-core/ -->
+  <ItemGroup>
+    <EmbeddedResource Update="Localization\Strings.resx">
+      <Generator>MSBuild:Compile</Generator>
+      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+      <StronglyTypedFileName>$(IntermediateOutputPath)\Strings.Designer.cs</StronglyTypedFileName>
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>FreePackages.Localization</StronglyTypedNamespace>
+      <StronglyTypedClassName>Strings</StronglyTypedClassName>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

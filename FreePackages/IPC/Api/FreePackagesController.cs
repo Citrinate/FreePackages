@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.IPC.Controllers.Api;
 using ArchiSteamFarm.IPC.Responses;
-using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
+using FreePackages.Localization;
 using Microsoft.AspNetCore.Mvc;
 using SteamKit2;
 using Swashbuckle.AspNetCore.Annotations;
@@ -27,12 +27,12 @@ namespace FreePackages.IPC {
 
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 			if ((bots == null) || (bots.Count == 0)) {
-				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botNames)));
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)));
 			}
 
 			Bot? bot = bots.FirstOrDefault(static bot => bot.IsConnectedAndLoggedOn);
 			if (bot == null) {
-				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
 			}
 
 			SteamApps.PICSChangesCallback picsChanges;
@@ -59,12 +59,12 @@ namespace FreePackages.IPC {
 
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 			if ((bots == null) || (bots.Count == 0)) {
-				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botNames)));
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)));
 			}
 
 			Bot? bot = bots.FirstOrDefault(static bot => bot.IsConnectedAndLoggedOn);
 			if (bot == null) {
-				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
 			}
 
 			IEnumerable<SteamApps.PICSProductInfoCallback> productInfos;
@@ -114,24 +114,24 @@ namespace FreePackages.IPC {
 
 			Bot? bot = Bot.GetBot(botName);
 			if (bot == null) {
-				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)));
 			}
 			
 			if (!bot.IsConnectedAndLoggedOn) {
-				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
 			}
 
 			HashSet<uint> apps = new();
 			foreach (string appIDString in appIDs.Split(",", StringSplitOptions.RemoveEmptyEntries)) {
 				if (!uint.TryParse(appIDString, out uint appID)) {
-					return BadRequest(new GenericResponse(false, String.Format(Strings.ErrorParsingObject, nameof(appIDString))));
+					return BadRequest(new GenericResponse(false, String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(appIDString))));
 				}
 
 				apps.Add(appID);
 			}
 
 			if (apps.Count == 0) {
-				return BadRequest(new GenericResponse(false, String.Format(Strings.ErrorIsEmpty, nameof(appIDs))));
+				return BadRequest(new GenericResponse(false, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(appIDs))));
 			}
 
 			SteamApps.FreeLicenseCallback response;
@@ -157,11 +157,11 @@ namespace FreePackages.IPC {
 
 			Bot? bot = Bot.GetBot(botName);
 			if (bot == null) {
-				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)));
 			}
 			
 			if (!bot.IsConnectedAndLoggedOn) {
-				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
 			}
 
 			EResult result;
@@ -188,11 +188,11 @@ namespace FreePackages.IPC {
 
 			Bot? bot = Bot.GetBot(botName);
 			if (bot == null) {
-				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)));
 			}
 
 			if (bot.OwnedPackageIDs.Count == 0) {
-				return BadRequest(new GenericResponse(false, "No packages found"));
+				return BadRequest(new GenericResponse(false, Strings.NoPackagesFound));
 			}
 
 			return Ok(new GenericResponse<IEnumerable<uint>>(true, bot.OwnedPackageIDs.Keys));
@@ -210,15 +210,15 @@ namespace FreePackages.IPC {
 
 			Bot? bot = Bot.GetBot(botName);
 			if (bot == null) {
-				return BadRequest(new GenericResponse(false, String.Format(Strings.BotNotFound, botName)));
+				return BadRequest(new GenericResponse(false, String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)));
 			}
 
 			if (bot.OwnedPackageIDs.Count == 0) {
-				return BadRequest(new GenericResponse(false, "No apps found"));
+				return BadRequest(new GenericResponse(false, Strings.NoAppsFound));
 			}
 
 			if (ASF.GlobalDatabase == null) {
-				return BadRequest(new GenericResponse(false, String.Format(Strings.ErrorObjectIsNull, nameof(ASF.GlobalDatabase))));
+				return BadRequest(new GenericResponse(false, String.Format(ArchiSteamFarm.Localization.Strings.ErrorObjectIsNull, nameof(ASF.GlobalDatabase))));
 			}
 
 			var ownedPackageIDs = bot.OwnedPackageIDs.Keys.ToHashSet();
@@ -230,7 +230,7 @@ namespace FreePackages.IPC {
 				try {
 					appList = await WebRequest.GetAppList(bot).ConfigureAwait(false);
 					if (appList == null) {
-						return BadRequest(new GenericResponse(false, "Failed to get app list"));
+						return BadRequest(new GenericResponse(false, Strings.AppListFetchFailed));
 					}
 				} catch (Exception e) {
 					return BadRequest(new GenericResponse(false, e.Message));
@@ -254,11 +254,11 @@ namespace FreePackages.IPC {
 
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 			if (bots == null || bots.Count == 0) {
-				return BadRequest(new GenericResponse(false, String.Format(Strings.BotNotFound, botNames)));
+				return BadRequest(new GenericResponse(false, String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)));
 			}
 
 			if (PackageHandler.Handlers.Keys.Union(bots.Select(x => x.BotName)).Count() == 0) {
-				return BadRequest(new GenericResponse(false, "Free Packages plugin not enabled"));
+				return BadRequest(new GenericResponse(false, Strings.PluginNotEnabled));
 			}
 
 			foreach (Bot bot in bots) {

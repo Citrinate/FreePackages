@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using ArchiSteamFarm.Core;
-using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
 
 namespace FreePackages {
@@ -66,7 +65,7 @@ namespace FreePackages {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
@@ -84,7 +83,7 @@ namespace FreePackages {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IEnumerable<string?> results = bots.Select(bot => ResponseClearQueue(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)));
@@ -100,7 +99,7 @@ namespace FreePackages {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
@@ -118,7 +117,7 @@ namespace FreePackages {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IEnumerable<string?> results = bots.Select(bot => ResponseQueueStatus(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)));
@@ -134,7 +133,7 @@ namespace FreePackages {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
@@ -154,7 +153,7 @@ namespace FreePackages {
 
 				if ((index > 0) && (entry.Length > index + 1)) {
 					if (!uint.TryParse(entry[(index + 1)..], out gameID) || (gameID == 0)) {
-						response.AppendLine(FormatBotResponse(bot, string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsInvalid, nameof(gameID))));
+						response.AppendLine(FormatBotResponse(bot, string.Format(CultureInfo.CurrentCulture, ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(gameID))));
 
 						continue;
 					}
@@ -163,7 +162,7 @@ namespace FreePackages {
 				} else if (uint.TryParse(entry, out gameID) && (gameID > 0)) {
 					type = "SUB";
 				} else {
-					response.AppendLine(FormatBotResponse(bot, string.Format(CultureInfo.CurrentCulture, Strings.ErrorIsInvalid, nameof(gameID))));
+					response.AppendLine(FormatBotResponse(bot, string.Format(CultureInfo.CurrentCulture, ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(gameID))));
 
 					continue;
 				}
@@ -190,7 +189,7 @@ namespace FreePackages {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IEnumerable<string?> results = bots.Select(bot => ResponseQueueLicense(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), licenses, useFilter));

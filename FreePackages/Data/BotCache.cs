@@ -8,7 +8,6 @@ using ArchiSteamFarm.Collections;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Helpers;
 using ArchiSteamFarm.Helpers.Json;
-using ArchiSteamFarm.Localization;
 using SteamKit2;
 
 namespace FreePackages {
@@ -68,7 +67,7 @@ namespace FreePackages {
 				string json = await File.ReadAllTextAsync(filePath).ConfigureAwait(false);
 
 				if (string.IsNullOrEmpty(json)) {
-					ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorIsEmpty, nameof(json)));
+					ASF.ArchiLogger.LogGenericError(string.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(json)));
 
 					return null;
 				}

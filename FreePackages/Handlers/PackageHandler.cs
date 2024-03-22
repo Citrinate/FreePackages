@@ -5,8 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
-using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
+using FreePackages.Localization;
 using SteamKit2;
 
 namespace FreePackages {
@@ -47,14 +47,14 @@ namespace FreePackages {
 					int numBotsThatIncludePlaytests = Handlers.Values.Where(x => x.PackageFilter.FilterConfigs.Any(filterConfig => filterConfig.PlaytestMode != EPlaytestMode.None)).Count();
 					if (numBotsThatIncludePlaytests > 0) {
 						filterConfigs.ForEach(filterConfig => filterConfig.PlaytestMode = EPlaytestMode.None);
-						bot.ArchiLogger.LogGenericInfo("Changed PlaytestMode to 0 (None), only 1 bot is allowed to use this filter");
+						bot.ArchiLogger.LogGenericInfo(Strings.PlaytestConfigLimitTriggered);
 					}
 				}
 
 				string cacheFilePath = Bot.GetFilePath(String.Format("{0}_{1}", bot.BotName, nameof(FreePackages)), Bot.EFileType.Database);
 				BotCache? botCache = await BotCache.CreateOrLoad(cacheFilePath).ConfigureAwait(false);
 				if (botCache == null) {
-					bot.ArchiLogger.LogGenericError(String.Format(Strings.ErrorDatabaseInvalid, cacheFilePath));
+					bot.ArchiLogger.LogGenericError(String.Format(ArchiSteamFarm.Localization.Strings.ErrorDatabaseInvalid, cacheFilePath));
 					botCache = new(cacheFilePath);
 				}
 
@@ -98,7 +98,7 @@ namespace FreePackages {
 			UserData? userData = await WebRequest.GetUserData(Bot).ConfigureAwait(false);
 			if (userData == null) {
 				UserDataRefreshTimer.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(15));
-				Bot.ArchiLogger.LogGenericError(String.Format(Strings.ErrorObjectIsNull, userData));
+				Bot.ArchiLogger.LogGenericError(String.Format(ArchiSteamFarm.Localization.Strings.ErrorObjectIsNull, userData));
 
 				return;
 			}
@@ -425,7 +425,7 @@ namespace FreePackages {
 			int numChangedPackages = BotCache.ChangedPackages.Count;
 
 			if (numPackages == 0 && numChangedApps == 0 && numChangedPackages == 0) {
-				return "Queue is empty";
+				return Strings.QueueEmpty;
 			}
 
 			BotCache.Clear();
@@ -433,13 +433,13 @@ namespace FreePackages {
 			HashSet<string> responses = new HashSet<string>();
 			
 			if (numPackages > 0) {
-				responses.Add(String.Format("{0} free packages removed.", numPackages));
+				responses.Add(String.Format(Strings.PackagesRemoved, numPackages));
 			}
 			if (numChangedApps > 0) {
-				responses.Add(String.Format("{0} discovered apps removed.", numChangedApps));
+				responses.Add(String.Format(Strings.DiscoveredAppsRemoved, numChangedApps));
 			}
 			if (numChangedPackages > 0) {
-				responses.Add(String.Format("{0} discovered packages removed.", numChangedPackages));
+				responses.Add(String.Format(Strings.DiscoveredPackagesRemoved, numChangedPackages));
 			}
 
 			return String.Join(" ", responses);
@@ -450,20 +450,20 @@ namespace FreePackages {
 				if (type == EPackageType.App) {
 					BotCache.AddChanges(appIDs: new HashSet<uint> {id});
 
-					return String.Format("Added app/{0} to discovered apps queue", id);
+					return String.Format(Strings.DiscoveredAppsAdded, String.Format("app/{0}", id));
 				} else {
 					BotCache.AddChanges(packageIDs: new HashSet<uint> {id});
 
-					return String.Format("Added sub/{0} to discovered packages queue", id);
+					return String.Format(Strings.DiscoveredPackagesAdded, String.Format("sub/{0}", id));
 				}
 			}
 
 			PackageQueue.AddPackage(new Package(type, id));
 
 			if (type == EPackageType.App) {
-				return String.Format("Added app/{0} to free packages queue", id);
+				return String.Format(Strings.AppsQueued, String.Format("app/{0}", id));
 			} else {
-				return String.Format("Added sub/{0} to free packages queue", id);
+				return String.Format(Strings.PackagesQueued, String.Format("sub/{0}", id));
 			}
 		}
 
