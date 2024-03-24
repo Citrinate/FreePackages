@@ -241,4 +241,8 @@
     <value>Free Packages plugin not enabled</value>
     <comment/>
   </data>
+  <data name="ASFInfoParseFailed" xml:space="preserve">
+    <value>Failed to parse data from ASFInfo</value>
+    <comment/>
+  </data>
 </root>

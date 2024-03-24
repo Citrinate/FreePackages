@@ -33,6 +33,7 @@ namespace FreePackages {
 			}
 
 			CardApps.Update();
+			ASFInfo.Update();
 		}
 
 		public async Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
