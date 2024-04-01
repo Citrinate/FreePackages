@@ -433,6 +433,12 @@ You can define as many filters as you'd like, and packages that pass any one of 
 
 ---
 
+### Importing packages
+
+While the plugin is meant to be used passively, you can also import free packages from [SteamDB](https://steamdb.info/freepackages/) using [this userscript](https://github.com/Citrinate/FreePackages/tree/main/FreePackagesImporter).
+
+---
+
 ### Commands
 
 Command | Access | Description
@@ -451,12 +457,6 @@ Command | Alias |
 `queuestatus asf`|`qsa`
 `queuelicense`|`queuelicence`, `qlicense`, `qlicence`
 `queuelicense^`|`queuelicence^`, `qlicense^`, `qlicence^`
-
----
-
-### Userscript
-
-You can use [this userscript](https://github.com/Citrinate/FreePackages/tree/main/FreePackagesImporter) to import packages from SteamDB's [free packages tool](https://steamdb.info/freepackages/).
 
 ---
 
