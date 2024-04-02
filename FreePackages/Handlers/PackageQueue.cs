@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
+using FreePackages.Localization;
 using SteamKit2;
 
 namespace FreePackages {
@@ -67,7 +68,7 @@ namespace FreePackages {
 
 			if (BotCache.NumActivationsPastHour() >= ActivationsPerHour) {
 				DateTime resumeTime = BotCache.GetLastActivation()!.Value.AddHours(1).AddMinutes(1);
-				Bot.ArchiLogger.LogGenericInfo(String.Format("Pausing free package activations until {0:T}", resumeTime));
+				Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.ActivationPaused, String.Format("{0:T}", resumeTime)));
 				UpdateTimer(resumeTime);
 				
 				return;
@@ -93,8 +94,8 @@ namespace FreePackages {
 			if (result == EResult.RateLimitExceeded) {
 				BotCache.AddActivation(DateTime.Now, MaxActivationsPerHour); // However many activations we thought were made, we were wrong.  Correct for this by adding a bunch of fake times to our cache
 				DateTime resumeTime = DateTime.Now.AddHours(1).AddMinutes(1);
-				Bot.ArchiLogger.LogGenericInfo("Free Package rate limit exceeded");
-				Bot.ArchiLogger.LogGenericInfo(String.Format("Pausing free package activations until {0:T}", resumeTime));
+				Bot.ArchiLogger.LogGenericInfo(Strings.RateLimitExceeded);
+				Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.ActivationPaused, String.Format("{0:T}", resumeTime)));
 				UpdateTimer(resumeTime);
 
 				return;
@@ -150,14 +151,14 @@ namespace FreePackages {
 
 			// The Result returned by RequestFreeLicense is useless and I've only ever seen it return EResult.OK
 			if (response.Result != EResult.OK) {
-				Bot.ArchiLogger.LogGenericInfo(string.Format("ID: app/{0} | Status: {1}", appID, response.Result));
+				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), response.Result));
 
 				return EResult.Fail;
 			}
 
 			if (response.GrantedApps.Count > 0 || response.GrantedPackages.Count > 0) {
 				// When only GrantedPackages is empty we probably tried to activate an app we already own.  I don't think it's possible for only GrantedApps to be empty
-				Bot.ArchiLogger.LogGenericInfo(string.Format("ID: app/{0} | Status: {1} | Items: {2}", appID, response.Result, String.Join(", ", response.GrantedApps.Select(x => $"app/{x}").Union(response.GrantedPackages.Select(x => $"sub/{x}")))));
+				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicenseWithItems, String.Format("app/{0}", appID), response.Result, String.Join(", ", response.GrantedApps.Select(x => $"app/{x}").Union(response.GrantedPackages.Select(x => $"sub/{x}")))));
 
 				return EResult.OK;
 			}
@@ -172,7 +173,7 @@ namespace FreePackages {
 				bool isComingSoon = appDetails?.Data?.ReleaseDate?.ComingSoon ?? true;
 
 				if (!success || !isFree || isComingSoon) {
-					Bot.ArchiLogger.LogGenericInfo(string.Format("ID: app/{0} | Status: {1}", appID, EResult.Invalid));
+					Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), EResult.Invalid));
 
 					return EResult.Invalid;
 				}
@@ -182,7 +183,7 @@ namespace FreePackages {
 				if (hasPackages) {
 					// Replace the app with the appropriate package and when we try to activate that we'll find out for sure if we're rate limited or not
 					// Note: This is mostly wishful thinking. /api/appdetails rarely shows the free packages for free apps (one example where it does: https://steamdb.info/app/2119270/)
-					Bot.ArchiLogger.LogGenericInfo(string.Format("ID: app/{0} | Status: Replaced with {1}", appID, String.Join(", ", appDetails!.Data!.Packages.Select(x => $"sub/{x}"))));
+					Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), String.Format(Strings.ReplacedWith, String.Join(", ", appDetails!.Data!.Packages.Select(x => $"sub/{x}")))));
 					BotCache.AddChanges(packageIDs: appDetails.Data.Packages);
 
 					return EResult.OK;
@@ -191,7 +192,7 @@ namespace FreePackages {
 				// We could be rate limited, but the app could also be invalid beacause it has no available licenses.  It's necessary to assume invalid so we don't get into an infinite loop.
 				// Examples: https://steamdb.info/app/2401570/ on Oct 2, 2023, Attempting to download demo through Steam client gives error "no licenses"
 				// Free games that still have store pages but display "At the request of the publisher, ___ is unlisted on the Steam store and will not appear in search.": https://store.steampowered.com/app/376570/WildStar/
-				Bot.ArchiLogger.LogGenericInfo(string.Format("ID: app/{0} | Status: Unknown", appID));
+				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), Strings.Unknown));
 
 				return EResult.Invalid;
 			}
@@ -210,7 +211,7 @@ namespace FreePackages {
 				return EResult.Invalid;
 			}
 
-			Bot.ArchiLogger.LogGenericInfo(string.Format("ID: sub/{0} | Status: {1}/{2}", subID, result, purchaseResult));
+			Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("sub/{0}", subID), String.Format("{0}/{1}", result, purchaseResult)));
 
 			if (purchaseResult == EPurchaseResultDetail.RateLimited) {
 				return EResult.RateLimitExceeded;
@@ -232,21 +233,21 @@ namespace FreePackages {
 
 			if (response == null) {
 				// Playtest does not exist currently
-				Bot.ArchiLogger.LogGenericInfo(string.Format("ID: playtest/{0} | Status: Invalid", appID));
+				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", appID), Strings.Invalid));
 
 				return EResult.Invalid;
 			}
 
 			if (response.Success != 1) {
 				// Not sure if/when this happens
-				Bot.ArchiLogger.LogGenericInfo(string.Format("ID: playtest/{0} | Status: Failed", appID));
+				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", appID), Strings.Failed));
 
 				return EResult.Invalid;
 			}
 
 			if (response.Granted == null) {
 				// Playtest has limited slots, account was added to the waitlist
-				Bot.ArchiLogger.LogGenericInfo(string.Format("ID: playtest/{0} | Status: Waitlisted", appID));
+				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", appID), Strings.Waitlisted));
 				// This won't show up in our owned apps until we're accepted, save it so we don't retry
 				BotCache.AddWaitlistedPlaytest(appID);
 
@@ -254,7 +255,7 @@ namespace FreePackages {
 			}
 
 			// Access to playtest granted
-			Bot.ArchiLogger.LogGenericInfo(string.Format("ID: playtest/{0} | Status: {1}", appID, EResult.OK));
+			Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", appID), EResult.OK));
 
 			return EResult.OK;
 		}
@@ -263,19 +264,19 @@ namespace FreePackages {
 			HashSet<string> responses = new HashSet<string>();
 
 			int activationsPastHour = Math.Min(BotCache.NumActivationsPastHour(), (int) MaxActivationsPerHour);
-			responses.Add(String.Format("{0} free packages queued.  {1}/{2} hourly activations used.", BotCache.Packages.Count, activationsPastHour, ActivationsPerHour));
+			responses.Add(String.Format(Strings.QueueStatus, BotCache.Packages.Count, activationsPastHour, ActivationsPerHour));
 
 			if (PauseWhilePlaying && !Bot.IsPlayingPossible) {
-				responses.Add("Activations are now paused as the account is being used to play a game.");
+				responses.Add(Strings.QueuePausedWhileIngame);
 			}
 
 			if (activationsPastHour >= ActivationsPerHour) {
 				DateTime resumeTime = BotCache.GetLastActivation()!.Value.AddHours(1).AddMinutes(1);
-				responses.Add(String.Format("Activations will resume at {0:T}.", resumeTime));
+				responses.Add(String.Format(Strings.QueueLimitedUntil, String.Format("{0:T}", resumeTime)));
 			}
 
 			if (BotCache.ChangedApps.Count > 0 || BotCache.ChangedPackages.Count > 0) {
-				responses.Add(String.Format("{0} apps and {1} packages discovered but not processed yet.", BotCache.ChangedApps.Count, BotCache.ChangedPackages.Count));
+				responses.Add(String.Format(Strings.QueueDiscoveryStatus, BotCache.ChangedApps.Count, BotCache.ChangedPackages.Count));
 			}
 
 			return String.Join(" ", responses);;

@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Web.Responses;
+using FreePackages.Localization;
 
 namespace FreePackages {
 	internal static class CardApps {
@@ -26,7 +27,7 @@ namespace FreePackages {
 			ObjectResponse<Badges>? response = await ASF.WebBrowser.UrlGetToJsonObject<Badges>(request).ConfigureAwait(false);
 
 			if (response == null) {
-				ASF.ArchiLogger.LogGenericDebug("Failed to fetch badge data for free packages");
+				ASF.ArchiLogger.LogGenericDebug(Strings.BadgeDataFetchFailed);
 				UpdateTimer.Change(TimeSpan.FromMinutes(1), UpdateFrequency);
 
 				return;
@@ -38,7 +39,7 @@ namespace FreePackages {
 				AppIDs = response.Content.Data.Keys.Select(uint.Parse).ToHashSet();
 			} catch (Exception e) {
 				ASF.ArchiLogger.LogGenericException(e);
-				ASF.ArchiLogger.LogGenericError("Failed to parse badge data for free packages");
+				ASF.ArchiLogger.LogGenericError(Strings.BadgeDataParsingFailed);
 
 				return;
 			}

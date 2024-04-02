@@ -488,3 +488,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# https://www.paraesthesia.com/archive/2022/09/30/strongly-typed-resources-with-net-core/
+*.Designer.cs

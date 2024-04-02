@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
+using FreePackages.Localization;
 using SteamKit2;
 
 namespace FreePackages {
@@ -37,7 +38,7 @@ namespace FreePackages {
 			}
 
 			uint oldChangeNumber = FreePackages.GlobalCache.LastChangeNumber;
-			ASF.ArchiLogger.LogGenericDebug(String.Format("PICS restarted, skipping from change number {0} to {1}", oldChangeNumber, currentChangeNumber));
+			ASF.ArchiLogger.LogGenericDebug(String.Format(Strings.PICSRestart, oldChangeNumber, currentChangeNumber));
 
 			// ASF restarts PICS if either apps or packages needs a full update.  Check the old change number, as one of them might still be good.
 			SteamApps.PICSChangesCallback? picsChanges = await FetchPICSChanges(oldChangeNumber, sendAppChangeList: false, sendPackageChangeList: true).ConfigureAwait(false);
@@ -48,12 +49,12 @@ namespace FreePackages {
 			if (!picsChanges.RequiresFullAppUpdate) {
 				PackageHandler.AddChanges(picsChanges.AppChanges, new Dictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData>());
 			} else {
-				ASF.ArchiLogger.LogGenericDebug("Possibly missed some free apps due to PICS restart");
+				ASF.ArchiLogger.LogGenericDebug(Strings.MissedApps);
 				
 				// Search for the oldest change number which is still valid for apps
 				var appChanges = await FindOldestPICSChanges(oldChangeNumber + 1, picsChanges.CurrentChangeNumber, findApps: true);
 				if (appChanges != null) {
-					ASF.ArchiLogger.LogGenericDebug(String.Format("Recovered {0} app changes at change number {1}", appChanges.AppChanges.Count, appChanges.LastChangeNumber + 1));
+					ASF.ArchiLogger.LogGenericDebug(String.Format(Strings.RecoveredApps, appChanges.AppChanges.Count, appChanges.LastChangeNumber + 1));
 
 					PackageHandler.AddChanges(appChanges.AppChanges, new Dictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData>());
 				}
@@ -62,12 +63,12 @@ namespace FreePackages {
 			if (!picsChanges.RequiresFullPackageUpdate) {
 				PackageHandler.AddChanges(new Dictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData>(), picsChanges.PackageChanges);
 			} else {
-				ASF.ArchiLogger.LogGenericDebug("Possibly missed some free packages due to PICS restart");
+				ASF.ArchiLogger.LogGenericDebug(Strings.MissedPackages);
 
 				// Search for the oldest change number which is still valid for packages
 				var packageChanges = await FindOldestPICSChanges(oldChangeNumber + 1, picsChanges.CurrentChangeNumber, findApps: false);
 				if (packageChanges != null) {
-					ASF.ArchiLogger.LogGenericDebug(String.Format("Recovered {0} package changes at change number {1}", packageChanges.PackageChanges.Count, packageChanges.LastChangeNumber + 1));
+					ASF.ArchiLogger.LogGenericDebug(String.Format(Strings.RecoveredPackages, packageChanges.PackageChanges.Count, packageChanges.LastChangeNumber + 1));
 
 					PackageHandler.AddChanges(new Dictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData>(), packageChanges.PackageChanges);
 				}

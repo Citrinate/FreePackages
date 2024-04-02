@@ -5,17 +5,19 @@ using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Helpers;
 using ArchiSteamFarm.Helpers.Json;
-using ArchiSteamFarm.Localization;
 
 namespace FreePackages {
 	internal sealed class GlobalCache : SerializableFile {
 		private static string SharedFilePath => Path.Combine(ArchiSteamFarm.SharedInfo.ConfigDirectory, $"{nameof(FreePackages)}.cache");
 
 		[JsonInclude]
-		[JsonRequired]
 		internal uint LastChangeNumber { get; private set; }
+
+		[JsonInclude]
+		internal uint LastASFInfoItemCount { get; private set; }
 		
 		public bool ShouldSerializeLastChangeNumber() => LastChangeNumber > 0;
+		public bool ShouldSerializeLastASFInfoItemCount() => LastASFInfoItemCount > 0;
 
 		[JsonConstructor]
 		internal GlobalCache() {
@@ -34,7 +36,7 @@ namespace FreePackages {
 				string json = await File.ReadAllTextAsync(SharedFilePath).ConfigureAwait(false);
 
 				if (string.IsNullOrEmpty(json)) {
-					ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorIsEmpty, nameof(json)));
+					ASF.ArchiLogger.LogGenericError(string.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(json)));
 
 					return null;
 				}
@@ -57,6 +59,12 @@ namespace FreePackages {
 
 		internal void UpdateChangeNumber(uint currentChangeNumber) {
 			LastChangeNumber = currentChangeNumber;
+
+			Utilities.InBackground(Save);
+		}
+		
+		internal void UpdateASFInfoItemCount(uint currentASFInfoItemCount) {
+			LastASFInfoItemCount = currentASFInfoItemCount;
 
 			Utilities.InBackground(Save);
 		}
