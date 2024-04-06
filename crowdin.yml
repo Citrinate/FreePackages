@@ -1,0 +1,3 @@
+files:
+  - source: /FreePackages/Localization/Strings.resx
+    translation: /FreePackages/Localization/Strings.%locale%.resx
