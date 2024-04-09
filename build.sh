@@ -48,6 +48,7 @@ sync
 dotnet publish FreePackages -c "Release" -f net8.0 -o "out/generic" "/p:LinkDuringPublish=false"
 mkdir ./out/$plugin_name
 cp ./out/generic/$plugin_name.dll ./out/$plugin_name
+( cd ./out/generic ; cp --parents ./*/$plugin_name.resources.dll ../../out/$plugin_name || : )
 if [[ -f "README.md" ]]; then
    if ! command -v pandoc &> /dev/null; then
       cp README.md ./out/$plugin_name

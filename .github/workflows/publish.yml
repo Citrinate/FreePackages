@@ -34,6 +34,7 @@ jobs:
           dotnet publish ${{ env.PLUGIN_NAME }} -c "Release" -o "out/generic" -p:ContinuousIntegrationBuild=true --nologo
           mkdir -p ./out/dist/${{ env.PLUGIN_NAME }}
           cp ./out/generic/${{ env.PLUGIN_NAME }}.dll ./out/dist/${{ env.PLUGIN_NAME }}
+          ( cd ./out/generic/ ; cp --parents ./*/${{ env.PLUGIN_NAME }}.resources.dll ../dist/${{ env.PLUGIN_NAME }} || : )
 
       - name: Create README
         uses: docker://pandoc/core:3.1
