@@ -309,7 +309,7 @@ All filter options are explained below:
 
 #### MinDaysOld
 
-`uint` type with default value of `0`.  Packages must contain an app with a Steam release date newer than this many days or they will not be added to your account.  You can leave this at `0` to allow for all values.
+`uint` type with default value of `0`.  Packages must contain an app which was released on Steam within the last `MinDaysOld` days or they will not be added to your account.  You can leave this at `0` to not filter by release date.
 
 ---
 
