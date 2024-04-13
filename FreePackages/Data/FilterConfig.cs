@@ -58,6 +58,9 @@ namespace FreePackages {
 		[JsonInclude]
 		internal bool WishlistOnly { get; set; } = false;
 
+		[JsonInclude]
+		internal uint MinDaysOld { get; set; } = 0;
+
 		[JsonConstructor]
 		internal FilterConfig() { }
 	}

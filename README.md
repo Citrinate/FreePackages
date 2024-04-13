@@ -63,6 +63,7 @@ By default, the plugin will attempt to activate all free non-playtest packages. 
   "Languages": [],
   "Systems": [],
   "MinReviewScore": 0,
+  "MinDaysOld": 0,
   "IgnoredContentDescriptors": [],
   "IgnoredTypes": [],
   "IgnoredTags": [],
@@ -303,6 +304,12 @@ All filter options are explained below:
   8 | Very Positive | 500+ | 80%-94%
   9 | Overwhelmingly Positive | 500+ | 95%-100%
 </details>
+
+---
+
+#### MinDaysOld
+
+`uint` type with default value of `0`.  Packages must contain an app with a Steam release date newer than this many days or they will not be added to your account.  You can leave this at `0` to allow for all values.
 
 ---
 

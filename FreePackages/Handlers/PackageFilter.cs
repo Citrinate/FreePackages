@@ -129,6 +129,11 @@ namespace FreePackages {
 				// Unwated to due not being wishlisted or followed on the Steam storefront
 				return false;
 			}
+			
+			if (filter.MinDaysOld > 0 && DateTime.UtcNow.AddDays(-filter.MinDaysOld) > app.SteamReleaseDate) {
+				// Unwanted because the app isn't new enough
+				return false;
+			}
 
 			return true;
 		}
