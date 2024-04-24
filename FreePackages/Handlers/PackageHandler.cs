@@ -138,10 +138,7 @@ namespace FreePackages {
 		}
 
 		internal async static Task HandleChanges() {
-			if (!await ProcessChangesSemaphore.WaitAsync(0).ConfigureAwait(false)) {
-				return;
-			}
-
+			await ProcessChangesSemaphore.WaitAsync().ConfigureAwait(false);
 			try {
 				await IsReady().ConfigureAwait(false);
 

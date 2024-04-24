@@ -42,18 +42,31 @@ namespace FreePackages {
 			}
 
 			if (package.Type == EPackageType.Sub && appIDsToRemove != null) {
-				// Remove duplicates.  Whenever we're trying to activate and app and also an package for that app, get rid of the app.  Because error messages for packages are more descriptive and useful.
+				// Used to remove duplicates.  
+				// Whenever we're trying to activate an app and also an package for that app, get rid of the app.
+				// I only really like to do this because the error messages for packages are more descriptive and useful.
 				BotCache.RemoveAppPackages(appIDsToRemove);
 			}
+
+			UpdateTimer(DateTime.Now);
 		}
 
 		internal void AddPackages(IEnumerable<Package> packages) {
 			if (!BotCache.AddPackages(packages)) {
 				return;
 			}
+
+			UpdateTimer(DateTime.Now);
 		}
 
 		private async Task ProcessQueue() {
+			DateTime? lastActivation = BotCache.GetLastActivation();
+			if (lastActivation != null && lastActivation.Value.AddSeconds(DelayBetweenActivationsSeconds) > DateTime.Now) {
+				UpdateTimer(lastActivation.Value.AddSeconds(DelayBetweenActivationsSeconds));
+
+				return;
+			}
+
 			if (!Bot.IsConnectedAndLoggedOn) {
 				UpdateTimer(DateTime.Now.AddMinutes(1));
 
@@ -67,7 +80,7 @@ namespace FreePackages {
 			}
 
 			if (BotCache.NumActivationsPastHour() >= ActivationsPerHour) {
-				DateTime resumeTime = BotCache.GetLastActivation()!.Value.AddHours(1).AddMinutes(1);
+				DateTime resumeTime = lastActivation!.Value.AddHours(1).AddMinutes(1);
 				Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.ActivationPaused, String.Format("{0:T}", resumeTime)));
 				UpdateTimer(resumeTime);
 				

@@ -269,6 +269,8 @@ namespace FreePackages.IPC {
 				PackageHandler.Handlers[bot.BotName].AddPackages(request.AppIDs, request.PackageIDs, request.UseFilter);
 			}
 
+			Utilities.InBackground(async() => await PackageHandler.HandleChanges().ConfigureAwait(false));
+
 			return Ok(new GenericResponse(true));
 		}
 	}
