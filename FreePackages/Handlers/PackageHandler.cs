@@ -394,6 +394,7 @@ namespace FreePackages {
 
 				if (dlcAppIDs.Count != 0) {
 					BotCache.AddChanges(appIDs: dlcAppIDs);
+					Utilities.InBackground(async() => await HandleChanges().ConfigureAwait(false));
 				}
 			} finally {
 				BotCache.RemoveChange(newOwnedPackageID: package.ID);
@@ -406,6 +407,7 @@ namespace FreePackages {
 
 			if (BotCache.SeenPackages.Count > 0) {
 				BotCache.AddChanges(newOwnedPackageIDs: newOwnedPackageIDs);
+				Utilities.InBackground(async() => await HandleChanges().ConfigureAwait(false));
 			}
 
 			BotCache.UpdateSeenPackages(newOwnedPackageIDs);
