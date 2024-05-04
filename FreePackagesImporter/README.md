@@ -4,7 +4,7 @@ This userscript lets you transfer packages from SteamDB's [free packages tool](h
 
 ## Installation
 
-1. Install a userscript manager like [Tampermonkey](https://www.tampermonkey.net/), [Greasemonkey](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/), or [Violentmonkey](https://violentmonkey.github.io/)
+1. Install a userscript manager like [Tampermonkey](https://www.tampermonkey.net/)
 2. Go [here](https://raw.githubusercontent.com/Citrinate/FreePackages/main/FreePackagesImporter/code.user.js) and click "Install"
 3. Make sure that you have:
     - ArchiSteamFarm with [IPC](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/IPC) enabled (which is the default)
