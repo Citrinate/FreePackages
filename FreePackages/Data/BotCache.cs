@@ -85,6 +85,7 @@ namespace FreePackages {
 				return null;
 			}
 
+			botCache.Packages = new(botCache.Packages.GroupBy(package => package, new PackageComparer()).Select(group => group.First()), new PackageComparer());
 			botCache.FilePath = filePath;
 			
 			return botCache;
