@@ -245,4 +245,12 @@
     <value>Failed to parse data from ASFInfo</value>
     <comment/>
   </data>
+  <data name="AppsDiscovered" xml:space="preserve">
+    <value>Discovered {0} apps</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="AppListFailed" xml:space="preserve">
+    <value>Failed to get app list</value>
+    <comment/>
+  </data>
 </root>

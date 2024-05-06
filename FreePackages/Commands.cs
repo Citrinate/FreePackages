@@ -4,12 +4,14 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
+using FreePackages.Localization;
 
 namespace FreePackages {
 	internal static class Commands {
-		internal static string? Response(Bot bot, EAccess access, ulong steamID, string message, string[] args) {
+		internal static async Task<string?> Response(Bot bot, EAccess access, ulong steamID, string message, string[] args) {
 			if (!Enum.IsDefined(access)) {
 				throw new InvalidEnumArgumentException(nameof(access), (int) access, typeof(EAccess));
 			}
@@ -26,6 +28,9 @@ namespace FreePackages {
 
 						case "CLEARFREEPACKAGESQUEUE":
 							return ResponseClearQueue(bot, access);
+
+						case "DISCOVERALLAPPS" or "DISCOVERALL" or "DALLAPPS" or "DALL" or "DAPPS" or "QUEUEALLAPPS" or "QUEUEALL" or "QALLAPPS" or "QALL" or "QAPPS":
+							return await ResponseDiscoverAllApps(bot, access).ConfigureAwait(false);
 
 						case "QSA":
 							return ResponseQueueStatus(access, steamID, "ASF");
@@ -91,6 +96,14 @@ namespace FreePackages {
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static async Task<string?> ResponseDiscoverAllApps(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			return FormatBotResponse(bot, await PackageHandler.DiscoverAllApps().ConfigureAwait(false));
 		}
 
 		private static string? ResponseQueueStatus(Bot bot, EAccess access) {

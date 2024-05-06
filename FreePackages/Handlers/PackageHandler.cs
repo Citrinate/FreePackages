@@ -484,5 +484,17 @@ namespace FreePackages {
 
 			PackageQueue.AddPackages(packages);
 		}
+
+		internal static async Task<string> DiscoverAllApps() {
+			HashSet<uint>? appIDs = await AppList.GetAllApps().ConfigureAwait(false);
+			if (appIDs == null) {
+				return Strings.AppListFailed;
+			}
+
+			Handlers.Values.ToList().ForEach(x => x.BotCache.AddChanges(appIDs));
+			Utilities.InBackground(async() => await HandleChanges().ConfigureAwait(false));
+
+			return String.Format(Strings.AppsDiscovered, appIDs.Count);
+		}
 	}
 }
