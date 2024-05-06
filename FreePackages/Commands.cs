@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
+using FreePackages.Localization;
 
 namespace FreePackages {
 	internal static class Commands {
@@ -70,7 +71,7 @@ namespace FreePackages {
 			}
 
 			if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
-				return FormatBotResponse(bot, "Free Packages plugin not enabled");
+				return FormatBotResponse(bot, Strings.PluginNotEnabled);
 			}
 
 			return FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].ClearQueue());
@@ -104,7 +105,7 @@ namespace FreePackages {
 			}
 
 			if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
-				return FormatBotResponse(bot, "Free Packages plugin not enabled");
+				return FormatBotResponse(bot, Strings.PluginNotEnabled);
 			}
 
 			return FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].GetStatus());
