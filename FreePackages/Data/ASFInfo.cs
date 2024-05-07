@@ -16,6 +16,7 @@ using FreePackages.Localization;
 namespace FreePackages {
 	internal static class ASFInfo {
 		private static Uri Source = new("https://gist.githubusercontent.com/C4illin/e8c5cf365d816f2640242bf01d8d3675/raw/Steam%2520Codes");
+		private static readonly Regex SourceLine = new Regex("(?<type>[as])/(?<id>[0-9]+)", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase); // Match examples: a/12345 or s/12345
 		private static TimeSpan UpdateFrequency = TimeSpan.FromHours(1);
 
 		private static Timer UpdateTimer = new(async e => await DoUpdate().ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
@@ -61,8 +62,7 @@ namespace FreePackages {
 						continue;
 					}
 
-					// Match examples: a/12345 or s/12345
-					Match item = Regex.Match(line, "(?<type>[as])/(?<id>[0-9]+)");
+					Match item = SourceLine.Match(line);
 
 					if (!item.Success) {
 						ASF.ArchiLogger.LogGenericError(String.Format("{0}: {1}", Strings.ASFInfoParseFailed, line));
