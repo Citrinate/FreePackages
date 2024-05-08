@@ -122,7 +122,7 @@ namespace FreePackages {
 		}
 
 		internal bool RemoveAppPackages(HashSet<uint> appIDsToRemove) {
-			Packages.Where(x => appIDsToRemove.Contains(x.ID)).ToList().ForEach(x => Packages.Remove(x));
+			Packages.Where(x => x.Type == EPackageType.App && appIDsToRemove.Contains(x.ID)).ToList().ForEach(x => Packages.Remove(x));
 			Utilities.InBackground(Save);
 
 			return true;
