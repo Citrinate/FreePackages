@@ -47,40 +47,32 @@ namespace FreePackages {
 				// I only really like to do this because the error messages for packages are more descriptive and useful.
 				BotCache.RemoveAppPackages(appIDsToRemove);
 			}
-
-			UpdateTimer(DateTime.Now);
 		}
 
 		internal void AddPackages(IEnumerable<Package> packages) {
 			if (!BotCache.AddPackages(packages)) {
 				return;
 			}
-
-			UpdateTimer(DateTime.Now);
 		}
 
 		private async Task ProcessQueue() {
-			DateTime? lastActivation = BotCache.GetLastActivation();
-			if (lastActivation != null && lastActivation.Value.AddSeconds(DelayBetweenActivationsSeconds) > DateTime.Now) {
-				UpdateTimer(lastActivation.Value.AddSeconds(DelayBetweenActivationsSeconds));
-
-				return;
-			}
-
 			if (!Bot.IsConnectedAndLoggedOn) {
 				UpdateTimer(DateTime.Now.AddMinutes(1));
 
 				return;
 			}
 
-			if (BotCache.Packages.Count == 0) {
+			Package? package = BotCache.GetNextPackage();
+			if (package == null) {
+				// No packages to activate
 				UpdateTimer(DateTime.Now.AddMinutes(1));
 
 				return;
 			}
 
 			if (BotCache.NumActivationsPastHour() >= ActivationsPerHour) {
-				DateTime resumeTime = lastActivation!.Value.AddHours(1).AddMinutes(1);
+				// Rate limit reached
+				DateTime resumeTime = BotCache.GetLastActivation()!.Value.AddHours(1).AddMinutes(1);
 				Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.ActivationPaused, String.Format("{0:T}", resumeTime)));
 				UpdateTimer(resumeTime);
 				
@@ -89,14 +81,6 @@ namespace FreePackages {
 
 			if (PauseWhilePlaying && !Bot.IsPlayingPossible) {
 				// Don't activate anything while the user is playing a game (does not apply to ASF card farming)
-				UpdateTimer(DateTime.Now.AddMinutes(1));
-
-				return;
-			}
-
-			Package? package = BotCache.GetNextPackage();
-			if (package == null) {
-				// There are packages to redeem, but they aren't active yet
 				UpdateTimer(DateTime.Now.AddMinutes(1));
 
 				return;
@@ -115,7 +99,7 @@ namespace FreePackages {
 			}
 			
 			// Note: Not everything counts against the activation limit, ex: All playtests?, Some sub errors (dunno which), Maybe some app errors
-			// Might be worth revisiting later, but for now I feel comfortable just assuming everything counts
+			// Might be worth revisiting later, but for now I feel comfortable just assuming everything that doesnt get a rate limit response counts
 			BotCache.AddActivation(DateTime.Now);
 
 			if (result == EResult.OK || result == EResult.Invalid) {

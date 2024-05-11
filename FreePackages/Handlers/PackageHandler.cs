@@ -405,6 +405,11 @@ namespace FreePackages {
 			HashSet<uint> ownedPackageIDs = callback.LicenseList.Select(license => license.PackageID).ToHashSet();
 			HashSet<uint> newOwnedPackageIDs = ownedPackageIDs.Except(BotCache.SeenPackages).ToHashSet();
 
+			if (newOwnedPackageIDs.Count == 0) {
+				return;
+			}
+
+			// Cached seen packages need to be initialized
 			if (BotCache.SeenPackages.Count > 0) {
 				BotCache.AddChanges(newOwnedPackageIDs: newOwnedPackageIDs);
 				Utilities.InBackground(async() => await HandleChanges().ConfigureAwait(false));

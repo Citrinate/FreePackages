@@ -129,6 +129,7 @@ namespace FreePackages {
 		}
 
 		internal Package? GetNextPackage() {
+			// Return the package which should be activated first, prioritizing first packages which have a start and end date
 			ulong now = DateUtils.DateTimeToUnixTime(DateTime.UtcNow);
 			Package? package = Packages.FirstOrDefault(x => x.StartTime != null && now > x.StartTime);
 			if (package != null) {
