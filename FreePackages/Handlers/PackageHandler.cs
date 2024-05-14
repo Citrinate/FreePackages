@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
+using ArchiSteamFarm.Web.Responses;
 using FreePackages.Localization;
 using SteamKit2;
 
@@ -195,9 +196,11 @@ namespace FreePackages {
 				// Add wanted apps to the queue
 				apps.ForEach(app => {
 					if (app.Type == EAppType.Beta) {
-						Handlers.Values.ToList().ForEach(x => x.HandlePlaytest(app));
+						SharedExternalResource<HtmlDocumentResponse> storePageResource = new();
+						Handlers.Values.ToList().ForEach(x => Utilities.InBackground(async() => await x.HandlePlaytest(app, storePageResource).ConfigureAwait(false)));
 					} else {
-						Handlers.Values.ToList().ForEach(x => x.HandleFreeApp(app));
+						SharedExternalResource<AppDetails> appDetailsResource = new();
+						Handlers.Values.ToList().ForEach(x => Utilities.InBackground(async() => await x.HandleFreeApp(app, appDetailsResource).ConfigureAwait(false)));
 					}
 				});
 			}
@@ -289,7 +292,7 @@ namespace FreePackages {
 			Handlers.Values.ToList().ForEach(x => x.BotCache.SaveChanges());
 		}
 
-		private void HandleFreeApp(FilterableApp app) {
+		private async Task HandleFreeApp(FilterableApp app, SharedExternalResource<AppDetails> appDetailsResource) {
 			if (!BotCache.ChangedApps.Contains(app.ID)) {
 				return;
 			}
@@ -304,6 +307,10 @@ namespace FreePackages {
 				}
 
 				if (!PackageFilter.IsWantedApp(app)) {
+					return;
+				}
+
+				if (!PackageFilter.IsAppFreeAndValidOnStore(await appDetailsResource.Fetch(async() => await WebRequest.GetAppDetails(Bot, app.ID).ConfigureAwait(false)).ConfigureAwait(false))) {
 					return;
 				}
 
@@ -337,7 +344,7 @@ namespace FreePackages {
 			}
 		}
 
-		private void HandlePlaytest(FilterableApp app) {
+		private async Task HandlePlaytest(FilterableApp app, SharedExternalResource<HtmlDocumentResponse> storePageResource) {
 			if (!BotCache.ChangedApps.Contains(app.ID)) {
 				return;
 			}
@@ -356,6 +363,10 @@ namespace FreePackages {
 				}
 
 				if (!PackageFilter.IsWantedPlaytest(app)) {
+					return;
+				}
+
+				if (!PackageFilter.IsPlaytestValidOnStore(await storePageResource.Fetch(async() => await WebRequest.GetStorePage(Bot, app.Parent?.ID).ConfigureAwait(false)).ConfigureAwait(false))) {
 					return;
 				}
 

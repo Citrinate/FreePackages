@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AngleSharp.Dom;
 using ArchiSteamFarm.Core;
+using ArchiSteamFarm.Steam.Integration;
+using ArchiSteamFarm.Web.Responses;
 using SteamKit2;
 
 namespace FreePackages {
@@ -188,6 +191,34 @@ namespace FreePackages {
 			return false;
 		}
 
+		internal bool IsAppFreeAndValidOnStore(AppDetails? appDetails) {
+			if (appDetails == null) {
+				// Indeterminate, assume the app is free and valid
+				return true;
+			}
+
+			if (!appDetails.Success) {
+				// App doesn't have a store page
+				// Usually this is true, but not always.  Example: https://store.steampowered.com/api/appdetails/?appids=317780 (on May 13, 2024)
+				// App 317780, also passes all of the checks below, but cannot be activated and doesn't have a store page.  It's type is listed as "advertising".
+				return false;
+			}
+
+			bool isFree = appDetails?.Data?.IsFree ?? false;
+			if (!isFree) {
+				// App is not free
+				return false;
+			}
+
+			bool isComingSoon = appDetails?.Data?.ReleaseDate?.ComingSoon ?? true;
+			if (isComingSoon) {
+				// App is not released yet
+				return false;
+			}
+
+			return true;
+		}
+
 		internal bool IsRedeemablePackage(FilterablePackage package) {			
 			if (UserData == null) {
 				throw new InvalidOperationException(nameof(UserData));
@@ -269,7 +300,7 @@ namespace FreePackages {
 		internal bool IsRedeemablePlaytest(FilterableApp app) {
 			// More than half of playtests we try to join will be invalid.
 			// Some of these will be becase there's no free packages (which we can't determine here), Ex: playtest is activated by key: https://steamdb.info/sub/858277/
-			// For most, There seems to be no difference at all between invalid playtest and valid ones.  The only way to resolve these would be to scrape the parent's store page.
+			// For most, There seems to be no difference at all between invalid playtest and valid ones.  The only way to resolve these is to scrape the parent's store page.
 
 			if (app.Parent == null) {
 				return false;
@@ -317,6 +348,32 @@ namespace FreePackages {
 			bool wantsUnlimitedPlaytests = (filter.PlaytestMode & EPlaytestMode.Unlimited) == EPlaytestMode.Unlimited;
 			if (app.PlayTestType == 1 && !wantsUnlimitedPlaytests) {
 				// User doesn't want unlimited playtests
+				return false;
+			}
+
+			return true;
+		}
+
+		internal bool IsPlaytestValidOnStore(HtmlDocumentResponse? storePage) {
+			if (storePage == null) {
+				// Indeterminate, assume the playtest is valid
+				return true;
+			}
+
+			bool hasStorePage = storePage.FinalUri != ArchiWebHandler.SteamStoreURL;
+			if (!hasStorePage) {
+				// App doesnt have a store page (redirects to homepage)
+				return false;
+			}
+
+			if (storePage.Content == null || !storePage.StatusCode.IsSuccessCode()) {
+				// Indeterminate (this will catch age gated store pages), assume the playtest is valid
+				return true;
+			}
+
+			bool hasPlaytestButton = storePage.Content.SelectNodes("//script").Any(static node => node.TextContent.Contains("RequestPlaytestAccess"));
+			if (!hasPlaytestButton) {
+				// Playtest is not active (doesn't have a "Request Access" button on store page)
 				return false;
 			}
 

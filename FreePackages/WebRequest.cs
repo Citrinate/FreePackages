@@ -6,13 +6,16 @@ using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Integration;
+using ArchiSteamFarm.Web;
 using ArchiSteamFarm.Web.Responses;
 using SteamKit2;
 
 namespace FreePackages {
 	internal static class WebRequest {
 		private static SemaphoreSlim AppDetailsSemaphore = new SemaphoreSlim(1, 1);
+		private static SemaphoreSlim StorePageSemaphore = new SemaphoreSlim(1, 1);
 		private const int AppDetailsDelaySeconds = 2;
+		private const int StorePageDelaySeconds = 2;
 
 		internal static async Task<UserData?> GetUserData(Bot bot) {
 			Uri request = new(ArchiWebHandler.SteamStoreURL, "/dynamicstore/userdata/");
@@ -26,7 +29,7 @@ namespace FreePackages {
 			await AppDetailsSemaphore.WaitAsync().ConfigureAwait(false);
 			try {
 				Uri request = new(ArchiWebHandler.SteamStoreURL, String.Format("/api/appdetails/?appids={0}", appID));
-				ObjectResponse<Dictionary<uint, AppDetails>>? appDetailsResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<Dictionary<uint, AppDetails>>(request).ConfigureAwait(false);
+				ObjectResponse<Dictionary<uint, AppDetails>>? appDetailsResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<Dictionary<uint, AppDetails>>(request, maxTries: 1).ConfigureAwait(false);
 				
 				return appDetailsResponse?.Content?[appID];
 			} finally {
@@ -61,6 +64,24 @@ namespace FreePackages {
 			ObjectResponse<PlaytestAccessResponse>? playtestAccessResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<PlaytestAccessResponse>(request, data: data, maxTries: 1).ConfigureAwait(false);
 
 			return playtestAccessResponse?.Content;
+		}
+
+		internal static async Task<HtmlDocumentResponse?> GetStorePage(Bot bot, uint? appID) {
+			ArgumentNullException.ThrowIfNull(appID);
+
+			await StorePageSemaphore.WaitAsync().ConfigureAwait(false);
+			try {
+				Uri request = new(ArchiWebHandler.SteamStoreURL, String.Format("/app/{0}", appID));
+
+				return await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnRedirections);
+			} finally {
+				Utilities.InBackground(
+					async() => {
+						await Task.Delay(TimeSpan.FromSeconds(StorePageDelaySeconds)).ConfigureAwait(false);
+						StorePageSemaphore.Release();
+					}
+				);
+			}
 		}
 	}
 }
