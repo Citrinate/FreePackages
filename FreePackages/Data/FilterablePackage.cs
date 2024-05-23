@@ -5,7 +5,7 @@ using SteamKit2;
 
 namespace FreePackages {
 	internal sealed class FilterablePackage {
-		internal bool IsNew;
+		internal bool IsNew; // This is used when finding DLC for new games added to account, and is not related to any Steam package property
 		internal List<FilterableApp> PackageContents = new();
 		internal HashSet<uint> PackageContentIDs;
 		internal HashSet<uint> PackageContentParentIDs = new();
@@ -108,6 +108,12 @@ namespace FreePackages {
 
 			if (BetaTesterPackage) {
 				// Playtests can't be activated through packages
+				return false;
+			}
+
+			if (ID == 17906) {
+				// Special case: Anonymous Dedicated Server Comp (https://steamdb.info/sub/17906/)
+				// This always returns AccessDenied/InvalidPackage
 				return false;
 			}
 

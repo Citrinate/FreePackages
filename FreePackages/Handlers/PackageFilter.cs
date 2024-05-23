@@ -210,12 +210,6 @@ namespace FreePackages {
 				return false;
 			}
 
-			bool isComingSoon = appDetails?.Data?.ReleaseDate?.ComingSoon ?? true;
-			if (isComingSoon) {
-				// App is not released yet
-				return false;
-			}
-
 			return true;
 		}
 

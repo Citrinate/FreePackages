@@ -366,7 +366,7 @@ namespace FreePackages {
 					return;
 				}
 
-				if (!PackageFilter.IsPlaytestValidOnStore(await storePageResource.Fetch(async() => await WebRequest.GetStorePage(Bot, app.Parent?.ID).ConfigureAwait(false)).ConfigureAwait(false))) {
+				if (!PackageFilter.IsPlaytestValidOnStore(await storePageResource.Fetch(async() => await WebRequest.GetStorePage(Bot, app.Parent.ID).ConfigureAwait(false)).ConfigureAwait(false))) {
 					return;
 				}
 
