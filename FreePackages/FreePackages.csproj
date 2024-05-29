@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Authors>Citrinate</Authors>
-    <AssemblyVersion>1.4.5.1</AssemblyVersion>
+    <AssemblyVersion>1.4.5.2</AssemblyVersion>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <TargetFramework>net8.0</TargetFramework>
