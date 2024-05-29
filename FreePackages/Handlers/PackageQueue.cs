@@ -16,8 +16,8 @@ namespace FreePackages {
 		private Timer Timer;
 		private readonly ConcurrentQueue<Package> Packages = new();
 		private const int DelayBetweenActivationsSeconds = 5;
-		private readonly uint ActivationsPerHour = 40;
-		private const uint MaxActivationsPerHour = 50; // Steam's imposed limit
+		private readonly uint ActivationsPerHour = 25;
+		private const uint MaxActivationsPerHour = 30; // Steam's imposed limit
 		private bool PauseWhilePlaying = false;
 
 		internal PackageQueue(Bot bot, BotCache botCache, uint? packageLimit, bool pauseWhilePlaying) {
