@@ -18,6 +18,7 @@ namespace FreePackages {
 		internal ulong ExpiryTime;
 		internal ulong StartTime;
 		internal uint DontGrantIfAppIDOwned;
+		internal uint MustOwnAppToPurchase;
 		internal List<string>? RestrictedCountries;
 		internal bool OnlyAllowRestrictedCountries;
 		internal List<string>? PurchaseRestrictedCountries;
@@ -38,6 +39,7 @@ namespace FreePackages {
 			ExpiryTime = kv["extended"]["expirytime"].AsUnsignedLong();
 			StartTime = kv["extended"]["starttime"].AsUnsignedLong();
 			DontGrantIfAppIDOwned = kv["extended"]["dontgrantifappidowned"].AsUnsignedInteger();
+			MustOwnAppToPurchase = kv["extended"]["mustownapptopurchase"].AsUnsignedInteger();
 			RestrictedCountries = kv["extended"]["restrictedcountries"].AsString()?.ToUpper().Split(" ").ToList();
 			OnlyAllowRestrictedCountries = kv["extended"]["onlyallowrestrictedcountries"].AsBoolean();
 			PurchaseRestrictedCountries = kv["extended"]["purchaserestrictedcountries"].AsString()?.ToUpper().Split(" ").ToList();

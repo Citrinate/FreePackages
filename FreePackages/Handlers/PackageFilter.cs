@@ -237,6 +237,11 @@ namespace FreePackages {
 			}
 
 			if (package.DontGrantIfAppIDOwned > 0 && OwnedAppIDs.Contains(package.DontGrantIfAppIDOwned)) {
+				// Owns an app that blocks activation
+				return false;
+			}
+
+			if (package.MustOwnAppToPurchase > 0 && !OwnedAppIDs.Contains(package.MustOwnAppToPurchase)) {
 				// Don't own required app
 				return false;
 			}
