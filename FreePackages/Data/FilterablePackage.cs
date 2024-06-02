@@ -5,7 +5,7 @@ using SteamKit2;
 
 namespace FreePackages {
 	internal sealed class FilterablePackage {
-		internal bool IsNew;
+		internal bool IsNew; // This is used when finding DLC for new games added to account, and is not related to any Steam package property
 		internal List<FilterableApp> PackageContents = new();
 		internal HashSet<uint> PackageContentIDs;
 		internal HashSet<uint> PackageContentParentIDs = new();
@@ -18,6 +18,7 @@ namespace FreePackages {
 		internal ulong ExpiryTime;
 		internal ulong StartTime;
 		internal uint DontGrantIfAppIDOwned;
+		internal uint MustOwnAppToPurchase;
 		internal List<string>? RestrictedCountries;
 		internal bool OnlyAllowRestrictedCountries;
 		internal List<string>? PurchaseRestrictedCountries;
@@ -38,6 +39,7 @@ namespace FreePackages {
 			ExpiryTime = kv["extended"]["expirytime"].AsUnsignedLong();
 			StartTime = kv["extended"]["starttime"].AsUnsignedLong();
 			DontGrantIfAppIDOwned = kv["extended"]["dontgrantifappidowned"].AsUnsignedInteger();
+			MustOwnAppToPurchase = kv["extended"]["mustownapptopurchase"].AsUnsignedInteger();
 			RestrictedCountries = kv["extended"]["restrictedcountries"].AsString()?.ToUpper().Split(" ").ToList();
 			OnlyAllowRestrictedCountries = kv["extended"]["onlyallowrestrictedcountries"].AsBoolean();
 			PurchaseRestrictedCountries = kv["extended"]["purchaserestrictedcountries"].AsString()?.ToUpper().Split(" ").ToList();
@@ -108,6 +110,12 @@ namespace FreePackages {
 
 			if (BetaTesterPackage) {
 				// Playtests can't be activated through packages
+				return false;
+			}
+
+			if (ID == 17906) {
+				// Special case: Anonymous Dedicated Server Comp (https://steamdb.info/sub/17906/)
+				// This always returns AccessDenied/InvalidPackage
 				return false;
 			}
 

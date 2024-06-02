@@ -92,6 +92,7 @@ namespace FreePackages {
 
 			PackageHandler.Handlers.Values.ToList().ForEach(x => x.BotCache.AddChanges(appIDs, packageIDs));
 			FreePackages.GlobalCache.UpdateASFInfoItemCount(itemCount);
+			Utilities.InBackground(async() => await PackageHandler.HandleChanges().ConfigureAwait(false));
 		}
 	}
 }

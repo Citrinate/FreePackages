@@ -414,4 +414,21 @@ public class Filters {
 
 		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
 	}
+
+	[TestMethod]
+	public void CanFilterByReleaseDate() {
+		var app = new FilterableApp(KeyValue.LoadAsText("app_which_is_free.txt"));
+
+		Filter.MinDaysOld = 0;
+
+		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
+
+		Filter.MinDaysOld = 1;
+
+		Assert.IsFalse(PackageFilter.IsAppWantedByFilter(app, Filter));
+
+		Filter.MinDaysOld = 20000;
+
+		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
+	}
 }

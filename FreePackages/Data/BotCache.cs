@@ -85,6 +85,7 @@ namespace FreePackages {
 				return null;
 			}
 
+			botCache.Packages = new(botCache.Packages.GroupBy(package => package, new PackageComparer()).Select(group => group.First()), new PackageComparer());
 			botCache.FilePath = filePath;
 			
 			return botCache;
@@ -121,13 +122,14 @@ namespace FreePackages {
 		}
 
 		internal bool RemoveAppPackages(HashSet<uint> appIDsToRemove) {
-			Packages.Where(x => appIDsToRemove.Contains(x.ID)).ToList().ForEach(x => Packages.Remove(x));
+			Packages.Where(x => x.Type == EPackageType.App && appIDsToRemove.Contains(x.ID)).ToList().ForEach(x => Packages.Remove(x));
 			Utilities.InBackground(Save);
 
 			return true;
 		}
 
 		internal Package? GetNextPackage() {
+			// Return the package which should be activated first, prioritizing first packages which have a start and end date
 			ulong now = DateUtils.DateTimeToUnixTime(DateTime.UtcNow);
 			Package? package = Packages.FirstOrDefault(x => x.StartTime != null && now > x.StartTime);
 			if (package != null) {

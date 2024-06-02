@@ -27,6 +27,7 @@ namespace FreePackages {
 		internal uint PlayTestType;
 		internal List<string>? OSList;
 		internal uint DeckCompatibility;
+		internal DateTime SteamReleaseDate;
 		internal bool Hidden;
 
 		internal FilterableApp(SteamApps.PICSProductInfoCallback.PICSProductInfo productInfo) : this(productInfo.ID, productInfo.KeyValues) {}
@@ -55,6 +56,7 @@ namespace FreePackages {
 			PlayTestType = kv["extended"]["playtest_type"].AsUnsignedInteger();
 			OSList = kv["common"]["oslist"].AsString()?.ToUpper().Split(",").ToList();
 			DeckCompatibility = kv["common"]["steam_deck_compatibility"]["category"].AsUnsignedInteger();
+			SteamReleaseDate = DateTimeOffset.FromUnixTimeSeconds(kv["common"]["steam_release_date"].AsUnsignedInteger()).UtcDateTime;
 			Hidden = kv["common"] == KeyValue.Invalid;
 
 			// Fix the category for games which do have trading cards, but which don't have the trading card category, Ex: https://steamdb.info/app/316260/

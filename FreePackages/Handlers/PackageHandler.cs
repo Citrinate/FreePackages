@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
+using ArchiSteamFarm.Web.Responses;
 using FreePackages.Localization;
 using SteamKit2;
 
@@ -138,10 +139,7 @@ namespace FreePackages {
 		}
 
 		internal async static Task HandleChanges() {
-			if (!await ProcessChangesSemaphore.WaitAsync(0).ConfigureAwait(false)) {
-				return;
-			}
-
+			await ProcessChangesSemaphore.WaitAsync().ConfigureAwait(false);
 			try {
 				await IsReady().ConfigureAwait(false);
 
@@ -198,9 +196,11 @@ namespace FreePackages {
 				// Add wanted apps to the queue
 				apps.ForEach(app => {
 					if (app.Type == EAppType.Beta) {
-						Handlers.Values.ToList().ForEach(x => x.HandlePlaytest(app));
+						SharedExternalResource<HtmlDocumentResponse> storePageResource = new();
+						Handlers.Values.ToList().ForEach(x => Utilities.InBackground(async() => await x.HandlePlaytest(app, storePageResource).ConfigureAwait(false)));
 					} else {
-						Handlers.Values.ToList().ForEach(x => x.HandleFreeApp(app));
+						SharedExternalResource<AppDetails> appDetailsResource = new();
+						Handlers.Values.ToList().ForEach(x => Utilities.InBackground(async() => await x.HandleFreeApp(app, appDetailsResource).ConfigureAwait(false)));
 					}
 				});
 			}
@@ -292,7 +292,7 @@ namespace FreePackages {
 			Handlers.Values.ToList().ForEach(x => x.BotCache.SaveChanges());
 		}
 
-		private void HandleFreeApp(FilterableApp app) {
+		private async Task HandleFreeApp(FilterableApp app, SharedExternalResource<AppDetails> appDetailsResource) {
 			if (!BotCache.ChangedApps.Contains(app.ID)) {
 				return;
 			}
@@ -307,6 +307,10 @@ namespace FreePackages {
 				}
 
 				if (!PackageFilter.IsWantedApp(app)) {
+					return;
+				}
+
+				if (!PackageFilter.IsAppFreeAndValidOnStore(await appDetailsResource.Fetch(async() => await WebRequest.GetAppDetails(Bot, app.ID).ConfigureAwait(false)).ConfigureAwait(false))) {
 					return;
 				}
 
@@ -340,7 +344,7 @@ namespace FreePackages {
 			}
 		}
 
-		private void HandlePlaytest(FilterableApp app) {
+		private async Task HandlePlaytest(FilterableApp app, SharedExternalResource<HtmlDocumentResponse> storePageResource) {
 			if (!BotCache.ChangedApps.Contains(app.ID)) {
 				return;
 			}
@@ -359,6 +363,10 @@ namespace FreePackages {
 				}
 
 				if (!PackageFilter.IsWantedPlaytest(app)) {
+					return;
+				}
+
+				if (!PackageFilter.IsPlaytestValidOnStore(await storePageResource.Fetch(async() => await WebRequest.GetStorePage(Bot, app.Parent.ID).ConfigureAwait(false)).ConfigureAwait(false))) {
 					return;
 				}
 
@@ -397,6 +405,7 @@ namespace FreePackages {
 
 				if (dlcAppIDs.Count != 0) {
 					BotCache.AddChanges(appIDs: dlcAppIDs);
+					Utilities.InBackground(async() => await HandleChanges().ConfigureAwait(false));
 				}
 			} finally {
 				BotCache.RemoveChange(newOwnedPackageID: package.ID);
@@ -407,8 +416,14 @@ namespace FreePackages {
 			HashSet<uint> ownedPackageIDs = callback.LicenseList.Select(license => license.PackageID).ToHashSet();
 			HashSet<uint> newOwnedPackageIDs = ownedPackageIDs.Except(BotCache.SeenPackages).ToHashSet();
 
+			if (newOwnedPackageIDs.Count == 0) {
+				return;
+			}
+
+			// Cached seen packages need to be initialized
 			if (BotCache.SeenPackages.Count > 0) {
 				BotCache.AddChanges(newOwnedPackageIDs: newOwnedPackageIDs);
+				Utilities.InBackground(async() => await HandleChanges().ConfigureAwait(false));
 			}
 
 			BotCache.UpdateSeenPackages(newOwnedPackageIDs);

@@ -42,7 +42,9 @@ namespace FreePackages {
 			}
 
 			if (package.Type == EPackageType.Sub && appIDsToRemove != null) {
-				// Remove duplicates.  Whenever we're trying to activate and app and also an package for that app, get rid of the app.  Because error messages for packages are more descriptive and useful.
+				// Used to remove duplicates.  
+				// Whenever we're trying to activate an app and also an package for that app, get rid of the app.
+				// I only really like to do this because the error messages for packages are more descriptive and useful.
 				BotCache.RemoveAppPackages(appIDsToRemove);
 			}
 		}
@@ -60,13 +62,16 @@ namespace FreePackages {
 				return;
 			}
 
-			if (BotCache.Packages.Count == 0) {
+			Package? package = BotCache.GetNextPackage();
+			if (package == null) {
+				// No packages to activate
 				UpdateTimer(DateTime.Now.AddMinutes(1));
 
 				return;
 			}
 
 			if (BotCache.NumActivationsPastHour() >= ActivationsPerHour) {
+				// Rate limit reached
 				DateTime resumeTime = BotCache.GetLastActivation()!.Value.AddHours(1).AddMinutes(1);
 				Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.ActivationPaused, String.Format("{0:T}", resumeTime)));
 				UpdateTimer(resumeTime);
@@ -76,14 +81,6 @@ namespace FreePackages {
 
 			if (PauseWhilePlaying && !Bot.IsPlayingPossible) {
 				// Don't activate anything while the user is playing a game (does not apply to ASF card farming)
-				UpdateTimer(DateTime.Now.AddMinutes(1));
-
-				return;
-			}
-
-			Package? package = BotCache.GetNextPackage();
-			if (package == null) {
-				// There are packages to redeem, but they aren't active yet
 				UpdateTimer(DateTime.Now.AddMinutes(1));
 
 				return;
@@ -102,7 +99,7 @@ namespace FreePackages {
 			}
 			
 			// Note: Not everything counts against the activation limit, ex: All playtests?, Some sub errors (dunno which), Maybe some app errors
-			// Might be worth revisiting later, but for now I feel comfortable just assuming everything counts
+			// Might be worth revisiting later, but for now I feel comfortable just assuming everything that doesnt get a rate limit response counts
 			BotCache.AddActivation(DateTime.Now);
 
 			if (result == EResult.OK || result == EResult.Invalid) {
@@ -151,7 +148,7 @@ namespace FreePackages {
 
 			// The Result returned by RequestFreeLicense is useless and I've only ever seen it return EResult.OK
 			if (response.Result != EResult.OK) {
-				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), response.Result));
+				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), response.Result));
 
 				return EResult.Fail;
 			}
@@ -173,7 +170,7 @@ namespace FreePackages {
 				bool isComingSoon = appDetails?.Data?.ReleaseDate?.ComingSoon ?? true;
 
 				if (!success || !isFree || isComingSoon) {
-					Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), EResult.Invalid));
+					Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), EResult.Invalid));
 
 					return EResult.Invalid;
 				}
@@ -183,7 +180,7 @@ namespace FreePackages {
 				if (hasPackages) {
 					// Replace the app with the appropriate package and when we try to activate that we'll find out for sure if we're rate limited or not
 					// Note: This is mostly wishful thinking. /api/appdetails rarely shows the free packages for free apps (one example where it does: https://steamdb.info/app/2119270/)
-					Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), String.Format(Strings.ReplacedWith, String.Join(", ", appDetails!.Data!.Packages.Select(x => $"sub/{x}")))));
+					Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), String.Format(Strings.ReplacedWith, String.Join(", ", appDetails!.Data!.Packages.Select(x => $"sub/{x}")))));
 					BotCache.AddChanges(packageIDs: appDetails.Data.Packages);
 
 					return EResult.OK;
@@ -192,7 +189,7 @@ namespace FreePackages {
 				// We could be rate limited, but the app could also be invalid beacause it has no available licenses.  It's necessary to assume invalid so we don't get into an infinite loop.
 				// Examples: https://steamdb.info/app/2401570/ on Oct 2, 2023, Attempting to download demo through Steam client gives error "no licenses"
 				// Free games that still have store pages but display "At the request of the publisher, ___ is unlisted on the Steam store and will not appear in search.": https://store.steampowered.com/app/376570/WildStar/
-				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), Strings.Unknown));
+				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), Strings.Unknown));
 
 				return EResult.Invalid;
 			}
@@ -211,7 +208,11 @@ namespace FreePackages {
 				return EResult.Invalid;
 			}
 
-			Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("sub/{0}", subID), String.Format("{0}/{1}", result, purchaseResult)));
+			if (result == EResult.OK) {
+				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("sub/{0}", subID), String.Format("{0}/{1}", result, purchaseResult)));
+			} else {
+				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("sub/{0}", subID), String.Format("{0}/{1}", result, purchaseResult)));
+			}
 
 			if (purchaseResult == EPurchaseResultDetail.RateLimited) {
 				return EResult.RateLimitExceeded;
@@ -233,14 +234,14 @@ namespace FreePackages {
 
 			if (response == null) {
 				// Playtest does not exist currently
-				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", appID), Strings.Invalid));
+				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", appID), Strings.Invalid));
 
 				return EResult.Invalid;
 			}
 
 			if (response.Success != 1) {
 				// Not sure if/when this happens
-				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", appID), Strings.Failed));
+				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", appID), Strings.Failed));
 
 				return EResult.Invalid;
 			}

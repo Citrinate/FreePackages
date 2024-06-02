@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
+using FreePackages.Localization;
 
 namespace FreePackages {
 	internal static class Commands {
@@ -69,7 +71,7 @@ namespace FreePackages {
 			}
 
 			if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
-				return FormatBotResponse(bot, "Free Packages plugin not enabled");
+				return FormatBotResponse(bot, Strings.PluginNotEnabled);
 			}
 
 			return FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].ClearQueue());
@@ -103,7 +105,7 @@ namespace FreePackages {
 			}
 
 			if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
-				return FormatBotResponse(bot, "Free Packages plugin not enabled");
+				return FormatBotResponse(bot, Strings.PluginNotEnabled);
 			}
 
 			return FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].GetStatus());
@@ -127,7 +129,7 @@ namespace FreePackages {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static string? ResponseQueueLicense(Bot bot, EAccess access, string licenses, bool useFilter = false) {
+		private static string? ResponseQueueLicense(Bot bot, EAccess access, string licenses, bool useFilter = false, [CallerMemberName] string? previousMethodName = null) {
 			if (access < EAccess.Master) {
 				return null;
 			}
@@ -178,6 +180,10 @@ namespace FreePackages {
 				response.AppendLine(FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].AddPackage(packageType, gameID, useFilter)));
 			}
 
+			if (previousMethodName == nameof(Response)) {
+				Utilities.InBackground(async() => await PackageHandler.HandleChanges().ConfigureAwait(false));
+			}
+
 			return response.Length > 0 ? response.ToString() : null;
 		}
 
@@ -195,6 +201,8 @@ namespace FreePackages {
 			IEnumerable<string?> results = bots.Select(bot => ResponseQueueLicense(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), licenses, useFilter));
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			Utilities.InBackground(async() => await PackageHandler.HandleChanges().ConfigureAwait(false));
 
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
