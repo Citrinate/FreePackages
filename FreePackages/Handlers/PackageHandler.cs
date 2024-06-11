@@ -87,6 +87,7 @@ namespace FreePackages {
 			}
 			
 			await Handlers[bot.BotName].FetchUserData().ConfigureAwait(false);
+			Handlers[bot.BotName].PackageQueue.Start();
 		}
 
 		private async Task FetchUserData() {

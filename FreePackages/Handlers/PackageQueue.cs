@@ -56,6 +56,10 @@ namespace FreePackages {
 			}
 		}
 
+		internal void Start() {
+			UpdateTimer(DateTime.Now.AddMinutes(1));
+		}
+
 		private async Task ProcessQueue() {
 			if (!Bot.IsConnectedAndLoggedOn) {
 				UpdateTimer(DateTime.Now.AddMinutes(1));
