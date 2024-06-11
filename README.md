@@ -44,10 +44,14 @@ Under certain conditions, activating a free package while playing a game on Stea
 
 ### Changing the hourly package limit
 
-A maximum of 30 packages can be activated per hour.  By default, this plugin will use at most 25 of those hourly activations and will resume where it left off if it's ever interrupted.  You can control this limit by adding `FreePackagesPerHour` to your individual bot's config files of `uint` type.
+A maximum of 30 packages can be activated per 1.5 hours.  By default, this plugin will use at most 25 of those activations and will resume where it left off if it's ever interrupted.  You can control this limit by adding `FreePackagesPerHour` to your individual bot's config files of `uint` type:
+
+```json
+"FreePackagesPerHour": 25,
+```
 
 > [!NOTE]
-> I don't recommend raising this value.  The default is 25 to let you manually redeem packages without having to fight with the plugin.  It's also not always possible for the plugin to tell when it's being rate-limited, and so it's best to avoid ever getting rate-limited.
+> I don't recommend raising this value.  The default is intentionally made lower than the actual limit to allow for you the ability to manually redeem packages without having to fight with the plugin.  It's also not always possible for the plugin to tell when it's being rate-limited, and so it's best to avoid ever getting rate-limited.
 
 ---
 

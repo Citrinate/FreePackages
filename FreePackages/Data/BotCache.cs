@@ -140,7 +140,7 @@ namespace FreePackages {
 		}
 
 		internal void AddActivation(DateTime activation, uint count = 1) {
-			var activationsToPrune = Activations.Where(x => x < DateTime.Now.AddHours(-1)).ToList();
+			var activationsToPrune = Activations.Where(x => x < DateTime.Now.AddMinutes(-1 * PackageQueue.ActivationPeriodMinutes)).ToList();
 			if (activationsToPrune.Count > 0) {
 				activationsToPrune.ForEach(x => Activations.Remove(x));
 			}
@@ -152,8 +152,8 @@ namespace FreePackages {
 			Utilities.InBackground(Save);
 		}
 
-		internal int NumActivationsPastHour() {
-			return Activations.Where(activation => activation > DateTime.Now.AddHours(-1)).Count();
+		internal int NumActivationsPastPeriod() {
+			return Activations.Where(activation => activation > DateTime.Now.AddMinutes(-1 * PackageQueue.ActivationPeriodMinutes)).Count();
 		}
 
 		internal DateTime? GetLastActivation() {

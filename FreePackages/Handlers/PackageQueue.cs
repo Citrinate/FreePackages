@@ -16,8 +16,9 @@ namespace FreePackages {
 		private Timer Timer;
 		private readonly ConcurrentQueue<Package> Packages = new();
 		private const int DelayBetweenActivationsSeconds = 5;
-		private readonly uint ActivationsPerHour = 25;
-		private const uint MaxActivationsPerHour = 30; // Steam's imposed limit
+		private readonly uint ActivationsPerPeriod = 25;
+		private const uint MaxActivationsPerPeriod = 30; // Steam's imposed limit
+		internal const uint ActivationPeriodMinutes = 90; // Steam's imposed limit
 		private bool PauseWhilePlaying = false;
 
 		internal PackageQueue(Bot bot, BotCache botCache, uint? packageLimit, bool pauseWhilePlaying) {
@@ -26,7 +27,7 @@ namespace FreePackages {
 			PauseWhilePlaying = pauseWhilePlaying;
 
 			if (packageLimit != null) {
-				ActivationsPerHour = Math.Min(packageLimit.Value, MaxActivationsPerHour);
+				ActivationsPerPeriod = Math.Min(packageLimit.Value, MaxActivationsPerPeriod);
 			}
 
 			Timer = new Timer(async e => await ProcessQueue().ConfigureAwait(false), null, 0, Timeout.Infinite);
@@ -70,9 +71,9 @@ namespace FreePackages {
 				return;
 			}
 
-			if (BotCache.NumActivationsPastHour() >= ActivationsPerHour) {
+			if (BotCache.NumActivationsPastPeriod() >= ActivationsPerPeriod) {
 				// Rate limit reached
-				DateTime resumeTime = BotCache.GetLastActivation()!.Value.AddHours(1).AddMinutes(1);
+				DateTime resumeTime = BotCache.GetLastActivation()!.Value.AddMinutes(ActivationPeriodMinutes + 1);
 				Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.ActivationPaused, String.Format("{0:T}", resumeTime)));
 				UpdateTimer(resumeTime);
 				
@@ -89,8 +90,8 @@ namespace FreePackages {
 			EResult result = await ClaimPackage(package).ConfigureAwait(false);
 
 			if (result == EResult.RateLimitExceeded) {
-				BotCache.AddActivation(DateTime.Now, MaxActivationsPerHour); // However many activations we thought were made, we were wrong.  Correct for this by adding a bunch of fake times to our cache
-				DateTime resumeTime = DateTime.Now.AddHours(1).AddMinutes(1);
+				BotCache.AddActivation(DateTime.Now, MaxActivationsPerPeriod); // However many activations we thought were made, we were wrong.  Correct for this by adding a bunch of fake times to our cache
+				DateTime resumeTime = DateTime.Now.AddMinutes(ActivationPeriodMinutes + 1);
 				Bot.ArchiLogger.LogGenericInfo(Strings.RateLimitExceeded);
 				Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.ActivationPaused, String.Format("{0:T}", resumeTime)));
 				UpdateTimer(resumeTime);
@@ -264,15 +265,15 @@ namespace FreePackages {
 		internal string GetStatus() {
 			HashSet<string> responses = new HashSet<string>();
 
-			int activationsPastHour = Math.Min(BotCache.NumActivationsPastHour(), (int) MaxActivationsPerHour);
-			responses.Add(String.Format(Strings.QueueStatus, BotCache.Packages.Count, activationsPastHour, ActivationsPerHour));
+			int activationsPastPeriod = Math.Min(BotCache.NumActivationsPastPeriod(), (int) MaxActivationsPerPeriod);
+			responses.Add(String.Format(Strings.QueueStatus, BotCache.Packages.Count, activationsPastPeriod, ActivationsPerPeriod));
 
 			if (PauseWhilePlaying && !Bot.IsPlayingPossible) {
 				responses.Add(Strings.QueuePausedWhileIngame);
 			}
 
-			if (activationsPastHour >= ActivationsPerHour) {
-				DateTime resumeTime = BotCache.GetLastActivation()!.Value.AddHours(1).AddMinutes(1);
+			if (activationsPastPeriod >= ActivationsPerPeriod) {
+				DateTime resumeTime = BotCache.GetLastActivation()!.Value.AddMinutes(ActivationPeriodMinutes + 1);
 				responses.Add(String.Format(Strings.QueueLimitedUntil, String.Format("{0:T}", resumeTime)));
 			}
 
