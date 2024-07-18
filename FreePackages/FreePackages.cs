@@ -60,9 +60,9 @@ namespace FreePackages {
 						break;
 					}
 
-					case "FreePackagesPerHour" when configProperty.Value.ValueKind == JsonValueKind.Number: {
+					case "FreePackagesPerHour" or "FreePackagesLimit" when configProperty.Value.ValueKind == JsonValueKind.Number: {
 						packageLimit = configProperty.Value.GetUInt32();
-						bot.ArchiLogger.LogGenericInfo("Free Packages Per Hour : " + packageLimit.ToString());
+						bot.ArchiLogger.LogGenericInfo("Free Packages Limit : " + packageLimit.ToString());
 						break;
 					}
 

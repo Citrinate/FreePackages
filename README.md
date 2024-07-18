@@ -42,7 +42,7 @@ Under certain conditions, activating a free package while playing a game on Stea
 
 ---
 
-### Changing the hourly package limit
+### Changing the package limit
 
 A maximum of 30 packages can be activated per 1.5 hours.  By default, this plugin will use at most 25 of those activations and will resume where it left off if it's ever interrupted.  You can control this limit by adding `FreePackagesPerHour` to your individual bot's config files of `uint` type:
 
