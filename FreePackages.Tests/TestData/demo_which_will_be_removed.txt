@@ -1,0 +1,118 @@
+"appinfo"
+{
+	"appid"		"2390760"
+	"common"
+	{
+		"name"		"Headlong Hunt Demo"
+		"type"		"Demo"
+		"parent"		"2323660"
+		"icon"		"4d5a7385e6b89cd637710621077ff5b78d6c97d0"
+		"clienticon"		"0b952c17ef430b1024660c6744ea2a7ed8a1acbf"
+		"clienttga"		"27711ecff9b45a6ba3208f56ff8632560e379a97"
+		"oslist"		"windows"
+		"osarch"		""
+		"osextended"		""
+		"releasestate"		"released"
+		"controller_support"		"full"
+		"small_capsule"
+		{
+			"english"		"capsule_231x87.jpg"
+		}
+		"header_image"
+		{
+			"english"		"header.jpg"
+		}
+		"store_asset_mtime"		"1694580774"
+		"associations"
+		{
+			"0"
+			{
+				"type"		"developer"
+				"name"		"Toombler Games"
+			}
+			"1"
+			{
+				"type"		"publisher"
+				"name"		"Toombler Games"
+			}
+		}
+		"primary_genre"		"0"
+		"category"
+		{
+			"category_2"		"1"
+			"category_28"		"1"
+			"category_62"		"1"
+		}
+		"supported_languages"
+		{
+			"english"
+			{
+				"supported"		"true"
+				"full_audio"		"true"
+				"subtitles"		"true"
+			}
+		}
+		"steam_release_date"		"1682337932"
+		"gameid"		"2390760"
+		"exfgls"		"6"
+	}
+	"extended"
+	{
+		"demoofappid"		"2323660"
+		"developer"		"Toombler Games"
+		"publisher"		"Toombler Games"
+	}
+	"config"
+	{
+		"installdir"		"Headlong Hunt Demo"
+		"launch"
+		{
+			"0"
+			{
+				"executable"		"Headlong Hunt Demo.exe"
+				"config"
+				{
+					"oslist"		"windows"
+				}
+			}
+		}
+	}
+	"depots"
+	{
+		"2390761"
+		{
+			"manifests"
+			{
+				"public"
+				{
+					"gid"		"4197211795039899891"
+					"size"		"227173403"
+					"download"		"73094016"
+				}
+			}
+			"encryptedmanifests"
+			{
+				"developer"
+				{
+					"gid"		"7804171D02872B87E66931369B0CB771"
+					"size"		"158735D7CADF0FA8A8123611B609B5ED"
+					"download"		"DF1C5DD4990E11ADCB42C8B55716E897"
+				}
+			}
+		}
+		"branches"
+		{
+			"public"
+			{
+				"buildid"		"12253280"
+				"timeupdated"		"1695358167"
+			}
+			"developer"
+			{
+				"buildid"		"12253422"
+				"pwdrequired"		"1"
+				"timeupdated"		"1695359406"
+			}
+		}
+	}
+}

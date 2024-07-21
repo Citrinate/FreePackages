@@ -73,6 +73,7 @@ public class Filters {
 		var demo = new FilterableApp(KeyValue.LoadAsText("demo_with_fewer_tags_than_parent.txt"));
 		var demoParent = KeyValue.LoadAsText("demo_with_fewer_tags_than_parent_parent.txt");
 
+		Filter.Types.Add("Demo");
 		Filter.Tags.Add(1742);
 
 		Assert.IsFalse(PackageFilter.IsAppWantedByFilter(demo, Filter));
@@ -430,5 +431,27 @@ public class Filters {
 		Filter.MinDaysOld = 20000;
 
 		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
+	}
+
+	[TestMethod]
+	public void CanFilterDemos() {
+		var app = new FilterableApp(KeyValue.LoadAsText("demo_which_will_be_removed.txt"));
+
+		Assert.IsFalse(PackageFilter.IsWantedApp(app));
+		Assert.IsFalse(PackageFilter.IsAppWantedByFilter(app, Filter));
+
+		Filter.Types.Add("Demo");
+		var packageFilterWhichAllowsDemos = new PackageFilter(new BotCache(), new List<FilterConfig>() { Filter });
+		packageFilterWhichAllowsDemos.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<UserData>());
+
+		Assert.IsTrue(packageFilterWhichAllowsDemos.IsWantedApp(app));
+		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
+
+		var package = new FilterablePackage(KeyValue.LoadAsText("package_with_demo_which_will_be_removed.txt"));
+		var package_app_1 = KeyValue.LoadAsText("demo_which_will_be_removed.txt");
+		package.AddPackageContents(new List<KeyValue>() { package_app_1 });
+
+		Assert.IsTrue(packageFilterWhichAllowsDemos.IsWantedPackage(package));
+		Assert.IsFalse(PackageFilter.IsWantedPackage(package));
 	}
 }

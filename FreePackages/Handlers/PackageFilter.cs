@@ -102,6 +102,11 @@ namespace FreePackages {
 				return false;
 			}
 
+			if (app.Type == EAppType.Demo && !app.HasType(filter.Types)) {
+				// Demos are unwanted by default unless the filter explicitly applies to them
+				return false;
+			}
+
 			if (filter.Categories.Count > 0 && !app.HasCategory(filter.Categories, filter.RequireAllCategories)) {
 				// Unwanted due to missing categories
 				return false;
@@ -388,8 +393,38 @@ namespace FreePackages {
 			return false;
 		}
 
-		internal bool IsWantedApp(FilterableApp app) => FilterConfigs.Count == 0 || FilterConfigs.Any(filter => !FilterOnlyAllowsPackages(filter) && IsAppWantedByFilter(app, filter) && !IsAppIgnoredByFilter(app, filter));
-		internal bool IsWantedPackage(FilterablePackage package) => FilterConfigs.Count == 0 || FilterConfigs.Any(filter => IsPackageWantedByFilter(package, filter) && !IsPackageIgnoredByFilter(package, filter));
-		internal bool IsWantedPlaytest(FilterableApp app) => FilterConfigs.Count > 0 && FilterConfigs.Any(filter => !FilterOnlyAllowsPackages(filter) && IsPlaytestWantedByFilter(app, filter) && !IsAppIgnoredByFilter(app, filter));
+		internal bool IsWantedApp(FilterableApp app) {
+			if (FilterConfigs.Count == 0) {
+				if (app.Type == EAppType.Demo) {
+					// Demos are unwanted by default
+					return false;
+				}
+
+				return true;
+			}
+
+			return FilterConfigs.Any(filter => !FilterOnlyAllowsPackages(filter) && IsAppWantedByFilter(app, filter) && !IsAppIgnoredByFilter(app, filter));
+		}
+
+		internal bool IsWantedPackage(FilterablePackage package) {
+			if (FilterConfigs.Count == 0) {
+				if (package.PackageContents.All(app => app.Type == EAppType.Demo)) {
+					// Demos are unwanted by default
+					return false;
+				}
+
+				return true;
+			}
+
+			return FilterConfigs.Any(filter => IsPackageWantedByFilter(package, filter) && !IsPackageIgnoredByFilter(package, filter));
+		}
+
+		internal bool IsWantedPlaytest(FilterableApp app) {
+			if (FilterConfigs.Count == 0) {
+				return false;
+			}
+
+			return FilterConfigs.Any(filter => !FilterOnlyAllowsPackages(filter) && IsPlaytestWantedByFilter(app, filter) && !IsAppIgnoredByFilter(app, filter));
+		}
 	}
 }

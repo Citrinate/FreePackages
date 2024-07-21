@@ -1,0 +1,21 @@
+"860092"
+{
+	"packageid"		"860092"
+	"billingtype"		"12"
+	"licensetype"		"1"
+	"status"		"0"
+	"extended"
+	{
+	}
+	"appids"
+	{
+		"0"		"2390760"
+	}
+	"depotids"
+	{
+		"0"		"2390761"
+	}
+	"appitems"
+	{
+	}
+}

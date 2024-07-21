@@ -70,6 +70,9 @@ get_app 1086940 "package_with_single_app_app_1"
 
 get_sub 44911 "package_which_is_no_cost"
 
+get_app 2390760 "demo_which_will_be_removed"
+get_sub 860092 "package_with_demo_which_will_be_removed"
+
 # For app testing
 
 get_app 440 "app_which_is_free"

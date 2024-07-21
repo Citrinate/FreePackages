@@ -44,10 +44,10 @@ Under certain conditions, activating a free package while playing a game on Stea
 
 ### Changing the package limit
 
-A maximum of 30 packages can be activated per 1.5 hours.  By default, this plugin will use at most 25 of those activations and will resume where it left off if it's ever interrupted.  You can control this limit by adding `FreePackagesPerHour` to your individual bot's config files of `uint` type:
+A maximum of 30 packages can be activated per 1.5 hours.  By default, this plugin will use at most 25 of those activations and will resume where it left off if it's ever interrupted.  You can control this limit by adding `FreePackagesLimit` to your individual bot's config files of `uint` type:
 
 ```json
-"FreePackagesPerHour": 25,
+"FreePackagesLimit": 25,
 ```
 
 > [!NOTE]
@@ -57,7 +57,7 @@ A maximum of 30 packages can be activated per 1.5 hours.  By default, this plugi
 
 ### Enabling package filters
 
-By default, the plugin will attempt to activate all free non-playtest packages.  You can control what kinds of packages are activated by adding `FreePackagesFilters` to your individual bot's config files with the following structure:
+By default, the plugin will attempt to activate all free non-demo and non-playtest packages.  You can control what kinds of packages are activated by adding `FreePackagesFilters` to your individual bot's config files with the following structure:
 
 ```json
 "FreePackagesFilters": [{
@@ -90,6 +90,9 @@ All filter options are explained below:
 #### Types
 
 `HashSet<string>` type with default value of `[]`.  Packages must contain an app with one of the `TypeNames` specified here or they will not be added to your account.  You can leave this empty to allow for all types.  The available `TypeNames` for filtering are: `"Game"`, `"Application"`, `"Tool"`, `"Demo"`, `"DLC"`, `"Music"`, `"Video"`
+
+> [!NOTE]
+> Demos are filtered out by default.  This is because Steam will automatically remove all demos from your account eventually.  However if you specify in your `Types` that you do want demos, then they will be included for that filter.
 
 ---
 
