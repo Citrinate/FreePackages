@@ -92,7 +92,7 @@ All filter options are explained below:
 `HashSet<string>` type with default value of `[]`.  Packages must contain an app with one of the `TypeNames` specified here or they will not be added to your account.  You can leave this empty to allow for all types.  The available `TypeNames` for filtering are: `"Game"`, `"Application"`, `"Tool"`, `"Demo"`, `"DLC"`, `"Music"`, `"Video"`
 
 > [!NOTE]
-> Demos are filtered out by default.  This is because Steam will automatically remove all demos from your account eventually.  However if you specify in your `Types` that you do want demos, then they will be included for that filter.
+> Demos are filtered out by default.  This is because Steam will automatically remove all uninstalled demos from your account eventually.  However if you specify in your `Types` that you do want demos, then they will be included for that filter.
 
 ---
 
