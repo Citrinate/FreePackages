@@ -69,7 +69,7 @@ namespace FreePackages {
 					case "FreePackagesFilter": {
 						FilterConfig? filter = configProperty.Value.ToJsonObject<FilterConfig>();
 						if (filter != null) {
-							bot.ArchiLogger.LogGenericInfo("Free Packages Filter : " + JsonSerializer.Serialize(filter));
+							bot.ArchiLogger.LogGenericInfo("Free Packages Filter : " + filter.ToJsonText());
 							filterConfigs.Add(filter);
 						}
 						break;
@@ -78,7 +78,7 @@ namespace FreePackages {
 					case "FreePackagesFilters": {
 						List<FilterConfig>? filters = configProperty.Value.ToJsonObject<List<FilterConfig>>();
 						if (filters != null) {
-							bot.ArchiLogger.LogGenericInfo("Free Packages Filters : " + JsonSerializer.Serialize(filters));
+							bot.ArchiLogger.LogGenericInfo("Free Packages Filters : " + filters.ToJsonText());
 							filterConfigs.AddRange(filters);
 						}
 						break;
