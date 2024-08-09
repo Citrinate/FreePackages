@@ -425,7 +425,7 @@ All filter options are explained below:
 
 You can define as many filters as you'd like, and packages that pass any one of your filters will be added to your account.  For example, with the three filters below we can allow for any of:
 
-  - Free Games with Steam Trading Cards, but without nudity, and ignoring free weekends
+  - Free Games with Steam Trading Cards, but without nudity
   - Free Games or Playtests which have English or French language support, and Puzzle or Programming tags
   - All Free DLC
 
@@ -434,7 +434,6 @@ You can define as many filters as you'd like, and packages that pass any one of 
   "Types": ["Game"],
   "Categories": [29],
   "IgnoredContentDescriptors": [3, 4],
-  "IgnoreFreeWeekends": true,
 },{
   "Types": ["Game"],
   "Tags": [1664, 5432],
@@ -449,9 +448,7 @@ You can define as many filters as you'd like, and packages that pass any one of 
 
 ### Importing packages
 
-While the plugin is meant to be used passively, you can also import free packages from [SteamDB](https://steamdb.info/freepackages/) using [this userscript](https://github.com/Citrinate/FreePackages/tree/main/FreePackagesImporter).
-
----
+While the plugin can be used passively, you can also manually import free packages from [SteamDB](https://steamdb.info/freepackages/) using [the importer userscript](https://github.com/Citrinate/FreePackages/tree/main/FreePackagesImporter), or through the commands and [IPC interface](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/IPC) endpoints below.
 
 ### Commands
 
@@ -472,9 +469,7 @@ Command | Alias |
 `queuelicense`|`queuelicence`, `qlicense`, `qlicence`
 `queuelicense^`|`queuelicence^`, `qlicense^`, `qlicence^`
 
----
-
-## IPC Interface
+### IPC Interface
 
 API | Method | Parameters | Description
 --- | --- | --- | ---
