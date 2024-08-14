@@ -238,7 +238,7 @@
     <comment/>
   </data>
   <data name="PluginNotEnabled" xml:space="preserve">
-    <value>Плагин "Free Packages" не включен</value>
+    <value>Плагин "Free Packages" не включён</value>
     <comment/>
   </data>
   <data name="ASFInfoParseFailed" xml:space="preserve">
