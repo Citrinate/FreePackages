@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Microsoft ResX Schema
+
+    Version 2.0
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
+    associated with the data types.
+
+    Example:
+
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+
+    There are any number of "resheader" rows that contain simple
+    name/value pairs.
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion through the TypeConverter architecture.
+    Classes that don't support this are serialized and stored with the
+    mimetype set.
+
+    The mimetype is used for serialized objects, and tells the
+    ResXResourceReader how to depersist the object. This is currently not
+    extensible. For a given mimetype the value must be set accordingly:
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
+    read any of the formats listed below.
+
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
+              <xsd:attribute name="type" type="xsd:string"/>
+              <xsd:attribute name="mimetype" type="xsd:string"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required"/>
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BadgeDataFetchFailed" xml:space="preserve">
+    <value>Не удалось получить данные о значках для бесплатных пакетов</value>
+    <comment/>
+  </data>
+  <data name="BadgeDataParsingFailed" xml:space="preserve">
+    <value>Не удалось собрать данные о значках для бесплатных пакетов</value>
+    <comment/>
+  </data>
+  <data name="PlaytestConfigLimitTriggered" xml:space="preserve">
+    <value>PlaytestMode изменён на 0 (нет), только 1 бот может использовать этот фильтр</value>
+    <comment/>
+  </data>
+  <data name="QueueEmpty" xml:space="preserve">
+    <value>Очередь пуста</value>
+    <comment/>
+  </data>
+  <data name="PackagesRemoved" xml:space="preserve">
+    <value>{0} бесплатных пакетов удалено.</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="DiscoveredAppsRemoved" xml:space="preserve">
+    <value>{0} обнаруженных приложений удалено.</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="DiscoveredPackagesRemoved" xml:space="preserve">
+    <value>{0} обнаруженных пакетов удалено.</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="DiscoveredAppsAdded" xml:space="preserve">
+    <value>{0} добавлено в очередь обнаруженных приложений</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="DiscoveredPackagesAdded" xml:space="preserve">
+    <value>{0} добавлено в очередь обнаруженных пакетов</value>
+    <comment>{0} will be replaced by a subID</comment>
+  </data>
+  <data name="AppsQueued" xml:space="preserve">
+    <value>{0} добавлено в очередь бесплатных пакетов</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="PackagesQueued" xml:space="preserve">
+    <value>{0} добавлено в очередь бесплатных пакетов</value>
+    <comment>{0} will be replaced by a subID</comment>
+  </data>
+  <data name="ActivationPaused" xml:space="preserve">
+    <value>Активация бесплатных пакетов приостановлена до {0}</value>
+    <comment>{0} will be replaced by a time</comment>
+  </data>
+  <data name="RateLimitExceeded" xml:space="preserve">
+    <value>Превышен лимит бесплатных пакетов</value>
+    <comment/>
+  </data>
+  <data name="ReplacedWith" xml:space="preserve">
+    <value>Заменено на {0}</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="Unknown" xml:space="preserve">
+    <value>Неизвестно</value>
+    <comment/>
+  </data>
+  <data name="Invalid" xml:space="preserve">
+    <value>Некорректно</value>
+    <comment/>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>Не удалось</value>
+    <comment/>
+  </data>
+  <data name="Waitlisted" xml:space="preserve">
+    <value>В списке ожидания</value>
+    <comment/>
+  </data>
+  <data name="QueueStatus" xml:space="preserve">
+    <value>{0} бесплатных пакетов в очереди. {1}/{2} активаций использовано.</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number, {2} will be replaced by a number</comment>
+  </data>
+  <data name="QueuePausedWhileIngame" xml:space="preserve">
+    <value>Активации приостановлены, поскольку аккаунт используется для игры.</value>
+    <comment/>
+  </data>
+  <data name="QueueLimitedUntil" xml:space="preserve">
+    <value>Активации продолжатся в {0}.</value>
+    <comment>{0} will be replaced by a time</comment>
+  </data>
+  <data name="QueueDiscoveryStatus" xml:space="preserve">
+    <value>{0} приложений и {1} пакетов обнаружены, но ещё не обработаны.</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="PICSRestart" xml:space="preserve">
+    <value>PICS перезапущен, переход от изменения номера {0} на {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="MissedApps" xml:space="preserve">
+    <value>Возможно, пропущены некоторые бесплатные приложения из-за перезагрузки PICS</value>
+    <comment/>
+  </data>
+  <data name="RecoveredApps" xml:space="preserve">
+    <value>Востановлено {0} изменений приложений под изменённым номером {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="MissedPackages" xml:space="preserve">
+    <value>Возможно, пропущены некоторые бесплатные пакеты из-за перезагрузки PICS</value>
+    <comment/>
+  </data>
+  <data name="RecoveredPackages" xml:space="preserve">
+    <value>Востановлено {0} изменений пакетов под изменённым номером {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="NoPackagesFound" xml:space="preserve">
+    <value>Пакеты не обнаружены</value>
+    <comment/>
+  </data>
+  <data name="NoAppsFound" xml:space="preserve">
+    <value>Приложения не найдены</value>
+    <comment/>
+  </data>
+  <data name="AppListFetchFailed" xml:space="preserve">
+    <value>Не удалось получить список приложений</value>
+    <comment/>
+  </data>
+  <data name="PluginNotEnabled" xml:space="preserve">
+    <value>Плагин "Free Packages" не включен</value>
+    <comment/>
+  </data>
+  <data name="ASFInfoParseFailed" xml:space="preserve">
+    <value>Не удалось собрать данные из ASFInfo</value>
+    <comment/>
+  </data>
+</root>
