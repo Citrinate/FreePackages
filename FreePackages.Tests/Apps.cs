@@ -36,7 +36,7 @@ public class Apps {
 	public void CanDetectAvailableAppByReleaseState() {
 		var app = new FilterableApp(KeyValue.LoadAsText("app_with_release_state.txt"));
 
-		Assert.IsFalse(app.ReleaseState.IsNullOrEmpty());
+		Assert.IsFalse(string.IsNullOrEmpty(app.ReleaseState));
 		Assert.IsTrue(app.IsAvailable());
 	}
 
@@ -44,7 +44,7 @@ public class Apps {
 	public void CanDetectAvailableAppByState() {
 		var app = new FilterableApp(KeyValue.LoadAsText("app_with_state.txt"));
 
-		Assert.IsFalse(app.State.IsNullOrEmpty());
+		Assert.IsFalse(string.IsNullOrEmpty(app.State));
 		Assert.IsTrue(app.IsAvailable());
 	}
 
@@ -90,7 +90,7 @@ public class Apps {
 		var app = new FilterableApp(KeyValue.LoadAsText("app_with_dlc.txt"));
 		PackageFilter.Country = "";
 
-		Assert.IsFalse(app.ListOfDLC.IsNullOrEmpty());
+		Assert.IsFalse(string.IsNullOrEmpty(app.ListOfDLC));
 	}
 
 	[TestMethod]
