@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.ResxSourceGenerator"  Version="3.11.0-beta1.23364.2" PrivateAssets="all" />
     <PackageReference Include="System.Composition.AttributedModel" Version="8.0.0" />
   </ItemGroup>
 
@@ -22,16 +23,8 @@
       <InternalsVisibleTo Include="FreePackages.Tests" />
   </ItemGroup>
 
-  <!-- https://www.paraesthesia.com/archive/2022/09/30/strongly-typed-resources-with-net-core/ -->
   <ItemGroup>
-    <EmbeddedResource Update="Localization\Strings.resx">
-      <Generator>MSBuild:Compile</Generator>
-      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
-      <StronglyTypedFileName>$(IntermediateOutputPath)\Strings.Designer.cs</StronglyTypedFileName>
-      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
-      <StronglyTypedNamespace>FreePackages.Localization</StronglyTypedNamespace>
-      <StronglyTypedClassName>Strings</StronglyTypedClassName>
-    </EmbeddedResource>
+    <EmbeddedResource Update="Localization\Strings.resx" />
   </ItemGroup>
 
 </Project>
