@@ -126,7 +126,7 @@
     <comment/>
   </data>
   <data name="PlaytestConfigLimitTriggered" xml:space="preserve">
-    <value>PlaytestMode изменён на 0 (нет), только 1 бот может использовать этот фильтр</value>
+    <value>Значение фильтра PlaytestMode изменено на 0 (нет), только 1 бот может использовать его</value>
     <comment/>
   </data>
   <data name="QueueEmpty" xml:space="preserve">
@@ -134,15 +134,15 @@
     <comment/>
   </data>
   <data name="PackagesRemoved" xml:space="preserve">
-    <value>{0} бесплатных пакетов удалено.</value>
+    <value>Бесплатных пакетов удалено: {0}.</value>
     <comment>{0} will be replaced by a number</comment>
   </data>
   <data name="DiscoveredAppsRemoved" xml:space="preserve">
-    <value>{0} обнаруженных приложений удалено.</value>
+    <value>Обнаруженных приложений удалено: {0}.</value>
     <comment>{0} will be replaced by a number</comment>
   </data>
   <data name="DiscoveredPackagesRemoved" xml:space="preserve">
-    <value>{0} обнаруженных пакетов удалено.</value>
+    <value>Обнаруженных пакетов удалено: {0}.</value>
     <comment>{0} will be replaced by a number</comment>
   </data>
   <data name="DiscoveredAppsAdded" xml:space="preserve">
@@ -166,7 +166,7 @@
     <comment>{0} will be replaced by a time</comment>
   </data>
   <data name="RateLimitExceeded" xml:space="preserve">
-    <value>Превышен лимит бесплатных пакетов</value>
+    <value>Плагин "Free Package" превысил лимит активаций</value>
     <comment/>
   </data>
   <data name="ReplacedWith" xml:space="preserve">
@@ -190,7 +190,7 @@
     <comment/>
   </data>
   <data name="QueueStatus" xml:space="preserve">
-    <value>{0} бесплатных пакетов в очереди. {1}/{2} активаций использовано.</value>
+    <value>Бесплатных пакетов в очереди: {0}. Активаций использовано: {1}/{2}.</value>
     <comment>{0} will be replaced by a number, {1} will be replaced by a number, {2} will be replaced by a number</comment>
   </data>
   <data name="QueuePausedWhileIngame" xml:space="preserve">
@@ -214,7 +214,7 @@
     <comment/>
   </data>
   <data name="RecoveredApps" xml:space="preserve">
-    <value>Востановлено {0} изменений приложений под изменённым номером {1}</value>
+    <value>Восстановлены изменения приложений в количестве: "{0}" под изменённым номером {1}</value>
     <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
   </data>
   <data name="MissedPackages" xml:space="preserve">
@@ -222,7 +222,7 @@
     <comment/>
   </data>
   <data name="RecoveredPackages" xml:space="preserve">
-    <value>Востановлено {0} изменений пакетов под изменённым номером {1}</value>
+    <value>Восстановлены изменения пакетов в количестве: "{0}" под изменённым номером {1}</value>
     <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
   </data>
   <data name="NoPackagesFound" xml:space="preserve">
@@ -238,7 +238,7 @@
     <comment/>
   </data>
   <data name="PluginNotEnabled" xml:space="preserve">
-    <value>Плагин "Free Packages" не включен</value>
+    <value>Плагин "Free Packages" не включён</value>
     <comment/>
   </data>
   <data name="ASFInfoParseFailed" xml:space="preserve">
