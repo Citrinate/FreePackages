@@ -3,7 +3,7 @@
 // @namespace   https://github.com/Citrinate
 // @author      Citrinate
 // @description Transfer packages from SteamDB's free packages tool to the ASF Free Packages plugin
-// @version     1.0.0
+// @version     1.0.1
 // @match       *://steamdb.info/freepackages/*
 // @connect     localhost
 // @connect     127.0.0.1
@@ -101,11 +101,15 @@
 	}
 
 	async function SendASF(operation, path, http_method, target_bot, data = {}) {
+		let payload = JSON.stringify(data);
+		if (http_method == "HEAD" || http_method == "GET") {
+			payload = null;
+		}
 		return new Promise((resolve, reject) => {
 			GM_xmlhttpRequest({
 				url: `${GetSetting(SETTING_ASF_SERVER)}:${GetSetting(SETTING_ASF_PORT)}/Api/${operation}/${target_bot}/${path}`,
 				method: http_method,
-				data: JSON.stringify(data),
+				data: payload,
 				responseType: "json",
 				headers: {
 					"Accept": "application/json",
@@ -126,7 +130,7 @@
 					}
 
 					resolve(result ?? response);
-				}, 
+				},
 				onerror: reject,
 				ontimeout: reject,
 			});
@@ -191,7 +195,7 @@
 				</div>
 			</div>
 		`);
-		
+
 		// Add packages
 		document.getElementById("js-freepackages-add-button").addEventListener("click", function() {
 			AddPackages();
@@ -205,7 +209,7 @@
 		// Close settings
 		document.getElementById("js-freepackages-settings-cancel").addEventListener("click", function() {
 			document.getElementById("js-freepackages-settings").style.display = "none";
-			
+
 			document.getElementById("js-freepackages-settings-asf-server").value = GetSetting(SETTING_ASF_SERVER);
 			document.getElementById("js-freepackages-settings-asf-port").value = GetSetting(SETTING_ASF_PORT);
 			document.getElementById("js-freepackages-settings-asf-password").value = GetSetting(SETTING_ASF_PASSWORD);
@@ -243,7 +247,7 @@
 		if (freePackages.length == 0) {
 			Finish();
 			ShowMessage("There are no packages to add.");
-			
+
 			return;
 		}
 
@@ -254,7 +258,7 @@
 		select.innerHTML = `<option value="ASF">All bots</option>`;
 		for (const i in bots) {
 			let bot = bots[i];
-			
+
 			let opt = document.createElement("option");
 			opt.value = bot.BotName;
 			opt.innerHTML = bot.BotName;
