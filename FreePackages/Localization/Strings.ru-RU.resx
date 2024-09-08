@@ -126,7 +126,7 @@
     <comment/>
   </data>
   <data name="PlaytestConfigLimitTriggered" xml:space="preserve">
-    <value>Значение фильтра PlaytestMode изменено на 0 (нет), только 1 бот может использовать его</value>
+    <value>Значение фильтра PlaytestMode было автоматически заменено на "0" (игнорировать всё), так как его может использовать только один бот</value>
     <comment/>
   </data>
   <data name="QueueEmpty" xml:space="preserve">
@@ -182,7 +182,7 @@
     <comment/>
   </data>
   <data name="Failed" xml:space="preserve">
-    <value>Не удалось</value>
+    <value>Неудачно</value>
     <comment/>
   </data>
   <data name="Waitlisted" xml:space="preserve">
@@ -202,11 +202,11 @@
     <comment>{0} will be replaced by a time</comment>
   </data>
   <data name="QueueDiscoveryStatus" xml:space="preserve">
-    <value>{0} приложений и {1} пакетов обнаружены, но ещё не обработаны.</value>
+    <value>Обнаружены приложения в количестве "{0}" и пакеты в количестве "{1}", но ещё не обработаны.</value>
     <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
   </data>
   <data name="PICSRestart" xml:space="preserve">
-    <value>PICS перезапущен, переход от изменения номера {0} на {1}</value>
+    <value>PICS перезапущен. Номер был изменён с {0} на {1}</value>
     <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
   </data>
   <data name="MissedApps" xml:space="preserve">
