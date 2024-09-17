@@ -206,7 +206,7 @@
     <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
   </data>
   <data name="PICSRestart" xml:space="preserve">
-    <value>PICS перезапущен. Номер был изменён с {0} на {1}</value>
+    <value>PICS перезапущен. Переход с номера изменения {0} на {1}</value>
     <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
   </data>
   <data name="MissedApps" xml:space="preserve">
