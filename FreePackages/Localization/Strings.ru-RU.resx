@@ -186,7 +186,7 @@
     <comment/>
   </data>
   <data name="Waitlisted" xml:space="preserve">
-    <value>В списке ожидания</value>
+    <value>Ожидание</value>
     <comment/>
   </data>
   <data name="QueueStatus" xml:space="preserve">
@@ -202,7 +202,7 @@
     <comment>{0} will be replaced by a time</comment>
   </data>
   <data name="QueueDiscoveryStatus" xml:space="preserve">
-    <value>Обнаружены приложения в количестве "{0}" и пакеты в количестве "{1}", но ещё не обработаны.</value>
+    <value>Обнаружены, но ещё не обработаны приложения в количестве "{0}" и пакеты в количестве "{1}".</value>
     <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
   </data>
   <data name="PICSRestart" xml:space="preserve">
