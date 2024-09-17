@@ -190,7 +190,7 @@
     <comment/>
   </data>
   <data name="QueueStatus" xml:space="preserve">
-    <value>{0} kostenlose Pakete in der Warteschlange. {1}/{2} Aktivierung verwendet.</value>
+    <value>{0} kostenlose Pakete in der Warteschlange. {1}/{2} Aktivierungen verwendet.</value>
     <comment>{0} will be replaced by a number, {1} will be replaced by a number, {2} will be replaced by a number</comment>
   </data>
   <data name="QueuePausedWhileIngame" xml:space="preserve">
@@ -206,7 +206,7 @@
     <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
   </data>
   <data name="PICSRestart" xml:space="preserve">
-    <value>PICS neu gestartet, Überspringe von der Nummer {0} bis {1}</value>
+    <value>PICS neu gestartet, überspringe von der Nummer {0} bis {1}</value>
     <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
   </data>
   <data name="MissedApps" xml:space="preserve">
