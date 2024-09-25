@@ -162,11 +162,11 @@
     <comment>{0} will be replaced by a subID</comment>
   </data>
   <data name="ActivationPaused" xml:space="preserve">
-    <value>暂停免费包激活任务直到 {0}</value>
+    <value>暂停免费包激活，直到 {0}</value>
     <comment>{0} will be replaced by a time</comment>
   </data>
   <data name="RateLimitExceeded" xml:space="preserve">
-    <value>超出免费包速率限制</value>
+    <value>Free Package 达到速率上限</value>
     <comment/>
   </data>
   <data name="ReplacedWith" xml:space="preserve">
