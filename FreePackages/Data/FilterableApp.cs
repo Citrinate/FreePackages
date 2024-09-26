@@ -109,7 +109,9 @@ namespace FreePackages {
 		}
 
 		internal bool IsAvailable() {
-			if (ReleaseState != "released" && State != "eStateAvailable") {
+			string[] availableReleaseStates = ["released", "preloadonly"];
+			string[] availableStates = ["eStateAvailable"];
+			if (!availableReleaseStates.Contains(ReleaseState) || !availableStates.Contains(State)) {
 				// App not released yet
 				// Note: There's another seemingly relevant field: kv["common"]["steam_release_date"] 
 				// steam_release_date is not checked because an app can be "released", still have a future release date, and still be redeemed
