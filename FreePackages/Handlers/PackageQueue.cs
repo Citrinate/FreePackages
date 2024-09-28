@@ -168,7 +168,7 @@ namespace FreePackages {
 			// When both GrantedApps and GrantedPackages are empty something went wrong, It could be we're rate limited or it could mean we just can't activate this app
 			if (response.GrantedApps.Count == 0 && response.GrantedPackages.Count == 0) {
 				// Only way to really get an idea of what might have went wrong is to check the store page
-				AppDetails? appDetails = await WebRequest.GetAppDetails(Bot, appID).ConfigureAwait(false);
+				AppDetails? appDetails = await WebRequest.GetAppDetails(appID).ConfigureAwait(false);
 				bool success = appDetails?.Success ?? false;
 				bool hasPackages = (appDetails?.Data?.Packages.Count ?? 0) != 0;
 				bool isFree = appDetails?.Data?.IsFree ?? false;

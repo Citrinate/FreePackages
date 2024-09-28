@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
+using ArchiSteamFarm.Helpers;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Web.Responses;
 using FreePackages.Localization;
@@ -197,10 +198,10 @@ namespace FreePackages {
 				// Add wanted apps to the queue
 				apps.ForEach(app => {
 					if (app.Type == EAppType.Beta) {
-						SharedExternalResource<HtmlDocumentResponse> storePageResource = new();
+						ArchiCacheable<HtmlDocumentResponse> storePageResource = new(async(_) => (true, await WebRequest.GetStorePage(app.Parent?.ID).ConfigureAwait(false)));
 						Handlers.Values.ToList().ForEach(x => Utilities.InBackground(async() => await x.HandlePlaytest(app, storePageResource).ConfigureAwait(false)));
 					} else {
-						SharedExternalResource<AppDetails> appDetailsResource = new();
+						ArchiCacheable<AppDetails> appDetailsResource = new(async(_) => (true, await WebRequest.GetAppDetails(app.ID).ConfigureAwait(false)));
 						Handlers.Values.ToList().ForEach(x => Utilities.InBackground(async() => await x.HandleFreeApp(app, appDetailsResource).ConfigureAwait(false)));
 					}
 				});
@@ -293,7 +294,7 @@ namespace FreePackages {
 			Handlers.Values.ToList().ForEach(x => x.BotCache.SaveChanges());
 		}
 
-		private async Task HandleFreeApp(FilterableApp app, SharedExternalResource<AppDetails> appDetailsResource) {
+		private async Task HandleFreeApp(FilterableApp app, ArchiCacheable<AppDetails> appDetailsResource) {
 			if (!BotCache.ChangedApps.Contains(app.ID)) {
 				return;
 			}
@@ -311,7 +312,8 @@ namespace FreePackages {
 					return;
 				}
 
-				if (!PackageFilter.IsAppFreeAndValidOnStore(await appDetailsResource.Fetch(async() => await WebRequest.GetAppDetails(Bot, app.ID).ConfigureAwait(false)).ConfigureAwait(false))) {
+				(_, AppDetails? appDetails) = await appDetailsResource.GetValue().ConfigureAwait(false);
+				if (!PackageFilter.IsAppFreeAndValidOnStore(appDetails)) {
 					return;
 				}
 
@@ -345,7 +347,7 @@ namespace FreePackages {
 			}
 		}
 
-		private async Task HandlePlaytest(FilterableApp app, SharedExternalResource<HtmlDocumentResponse> storePageResource) {
+		private async Task HandlePlaytest(FilterableApp app, ArchiCacheable<HtmlDocumentResponse> storePageResource) {
 			if (!BotCache.ChangedApps.Contains(app.ID)) {
 				return;
 			}
@@ -367,7 +369,8 @@ namespace FreePackages {
 					return;
 				}
 
-				if (!PackageFilter.IsPlaytestValidOnStore(await storePageResource.Fetch(async() => await WebRequest.GetStorePage(Bot, app.Parent.ID).ConfigureAwait(false)).ConfigureAwait(false))) {
+				(_, HtmlDocumentResponse? storePage) = await storePageResource.GetValue().ConfigureAwait(false);
+				if (!PackageFilter.IsPlaytestValidOnStore(storePage)) {
 					return;
 				}
 

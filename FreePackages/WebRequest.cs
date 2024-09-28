@@ -24,12 +24,14 @@ namespace FreePackages {
 			return userDataResponse?.Content;
 		}
 
-		internal static async Task<AppDetails?> GetAppDetails(Bot bot, uint appID) {
+		internal static async Task<AppDetails?> GetAppDetails(uint appID) {
+			ArgumentNullException.ThrowIfNull(ASF.WebBrowser);
+
 			// Reportedly, this API has a possibly reachable rate limit of 200 requests per 5 minutes
 			await AppDetailsSemaphore.WaitAsync().ConfigureAwait(false);
 			try {
 				Uri request = new(ArchiWebHandler.SteamStoreURL, String.Format("/api/appdetails/?appids={0}", appID));
-				ObjectResponse<Dictionary<uint, AppDetails>>? appDetailsResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<Dictionary<uint, AppDetails>>(request, maxTries: 1).ConfigureAwait(false);
+				ObjectResponse<Dictionary<uint, AppDetails>>? appDetailsResponse = await ASF.WebBrowser.UrlGetToJsonObject<Dictionary<uint, AppDetails>>(request, maxTries: 1).ConfigureAwait(false);
 				
 				return appDetailsResponse?.Content?[appID];
 			} finally {
@@ -66,14 +68,15 @@ namespace FreePackages {
 			return playtestAccessResponse?.Content;
 		}
 
-		internal static async Task<HtmlDocumentResponse?> GetStorePage(Bot bot, uint? appID) {
+		internal static async Task<HtmlDocumentResponse?> GetStorePage(uint? appID) {
 			ArgumentNullException.ThrowIfNull(appID);
+			ArgumentNullException.ThrowIfNull(ASF.WebBrowser);
 
 			await StorePageSemaphore.WaitAsync().ConfigureAwait(false);
 			try {
 				Uri request = new(ArchiWebHandler.SteamStoreURL, String.Format("/app/{0}", appID));
 
-				return await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnRedirections);
+				return await ASF.WebBrowser.UrlGetToHtmlDocument(request, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnRedirections);
 			} finally {
 				Utilities.InBackground(
 					async() => {
