@@ -425,9 +425,9 @@ All filter options are explained below:
 
 You can define as many filters as you'd like, and packages that pass any one of your filters will be added to your account.  For example, with the three filters below we can allow for any of:
 
-  - Free Games with Steam Trading Cards, but without nudity
-  - Free Games or Playtests which have English or French language support, and Puzzle or Programming tags
-  - All Free DLC
+  - Free games with Steam Trading Cards, but without nudity
+  - Free games or playtests which have English or French language support, and Puzzle or Programming tags
+  - Free DLC for games you own
 
 ```json
 "FreePackagesFilters": [{
@@ -441,6 +441,7 @@ You can define as many filters as you'd like, and packages that pass any one of 
   "PlaytestMode": 3,
 },{
   "Types": ["DLC"],
+  "IgnoredTypes": ["Game", "Application"],
 }],
 ```
 
