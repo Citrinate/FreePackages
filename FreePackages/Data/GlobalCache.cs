@@ -26,7 +26,7 @@ namespace FreePackages {
 
 		protected override Task Save() => Save(this);
 
-		internal static async Task<GlobalCache?> CreateOrLoad() {
+		internal static async Task<GlobalCache> CreateOrLoad() {
 			if (!File.Exists(SharedFilePath)) {
 				return new GlobalCache();
 			}
@@ -38,20 +38,20 @@ namespace FreePackages {
 				if (string.IsNullOrEmpty(json)) {
 					ASF.ArchiLogger.LogGenericError(string.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(json)));
 
-					return null;
+					return new GlobalCache();
 				}
 
 				globalCache = json.ToJsonObject<GlobalCache>();
 			} catch (Exception e) {
 				ASF.ArchiLogger.LogGenericException(e);
 
-				return null;
+				return new GlobalCache();
 			}
 
 			if (globalCache == null) {
 				ASF.ArchiLogger.LogNullError(globalCache);
 
-				return null;
+				return new GlobalCache();
 			}
 			
 			return globalCache;
