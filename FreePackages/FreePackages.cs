@@ -56,7 +56,7 @@ namespace FreePackages {
 					
 					case "PauseFreePackagesWhilePlaying" when (configProperty.Value.ValueKind == JsonValueKind.True || configProperty.Value.ValueKind == JsonValueKind.False): {
 						pauseWhilePlaying = configProperty.Value.GetBoolean();
-						bot.ArchiLogger.LogGenericInfo("Pause Free Packages While Playing : " + isEnabled.ToString());
+						bot.ArchiLogger.LogGenericInfo("Pause Free Packages While Playing : " + pauseWhilePlaying.ToString());
 						break;
 					}
 
