@@ -2,17 +2,17 @@
 
   <PropertyGroup>
     <Authors>Citrinate</Authors>
-    <AssemblyVersion>1.5.2.4</AssemblyVersion>
+    <AssemblyVersion>1.5.3.0</AssemblyVersion>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Deterministic>true</Deterministic>
     <CoreCompileDependsOn>PrepareResources;$(CompileDependsOn)</CoreCompileDependsOn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.ResxSourceGenerator"  Version="3.11.0-beta1.23364.2" PrivateAssets="all" />
-    <PackageReference Include="System.Composition.AttributedModel" Version="8.0.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.ResxSourceGenerator"  Version="3.11.0-beta1.24508.2" PrivateAssets="all" />
+    <PackageReference Include="System.Composition.AttributedModel" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>

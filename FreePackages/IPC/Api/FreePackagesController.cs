@@ -14,7 +14,7 @@ using SteamKit2;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace FreePackages.IPC {
-	[Route("Api/FreePackages", Name = nameof(FreePackages))]
+	[Route("Api/FreePackages")]
 	public sealed class FreePackagesController : ArchiController {
 		[HttpGet("{botNames:required}/GetChangesSince/{changeNumber:required}")]
 		[SwaggerOperation (Summary = "Request changes for apps and packages since a given change number")]

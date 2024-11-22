@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 env:
   PLUGIN_NAME: "FreePackages"
-  DOTNET_SDK_VERSION: 8.0
+  DOTNET_SDK_VERSION: 9.0
 
 jobs:
   publish:
