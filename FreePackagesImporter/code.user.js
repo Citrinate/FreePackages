@@ -3,7 +3,7 @@
 // @namespace   https://github.com/Citrinate
 // @author      Citrinate
 // @description Transfer packages from SteamDB's free packages tool to the ASF Free Packages plugin
-// @version     1.0.1
+// @version     1.0.2
 // @match       *://steamdb.info/freepackages/*
 // @connect     localhost
 // @connect     127.0.0.1
@@ -48,7 +48,8 @@
 	// Get displayed packages
 	var freePackages = null;
 	const packageRegex = new RegExp("Package ([0-9]+)");
-	var observer = new MutationObserver(() => {
+
+	function UpdatePackages() {
 		let newFreePackages = [];
 		let packages = document.querySelectorAll(".package");
 		for (let i = 0; i < packages.length; i++) {
@@ -60,8 +61,11 @@
 
 		freePackages = newFreePackages;
 		UpdateInterface();
-  	});
+	}
+
+	var observer = new MutationObserver(() => UpdatePackages());
 	observer.observe(document.getElementById("freepackages"), { childList: true });
+	UpdatePackages();
 
 	// Get bot list
 	var bots = null;
@@ -245,7 +249,6 @@
 		}
 
 		if (freePackages.length == 0) {
-			Finish();
 			ShowMessage("There are no packages to add.");
 
 			return;
