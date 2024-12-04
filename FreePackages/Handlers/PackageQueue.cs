@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -14,7 +13,6 @@ namespace FreePackages {
 		private readonly Bot Bot;
 		private readonly BotCache BotCache;
 		private Timer Timer;
-		private readonly ConcurrentQueue<Package> Packages = new();
 		private const int DelayBetweenActivationsSeconds = 5;
 		private readonly uint ActivationsPerPeriod = 25;
 		private const uint MaxActivationsPerPeriod = 30; // Steam's imposed limit
@@ -102,10 +100,6 @@ namespace FreePackages {
 
 				return;
 			}
-			
-			// Note: Not everything counts against the activation limit, ex: All playtests?, Some sub errors (dunno which), Maybe some app errors
-			// Might be worth revisiting later, but for now I feel comfortable just assuming everything that doesnt get a rate limit response counts
-			BotCache.AddActivation(DateTime.Now);
 
 			if (result == EResult.OK || result == EResult.Invalid) {
 				BotCache.RemovePackage(package);
@@ -150,8 +144,8 @@ namespace FreePackages {
 				return EResult.Timeout;
 			}
 			
-
 			// The Result returned by RequestFreeLicense is useless and I've only ever seen it return EResult.OK
+			// Sometimes it'll return EResult.RateLimitExceeded, but this is unrelated to the package limit
 			if (response.Result != EResult.OK) {
 				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), response.Result));
 
@@ -165,41 +159,11 @@ namespace FreePackages {
 				return EResult.OK;
 			}
 
-			// When both GrantedApps and GrantedPackages are empty something went wrong, It could be we're rate limited or it could mean we just can't activate this app
-			if (response.GrantedApps.Count == 0 && response.GrantedPackages.Count == 0) {
-				// Only way to really get an idea of what might have went wrong is to check the store page
-				AppDetails? appDetails = await WebRequest.GetAppDetails(appID).ConfigureAwait(false);
-				bool success = appDetails?.Success ?? false;
-				bool hasPackages = (appDetails?.Data?.Packages.Count ?? 0) != 0;
-				bool isFree = appDetails?.Data?.IsFree ?? false;
-				bool isComingSoon = appDetails?.Data?.ReleaseDate?.ComingSoon ?? true;
+			// Either app isn't available, or we're rate limited.  Impossible to tell the difference
+			// Assume invalid as to not attempt to activate invalid apps endlessly
+			Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), Strings.Unknown));
 
-				if (!success || !isFree || isComingSoon) {
-					Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), EResult.Invalid));
-
-					return EResult.Invalid;
-				}
-
-				// App is available, but we couldn't activate it.  We might be rate limited
-				
-				if (hasPackages) {
-					// Replace the app with the appropriate package and when we try to activate that we'll find out for sure if we're rate limited or not
-					// Note: This is mostly wishful thinking. /api/appdetails rarely shows the free packages for free apps (one example where it does: https://steamdb.info/app/2119270/)
-					Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), String.Format(Strings.ReplacedWith, String.Join(", ", appDetails!.Data!.Packages.Select(x => $"sub/{x}")))));
-					BotCache.AddChanges(packageIDs: appDetails.Data.Packages);
-
-					return EResult.OK;
-				}
-
-				// We could be rate limited, but the app could also be invalid beacause it has no available licenses.  It's necessary to assume invalid so we don't get into an infinite loop.
-				// Examples: https://steamdb.info/app/2401570/ on Oct 2, 2023, Attempting to download demo through Steam client gives error "no licenses"
-				// Free games that still have store pages but display "At the request of the publisher, ___ is unlisted on the Steam store and will not appear in search.": https://store.steampowered.com/app/376570/WildStar/
-				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), Strings.Unknown));
-
-				return EResult.Invalid;
-			}
-
-			return EResult.OK;
+			return EResult.Invalid;
 		}
 
 		private async Task<EResult> ClaimFreeSub(uint subID) {
@@ -254,13 +218,14 @@ namespace FreePackages {
 			if (response.Granted == null) {
 				// Playtest has limited slots, account was added to the waitlist
 				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", appID), Strings.Waitlisted));
-				// This won't show up in our owned apps until we're accepted, save it so we don't retry
+
+				// This won't show up in our owned apps until we're accepted, save it so we don't attempt to join the playtest again
 				BotCache.AddWaitlistedPlaytest(appID);
 
 				return EResult.OK;
 			}
 
-			// Access to playtest granted
+			// Access to unlimited playtest granted
 			Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", appID), EResult.OK));
 
 			return EResult.OK;

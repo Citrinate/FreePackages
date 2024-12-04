@@ -215,8 +215,18 @@ namespace FreePackages {
 			Utilities.InBackground(Save);
 		}
 
-		internal void UpdateSeenPackages(HashSet<uint> seenPackages) {
-			SeenPackages.UnionWith(seenPackages);
+		internal void UpdateSeenPackages(List<SteamApps.LicenseListCallback.License> newLicenses) {
+			SeenPackages.UnionWith(newLicenses.Select(license => license.PackageID));
+
+			// Keep track of how many free licenses we activated to enforce the free packages limit
+			// TODO: Do other PaymentMethod values also count against the free package limit?
+			foreach(SteamApps.LicenseListCallback.License license in newLicenses) {
+				if (license.PaymentMethod == EPaymentMethod.Complimentary &&
+					license.TimeCreated.ToLocalTime() > DateTime.Now.AddMinutes(-1 * PackageQueue.ActivationPeriodMinutes)
+				) {
+					AddActivation(license.TimeCreated.ToLocalTime());
+				}
+			}
 
 			Utilities.InBackground(Save);
 		}

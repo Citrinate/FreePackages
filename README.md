@@ -51,7 +51,7 @@ A maximum of 30 packages can be activated per 1.5 hours.  By default, this plugi
 ```
 
 > [!NOTE]
-> I don't recommend raising this value.  The default is intentionally made lower than the actual limit to allow for you the ability to manually redeem packages without having to fight with the plugin.  It's also not always possible for the plugin to tell when it's being rate-limited, and so it's best to avoid ever getting rate-limited.
+> The default is intentionally made lower than the actual limit to allow for you the ability to manually redeem packages without having to fight with the plugin.
 
 ---
 

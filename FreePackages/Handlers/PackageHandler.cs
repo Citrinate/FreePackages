@@ -5,9 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
-using ArchiSteamFarm.Helpers;
 using ArchiSteamFarm.Steam;
-using ArchiSteamFarm.Web.Responses;
 using FreePackages.Localization;
 using SteamKit2;
 
@@ -89,6 +87,10 @@ namespace FreePackages {
 			
 			await Handlers[bot.BotName].FetchUserData().ConfigureAwait(false);
 			Handlers[bot.BotName].PackageQueue.Start();
+		}
+
+		private void UpdateUserData() {
+			UserDataRefreshTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(15));
 		}
 
 		private async Task FetchUserData() {
@@ -198,11 +200,9 @@ namespace FreePackages {
 				// Add wanted apps to the queue
 				apps.ForEach(app => {
 					if (app.Type == EAppType.Beta) {
-						ArchiCacheable<HtmlDocumentResponse> storePageResource = new(async(_) => (true, await WebRequest.GetStorePage(app.Parent?.ID).ConfigureAwait(false)));
-						Handlers.Values.ToList().ForEach(x => Utilities.InBackground(async() => await x.HandlePlaytest(app, storePageResource).ConfigureAwait(false)));
+						Handlers.Values.ToList().ForEach(x => x.HandlePlaytest(app));
 					} else {
-						ArchiCacheable<AppDetails> appDetailsResource = new(async(_) => (true, await WebRequest.GetAppDetails(app.ID).ConfigureAwait(false)));
-						Handlers.Values.ToList().ForEach(x => Utilities.InBackground(async() => await x.HandleFreeApp(app, appDetailsResource).ConfigureAwait(false)));
+						Handlers.Values.ToList().ForEach(x => x.HandleFreeApp(app));
 					}
 				});
 			}
@@ -294,7 +294,7 @@ namespace FreePackages {
 			Handlers.Values.ToList().ForEach(x => x.BotCache.SaveChanges());
 		}
 
-		private async Task HandleFreeApp(FilterableApp app, ArchiCacheable<AppDetails> appDetailsResource) {
+		private void HandleFreeApp(FilterableApp app) {
 			if (!BotCache.ChangedApps.Contains(app.ID)) {
 				return;
 			}
@@ -309,11 +309,6 @@ namespace FreePackages {
 				}
 
 				if (!PackageFilter.IsWantedApp(app)) {
-					return;
-				}
-
-				(_, AppDetails? appDetails) = await appDetailsResource.GetValue().ConfigureAwait(false);
-				if (!PackageFilter.IsAppFreeAndValidOnStore(appDetails)) {
 					return;
 				}
 
@@ -347,7 +342,7 @@ namespace FreePackages {
 			}
 		}
 
-		private async Task HandlePlaytest(FilterableApp app, ArchiCacheable<HtmlDocumentResponse> storePageResource) {
+		private void HandlePlaytest(FilterableApp app) {
 			if (!BotCache.ChangedApps.Contains(app.ID)) {
 				return;
 			}
@@ -366,11 +361,6 @@ namespace FreePackages {
 				}
 
 				if (!PackageFilter.IsWantedPlaytest(app)) {
-					return;
-				}
-
-				(_, HtmlDocumentResponse? storePage) = await storePageResource.GetValue().ConfigureAwait(false);
-				if (!PackageFilter.IsPlaytestValidOnStore(storePage)) {
 					return;
 				}
 
@@ -417,21 +407,24 @@ namespace FreePackages {
 		}
 
 		internal void HandleLicenseList(SteamApps.LicenseListCallback callback) {
-			HashSet<uint> ownedPackageIDs = callback.LicenseList.Select(license => license.PackageID).ToHashSet();
-			HashSet<uint> newOwnedPackageIDs = ownedPackageIDs.Except(BotCache.SeenPackages).ToHashSet();
+			List<SteamApps.LicenseListCallback.License> newLicenses = callback.LicenseList.Where(license => !BotCache.SeenPackages.Contains(license.PackageID)).ToList();
 
-			if (newOwnedPackageIDs.Count == 0) {
+			if (newLicenses.Count == 0) {
 				return;
 			}
 
-			// Cached seen packages need to be initialized
-			if (BotCache.SeenPackages.Count > 0) {
-				BotCache.AddChanges(newOwnedPackageIDs: newOwnedPackageIDs);
-				Utilities.InBackground(async() => await HandleChanges().ConfigureAwait(false));
+			UpdateUserData();
+
+			// Initialize SeenPackages
+			if (BotCache.SeenPackages.Count == 0) {
+				BotCache.UpdateSeenPackages(newLicenses);
+
+				return;
 			}
 
-			BotCache.UpdateSeenPackages(newOwnedPackageIDs);
-			UserDataRefreshTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(15));
+			BotCache.AddChanges(newOwnedPackageIDs: newLicenses.Select(license => license.PackageID).ToHashSet());
+			BotCache.UpdateSeenPackages(newLicenses);
+			Utilities.InBackground(async() => await HandleChanges().ConfigureAwait(false));
 		}
 
 		internal string GetStatus() {
