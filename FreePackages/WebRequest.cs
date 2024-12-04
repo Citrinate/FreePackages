@@ -9,9 +9,9 @@ using SteamKit2;
 
 namespace FreePackages {
 	internal static class WebRequest {
-		internal static async Task<UserData?> GetUserData(Bot bot) {
+		internal static async Task<Steam.UserData?> GetUserData(Bot bot) {
 			Uri request = new(ArchiWebHandler.SteamStoreURL, "/dynamicstore/userdata/");
-			ObjectResponse<UserData>? userDataResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<UserData>(request).ConfigureAwait(false);
+			ObjectResponse<Steam.UserData>? userDataResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<Steam.UserData>(request).ConfigureAwait(false);
 			
 			return userDataResponse?.Content;
 		}
@@ -31,11 +31,11 @@ namespace FreePackages {
 			return appList;
 		}
 
-		internal static async Task<PlaytestAccessResponse?> RequestPlaytestAccess(Bot bot, uint appID) {
+		internal static async Task<Steam.PlaytestAccessResponse?> RequestPlaytestAccess(Bot bot, uint appID) {
 			Uri request = new(ArchiWebHandler.SteamStoreURL, String.Format("/ajaxrequestplaytestaccess/{0}", appID));
 			Dictionary<string, string> data = new(1); // Extra entry for sessionID
 			// Returns 401 error error with body "false" if playtest doesn't exist for appID
-			ObjectResponse<PlaytestAccessResponse>? playtestAccessResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<PlaytestAccessResponse>(request, data: data, maxTries: 1).ConfigureAwait(false);
+			ObjectResponse<Steam.PlaytestAccessResponse>? playtestAccessResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<Steam.PlaytestAccessResponse>(request, data: data, maxTries: 1).ConfigureAwait(false);
 
 			return playtestAccessResponse?.Content;
 		}

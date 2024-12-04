@@ -10,8 +10,8 @@ using ArchiSteamFarm.Web.Responses;
 using FreePackages.Localization;
 
 // There are limitations to using PICS for discovery such that an account that's online 24/7 can still miss certain free games
-// For more information see here: https://github.com/Citrinate/FreePackages/commit/7541807f10e8dde53b1352a2c103b867e5446fa1#commitcomment-137669223
 // To fill in some of these gaps, we periodically check the free apps/subs list provided by https://github.com/C4illin/ASFinfo
+// For more information see here: https://github.com/Citrinate/FreePackages/commit/7541807f10e8dde53b1352a2c103b867e5446fa1#commitcomment-137669223
 
 namespace FreePackages {
 	internal static class ASFInfo {

@@ -10,7 +10,7 @@ namespace FreePackages {
 		private readonly BotCache BotCache;
 		internal readonly List<FilterConfig> FilterConfigs;
 		private HashSet<uint>? OwnedAppIDs = null;
-		private UserData? UserData = null;
+		private Steam.UserData? UserData = null;
 		private HashSet<uint> ImportedIgnoredAppIDs = new();
 		private HashSet<uint> ImportedIgnoredTags = new();
 		private HashSet<uint> ImportedIgnoredContentDescriptors = new();
@@ -26,7 +26,7 @@ namespace FreePackages {
 			Country = callback.Country;
 		}
 		
-		internal void UpdateUserData(UserData userData) {
+		internal void UpdateUserData(Steam.UserData userData) {
 			ImportedIgnoredAppIDs = userData.IgnoredApps.Where(x => x.Value == 0).Select(x => x.Key).ToHashSet();
 			ImportedIgnoredTags = userData.ExcludedTags.Select(x => x.TagID).ToHashSet();
 			ImportedIgnoredContentDescriptors = userData.ExcludedContentDescriptorIDs;

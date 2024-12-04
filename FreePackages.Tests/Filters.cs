@@ -15,13 +15,13 @@ public class Filters {
 	[TestInitialize]
 	public void InitializePackageFilter () {
 		PackageFilter = new PackageFilter(new BotCache(), new List<FilterConfig>());
-		PackageFilter.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<UserData>());
+		PackageFilter.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<Steam.UserData>());
 		Filter = new FilterConfig();
 	}
 
 	[TestCleanup]
 	public void CleanupPackageFilter() {
-		PackageFilter.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<UserData>());
+		PackageFilter.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<Steam.UserData>());
 		Filter = new FilterConfig();
 	}
 
@@ -309,15 +309,15 @@ public class Filters {
 
 		Assert.IsFalse(PackageFilter.IsAppIgnoredByFilter(app, Filter));
 
-		PackageFilter.UpdateUserData(File.ReadAllText("userdata_with_ignored_apps.json").ToJsonObject<UserData>());
+		PackageFilter.UpdateUserData(File.ReadAllText("userdata_with_ignored_apps.json").ToJsonObject<Steam.UserData>());
 
 		Assert.IsTrue(PackageFilter.IsAppIgnoredByFilter(app, Filter));
 
-		PackageFilter.UpdateUserData(File.ReadAllText("userdata_with_excluded_tags.json").ToJsonObject<UserData>());
+		PackageFilter.UpdateUserData(File.ReadAllText("userdata_with_excluded_tags.json").ToJsonObject<Steam.UserData>());
 
 		Assert.IsTrue(PackageFilter.IsAppIgnoredByFilter(app, Filter));
 
-		PackageFilter.UpdateUserData(File.ReadAllText("userdata_with_excluded_content_descriptors.json").ToJsonObject<UserData>());
+		PackageFilter.UpdateUserData(File.ReadAllText("userdata_with_excluded_content_descriptors.json").ToJsonObject<Steam.UserData>());
 
 		Assert.IsTrue(PackageFilter.IsAppIgnoredByFilter(app, Filter));
 	}
@@ -334,7 +334,7 @@ public class Filters {
 		filterB.Types.Add("Game");
 		
 		var packageFilter = new PackageFilter(new BotCache(), new List<FilterConfig>() { filterA, filterB });
-		packageFilter.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<UserData>());
+		packageFilter.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<Steam.UserData>());
 
 		Assert.IsFalse(packageFilter.IsAppWantedByFilter(app, filterA));
 		Assert.IsTrue(packageFilter.IsAppIgnoredByFilter(app, filterA));
@@ -407,11 +407,11 @@ public class Filters {
 
 		Assert.IsFalse(PackageFilter.IsAppWantedByFilter(app, Filter));
 
-		PackageFilter.UpdateUserData(File.ReadAllText("userdata_with_wishlist_apps.json").ToJsonObject<UserData>());
+		PackageFilter.UpdateUserData(File.ReadAllText("userdata_with_wishlist_apps.json").ToJsonObject<Steam.UserData>());
 
 		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
 
-		PackageFilter.UpdateUserData(File.ReadAllText("userdata_with_followed_apps.json").ToJsonObject<UserData>());
+		PackageFilter.UpdateUserData(File.ReadAllText("userdata_with_followed_apps.json").ToJsonObject<Steam.UserData>());
 
 		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
 	}
@@ -442,7 +442,7 @@ public class Filters {
 
 		Filter.Types.Add("Demo");
 		var packageFilterWhichAllowsDemos = new PackageFilter(new BotCache(), new List<FilterConfig>() { Filter });
-		packageFilterWhichAllowsDemos.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<UserData>());
+		packageFilterWhichAllowsDemos.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<Steam.UserData>());
 
 		Assert.IsTrue(packageFilterWhichAllowsDemos.IsWantedApp(app));
 		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));

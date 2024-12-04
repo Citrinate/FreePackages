@@ -100,7 +100,7 @@ namespace FreePackages {
 				return;
 			}
 
-			UserData? userData = await WebRequest.GetUserData(Bot).ConfigureAwait(false);
+			Steam.UserData? userData = await WebRequest.GetUserData(Bot).ConfigureAwait(false);
 			if (userData == null) {
 				UserDataRefreshTimer.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(15));
 				Bot.ArchiLogger.LogGenericError(String.Format(ArchiSteamFarm.Localization.Strings.ErrorObjectIsNull, userData));
@@ -156,8 +156,14 @@ namespace FreePackages {
 					return;
 				}
 
-				// Process the changes in batches of 255 items
-				await ProductInfo.GetProductInfo(appIDs, packageIDs, HandleProductInfo).ConfigureAwait(false);
+				foreach ((HashSet<uint>? batchedAppIDs, HashSet<uint>? batchedPackageIDs) in ProductInfo.GetProductIDBatches(appIDs, packageIDs)) {
+					var productInfo = await ProductInfo.GetProductInfo(batchedAppIDs, batchedPackageIDs).ConfigureAwait(false);
+					if (productInfo == null) {
+						continue;
+					}
+
+					await HandleProductInfo(productInfo).ConfigureAwait(false);
+				}
 			} finally {
 				ProcessChangesSemaphore.Release();
 			}

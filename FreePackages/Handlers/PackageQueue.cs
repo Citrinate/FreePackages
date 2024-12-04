@@ -199,7 +199,7 @@ namespace FreePackages {
 		}
 
 		private async Task<EResult> ClaimPlaytest(uint appID) {
-			PlaytestAccessResponse? response = await WebRequest.RequestPlaytestAccess(Bot, appID).ConfigureAwait(false);
+			Steam.PlaytestAccessResponse? response = await WebRequest.RequestPlaytestAccess(Bot, appID).ConfigureAwait(false);
 
 			if (response == null) {
 				// Playtest does not exist currently

@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using SteamKit2;
 
-namespace FreePackages {
+namespace FreePackages.IPC {
 	public sealed class FreeSubResponse {
 		[JsonInclude]
 		[JsonPropertyName("Result")]

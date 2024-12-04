@@ -14,13 +14,13 @@ public class Packages {
 	[TestInitialize]
 	public void InitializePackageFilter () {
 		PackageFilter = new PackageFilter(new BotCache(), new List<FilterConfig>());
-		PackageFilter.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<UserData>());
+		PackageFilter.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<Steam.UserData>());
 		PackageFilter.Country = "FOO";
 	}
 
 	[TestCleanup]
 	public void CleanupPackageFilter() {
-		PackageFilter.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<UserData>());
+		PackageFilter.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<Steam.UserData>());
 		PackageFilter.Country = "FOO";
 	}
 
