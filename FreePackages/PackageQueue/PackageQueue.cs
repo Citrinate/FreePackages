@@ -144,11 +144,14 @@ namespace FreePackages {
 				return EResult.Timeout;
 			}
 			
-			// The Result returned by RequestFreeLicense is useless and I've only ever seen it return EResult.OK
-			// Sometimes it'll return EResult.RateLimitExceeded, but this is unrelated to the package limit
 			if (response.Result != EResult.OK) {
 				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), response.Result));
 
+				if (response.Result == EResult.RateLimitExceeded) {
+					// Note: this is the rate limit for this api, and is unrelated to the package limit
+					return EResult.Timeout;
+				}
+				
 				return EResult.Fail;
 			}
 
