@@ -370,5 +370,21 @@ namespace FreePackages {
 
 			return FilterConfigs.Any(filter => !FilterOnlyAllowsPackages(filter) && IsPlaytestWantedByFilter(app, filter) && !IsAppIgnoredByFilter(app, filter));
 		}
+
+		internal bool OwnsApp(uint appID) {
+			if (OwnedAppIDs == null) {
+				throw new InvalidOperationException(nameof(OwnedAppIDs));
+			}
+
+			return OwnedAppIDs.Contains(appID);
+		}
+
+		internal bool OwnsSub(uint subID) {
+			if (UserData == null) {
+				throw new InvalidOperationException(nameof(UserData));
+			}
+
+			return UserData.OwnedPackages.Contains(subID);
+		}
 	}
 }

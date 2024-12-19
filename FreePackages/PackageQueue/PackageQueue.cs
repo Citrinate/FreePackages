@@ -12,6 +12,7 @@ namespace FreePackages {
 	internal sealed class PackageQueue : IDisposable {
 		private readonly Bot Bot;
 		private readonly BotCache BotCache;
+		private PackageFilter PackageFilter => PackageHandler.Handlers[Bot.BotName].PackageFilter;
 		private Timer Timer;
 		private const int DelayBetweenActivationsSeconds = 5;
 		private readonly uint ActivationsPerPeriod = 25;
@@ -101,7 +102,7 @@ namespace FreePackages {
 				return;
 			}
 
-			if (result == EResult.OK || result == EResult.Invalid) {
+			if (result == EResult.OK || result == EResult.Invalid || result == EResult.AlreadyOwned) {
 				BotCache.RemovePackage(package);
 			} else if (result == EResult.Timeout) {
 				UpdateTimer(DateTime.Now.AddMinutes(5));
@@ -135,6 +136,13 @@ namespace FreePackages {
 		}
 
 		private async Task<EResult> ClaimFreeApp(uint appID) {
+			// One final check before claiming to make sure we still don't own this app
+			if (PackageFilter.OwnsApp(appID)) {
+				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), EResult.AlreadyOwned));
+
+				return EResult.AlreadyOwned;
+			}
+
 			SteamApps.FreeLicenseCallback response;
 			try {
 				response = await Bot.SteamApps.RequestFreeLicense(appID).ToLongRunningTask().ConfigureAwait(false);
@@ -171,6 +179,13 @@ namespace FreePackages {
 		}
 
 		private async Task<EResult> ClaimFreeSub(uint subID) {
+			// One final check before claiming to make sure we still don't own this package
+			if (PackageFilter.OwnsSub(subID)) {
+				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("sub/{0}", subID), EResult.AlreadyOwned));
+
+				return EResult.AlreadyOwned;
+			}
+
 			EResult result;
 			EPurchaseResultDetail purchaseResult;
 			try {
