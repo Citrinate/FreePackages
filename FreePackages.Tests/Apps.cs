@@ -57,7 +57,6 @@ public class Apps {
 
 		Assert.IsTrue(app.MustOwnAppToPurchase > 0);
 		Assert.IsTrue(PackageFilter.IsRedeemableApp(app));
-		Assert.IsTrue(app.MustOwnAppToPurchase == app.DLCForAppID);
 	}
 
 	[TestMethod]

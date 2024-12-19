@@ -67,17 +67,6 @@ namespace FreePackages {
 				return false;
 			}
 
-			if (app.DLCForAppID > 0 && !OwnedAppIDs.Contains(app.DLCForAppID) && (includedAppIDs == null || !includedAppIDs.Contains(app.DLCForAppID))) {
-				// Missing a necessary app
-				// Note: Some apps have only DLCForAppid and are missing MustOwnAppToPurchase, so we need to check this also, ex: https://steamdb.info/app/41046
-
-				if (!app.ActivationOnlyDLC) {
-					// Some DLC can be redeemed without owning the base game, ex: https://steamdb.info/app/2765950/
-					// All I see that's special here is having ActivationOnlyDLC set to true, and missing MustOwnAppToPurchase
-					return false;
-				}
-			}
-
 			if (app.RestrictedCountries != null && app.RestrictedCountries.Contains(Country, StringComparer.OrdinalIgnoreCase)) {
 				// App is restricted in this bot's country
 				return false;

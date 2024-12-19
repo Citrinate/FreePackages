@@ -14,7 +14,6 @@ namespace FreePackages {
 		internal string? ReleaseState;
 		internal string? State;
 		internal uint MustOwnAppToPurchase;
-		internal uint DLCForAppID;
 		internal List<string>? RestrictedCountries;
 		internal List<string>? PurchaseRestrictedCountries;
 		internal bool AllowPurchaseFromRestrictedCountries;
@@ -28,7 +27,6 @@ namespace FreePackages {
 		internal List<string>? OSList;
 		internal uint DeckCompatibility;
 		internal DateTime SteamReleaseDate;
-		internal bool ActivationOnlyDLC;
 		internal bool Hidden;
 
 		internal FilterableApp(SteamApps.PICSProductInfoCallback.PICSProductInfo productInfo) : this(productInfo.ID, productInfo.KeyValues) {}
@@ -44,7 +42,6 @@ namespace FreePackages {
 			ReleaseState = kv["common"]["releasestate"].AsString();
 			State = kv["extended"]["state"].AsString();
 			MustOwnAppToPurchase = kv["extended"]["mustownapptopurchase"].AsUnsignedInteger();
-			DLCForAppID = kv["extended"]["dlcforappid"].AsUnsignedInteger();
 			RestrictedCountries = kv["common"]["restricted_countries"].AsString()?.ToUpper().Split(",").ToList();
 			PurchaseRestrictedCountries = kv["extended"]["purchaserestrictedcountries"].AsString()?.ToUpper().Split(" ").ToList();
 			AllowPurchaseFromRestrictedCountries = kv["extended"]["allowpurchasefromrestrictedcountries"].AsBoolean();
@@ -58,7 +55,6 @@ namespace FreePackages {
 			OSList = kv["common"]["oslist"].AsString()?.ToUpper().Split(",").ToList();
 			DeckCompatibility = kv["common"]["steam_deck_compatibility"]["category"].AsUnsignedInteger();
 			SteamReleaseDate = DateTimeOffset.FromUnixTimeSeconds(kv["common"]["steam_release_date"].AsUnsignedInteger()).UtcDateTime;
-			ActivationOnlyDLC = kv["extended"]["activationonlydlc"].AsBoolean();
 			Hidden = kv["common"] == KeyValue.Invalid;
 
 			// Fix the category for games which do have trading cards, but which don't have the trading card category, Ex: https://steamdb.info/app/316260/
