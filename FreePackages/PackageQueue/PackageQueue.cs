@@ -149,7 +149,8 @@ namespace FreePackages {
 
 				if (response.Result == EResult.RateLimitExceeded) {
 					// Note: this is the rate limit for this api, and is unrelated to the package limit
-					return EResult.Timeout;
+					// I still treat this like a package rate limit however, as it seems to behave similarly, and doing this will avoid a lot of errors
+					return EResult.RateLimitExceeded;
 				}
 				
 				return EResult.Fail;
