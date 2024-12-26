@@ -126,7 +126,7 @@
     <comment/>
   </data>
   <data name="PlaytestConfigLimitTriggered" xml:space="preserve">
-    <value>已將遊戲測試模式更改為 0 (None)，只有 1 個機器人可使用此過濾器</value>
+    <value>已將遊戲測試模式更改為 0 (無)，只有 1 個機器人可使用此過濾器</value>
     <comment/>
   </data>
   <data name="QueueEmpty" xml:space="preserve">
@@ -166,7 +166,7 @@
     <comment>{0} will be replaced by a time</comment>
   </data>
   <data name="RateLimitExceeded" xml:space="preserve">
-    <value>Free Package 達到速率上限</value>
+    <value>FreePackages 的啟用已達到上限</value>
     <comment/>
   </data>
   <data name="ReplacedWith" xml:space="preserve">
@@ -238,7 +238,7 @@
     <comment/>
   </data>
   <data name="PluginNotEnabled" xml:space="preserve">
-    <value>Free Packages 外掛程式未啟用</value>
+    <value>外掛程式 FreePackages 未啟用</value>
     <comment/>
   </data>
   <data name="ASFInfoParseFailed" xml:space="preserve">
