@@ -191,11 +191,11 @@ namespace FreePackages.IPC {
 				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)));
 			}
 
-			if (bot.OwnedPackageIDs.Count == 0) {
+			if (bot.OwnedPackages.Count == 0) {
 				return BadRequest(new GenericResponse(false, Strings.NoPackagesFound));
 			}
 
-			return Ok(new GenericResponse<IEnumerable<uint>>(true, bot.OwnedPackageIDs.Keys));
+			return Ok(new GenericResponse<IEnumerable<uint>>(true, bot.OwnedPackages.Keys));
 		}
 
 		[HttpGet("{botName:required}/GetOwnedApps")]
@@ -213,7 +213,7 @@ namespace FreePackages.IPC {
 				return BadRequest(new GenericResponse(false, String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)));
 			}
 
-			if (bot.OwnedPackageIDs.Count == 0) {
+			if (bot.OwnedPackages.Count == 0) {
 				return BadRequest(new GenericResponse(false, Strings.NoAppsFound));
 			}
 
@@ -221,7 +221,7 @@ namespace FreePackages.IPC {
 				return BadRequest(new GenericResponse(false, String.Format(ArchiSteamFarm.Localization.Strings.ErrorObjectIsNull, nameof(ASF.GlobalDatabase))));
 			}
 
-			var ownedPackageIDs = bot.OwnedPackageIDs.Keys.ToHashSet();
+			var ownedPackageIDs = bot.OwnedPackages.Keys.ToHashSet();
 			var ownedAppIDs = ASF.GlobalDatabase!.PackagesDataReadOnly.Where(x => ownedPackageIDs.Contains(x.Key) && x.Value.AppIDs != null).SelectMany(x => x.Value.AppIDs!).ToHashSet().ToList();
 			ownedAppIDs.Sort();
 
