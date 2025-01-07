@@ -45,7 +45,7 @@ jobs:
         uses: actions/upload-artifact@v4.0.0
         with:
           name: ${{ env.PLUGIN_NAME }}
-          path: out/dist
+          path: out/dist/${{ env.PLUGIN_NAME }}
 
   release:
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
@@ -68,7 +68,7 @@ jobs:
       - name: Create Zip
         run: |
           cd out
-          7z a -tzip -mx7 ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
+          7z a -tzip -mx7 ${{ env.PLUGIN_NAME }}.zip *
 
       - name: Create ${{ env.PLUGIN_NAME }} GitHub release
         uses: ncipollo/release-action@v1.13.0
