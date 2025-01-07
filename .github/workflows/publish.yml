@@ -54,6 +54,8 @@ jobs:
 
     permissions:
       contents: write
+      attestations: write
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -69,6 +71,11 @@ jobs:
         run: |
           cd out
           7z a -tzip -mx7 ${{ env.PLUGIN_NAME }}.zip *
+
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'out/${{ env.PLUGIN_NAME }}.zip'
 
       - name: Create ${{ env.PLUGIN_NAME }} GitHub release
         uses: ncipollo/release-action@v1.13.0
