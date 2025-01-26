@@ -69,6 +69,11 @@ namespace FreePackages {
 					case "FreePackagesFilter": {
 						FilterConfig? filter = configProperty.Value.ToJsonObject<FilterConfig>();
 						if (filter != null) {
+							// Handles filter config changes made in V1.6.0
+							if (filter.Types.Contains("Demo") && filter.IgnoredTypes.Contains("Demo")) {
+								filter.IgnoredTypes.Remove("Demo");
+							}
+
 							bot.ArchiLogger.LogGenericInfo("Free Packages Filter : " + filter.ToJsonText());
 							filterConfigs.Add(filter);
 						}
@@ -78,6 +83,12 @@ namespace FreePackages {
 					case "FreePackagesFilters": {
 						List<FilterConfig>? filters = configProperty.Value.ToJsonObject<List<FilterConfig>>();
 						if (filters != null) {
+							// Handles filter config changes made in V1.6.0
+							foreach (FilterConfig filter in filters) {
+								if (filter.Types.Contains("Demo") && filter.IgnoredTypes.Contains("Demo")) {
+									filter.IgnoredTypes.Remove("Demo");
+								}
+							}
 							bot.ArchiLogger.LogGenericInfo("Free Packages Filters : " + filters.ToJsonText());
 							filterConfigs.AddRange(filters);
 						}

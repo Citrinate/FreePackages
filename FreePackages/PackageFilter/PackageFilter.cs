@@ -94,11 +94,6 @@ namespace FreePackages {
 				return false;
 			}
 
-			if (app.Type == EAppType.Demo && !app.HasType(filter.Types)) {
-				// Demos are unwanted by default unless the filter explicitly applies to them
-				return false;
-			}
-
 			if (filter.Categories.Count > 0 && !app.HasCategory(filter.Categories, filter.RequireAllCategories)) {
 				// Unwanted due to missing categories
 				return false;
@@ -339,11 +334,6 @@ namespace FreePackages {
 
 		internal bool IsWantedApp(FilterableApp app) {
 			if (FilterConfigs.Count == 0) {
-				if (app.Type == EAppType.Demo) {
-					// Demos are unwanted by default
-					return false;
-				}
-
 				return true;
 			}
 
@@ -352,11 +342,6 @@ namespace FreePackages {
 
 		internal bool IsWantedPackage(FilterablePackage package) {
 			if (FilterConfigs.Count == 0) {
-				if (package.PackageContents.All(app => app.Type == EAppType.Demo)) {
-					// Demos are unwanted by default
-					return false;
-				}
-
 				return true;
 			}
 

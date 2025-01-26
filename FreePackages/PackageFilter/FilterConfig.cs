@@ -17,7 +17,7 @@ namespace FreePackages {
 		internal HashSet<uint> Tags { get; set; } = new();
 
 		[JsonInclude]
-		internal HashSet<string> IgnoredTypes { get; set; } = new();
+		internal HashSet<string> IgnoredTypes { get; set; } = new() {"Demo"};
 
 		[JsonInclude]
 		internal HashSet<uint> IgnoredTags { get; set; } = new();

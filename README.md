@@ -69,7 +69,7 @@ By default, the plugin will attempt to activate all free non-demo and non-playte
   "MinReviewScore": 0,
   "MinDaysOld": 0,
   "IgnoredContentDescriptors": [],
-  "IgnoredTypes": [],
+  "IgnoredTypes": ["Demo"],
   "IgnoredTags": [],
   "IgnoredCategories": [],
   "IgnoredAppIDs": [],
@@ -90,9 +90,6 @@ All filter options are explained below:
 #### Types
 
 `HashSet<string>` type with default value of `[]`.  Packages must contain an app with one of the `TypeNames` specified here or they will not be added to your account.  You can leave this empty to allow for all types.  The available `TypeNames` for filtering are: `"Game"`, `"Application"`, `"Tool"`, `"Demo"`, `"DLC"`, `"Music"`, `"Video"`
-
-> [!NOTE]
-> Demos are filtered out by default.  This is because Steam will automatically remove all uninstalled demos from your account eventually.  However if you specify in your `Types` that you do want demos, then they will be included for that filter.
 
 ---
 
@@ -340,7 +337,10 @@ All filter options are explained below:
 
 #### IgnoredTypes
 
-`HashSet<string>` type with default value of `[]`.  Packages containing apps with any of the `TypeNames` specified here will not be added to your account.  Refer to [Types](#types) for more information about `TypeNames`.
+`HashSet<string>` type with default value of `["Demo"]`.  Packages containing apps with any of the `TypeNames` specified here will not be added to your account.  Refer to [Types](#types) for more information about `TypeNames`.
+
+> [!NOTE]
+> Demos are filtered out by default.  This is because Steam has at times removed all uninstalled demos from accounts.  If you'd like the plugin to activate demos, you can do so by setting `IgnoredTypes` to `[]`, or some other value that doesn't include `"Demo"`.
 
 ---
 
