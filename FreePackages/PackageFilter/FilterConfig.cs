@@ -61,6 +61,9 @@ namespace FreePackages {
 		[JsonInclude]
 		internal uint MinDaysOld { get; set; } = 0;
 
+		[JsonInclude]
+		internal uint MaxDaysOld { get; set; } = 0;
+
 		[JsonConstructor]
 		internal FilterConfig() { }
 	}

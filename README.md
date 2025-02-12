@@ -67,7 +67,7 @@ By default, the plugin will attempt to activate all free non-demo and non-playte
   "Languages": [],
   "Systems": [],
   "MinReviewScore": 0,
-  "MinDaysOld": 0,
+  "MaxDaysOld": 0,
   "IgnoredContentDescriptors": [],
   "IgnoredTypes": ["Demo"],
   "IgnoredTags": [],
@@ -311,9 +311,9 @@ All filter options are explained below:
 
 ---
 
-#### MinDaysOld
+#### MaxDaysOld
 
-`uint` type with default value of `0`.  Packages must contain an app which was released on Steam within the last `MinDaysOld` days or they will not be added to your account.  You can leave this at `0` to not filter by release date.
+`uint` type with default value of `0`.  Packages must contain an app which was released on Steam within the last `MaxDaysOld` days or they will not be added to your account.  You can leave this at `0` to not filter by release date.
 
 ---
 

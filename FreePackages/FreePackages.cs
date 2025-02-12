@@ -69,9 +69,14 @@ namespace FreePackages {
 					case "FreePackagesFilter": {
 						FilterConfig? filter = configProperty.Value.ToJsonObject<FilterConfig>();
 						if (filter != null) {
-							// Handles filter config changes made in V1.6.0
+							// Handles filter config changes made in V1.5.4.10
 							if (filter.Types.Contains("Demo") && filter.IgnoredTypes.Contains("Demo")) {
 								filter.IgnoredTypes.Remove("Demo");
+							}
+
+							// Handles filter config changes made in V1.5.4.11
+							if (filter.MinDaysOld > 0 && filter.MaxDaysOld == 0) {
+								filter.MaxDaysOld = filter.MinDaysOld;
 							}
 
 							bot.ArchiLogger.LogGenericInfo("Free Packages Filter : " + filter.ToJsonText());
@@ -83,12 +88,18 @@ namespace FreePackages {
 					case "FreePackagesFilters": {
 						List<FilterConfig>? filters = configProperty.Value.ToJsonObject<List<FilterConfig>>();
 						if (filters != null) {
-							// Handles filter config changes made in V1.6.0
 							foreach (FilterConfig filter in filters) {
+								// Handles filter config changes made in V1.5.4.10
 								if (filter.Types.Contains("Demo") && filter.IgnoredTypes.Contains("Demo")) {
 									filter.IgnoredTypes.Remove("Demo");
 								}
+
+								// Handles filter config changes made in V1.5.4.11
+								if (filter.MinDaysOld > 0 && filter.MaxDaysOld == 0) {
+									filter.MaxDaysOld = filter.MinDaysOld;
+								}
 							}
+
 							bot.ArchiLogger.LogGenericInfo("Free Packages Filters : " + filters.ToJsonText());
 							filterConfigs.AddRange(filters);
 						}

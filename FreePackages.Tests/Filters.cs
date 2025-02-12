@@ -422,15 +422,15 @@ public class Filters {
 	public void CanFilterByReleaseDate() {
 		var app = new FilterableApp(KeyValue.LoadAsText("app_which_is_free.txt"));
 
-		Filter.MinDaysOld = 0;
+		Filter.MaxDaysOld = 0;
 
 		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
 
-		Filter.MinDaysOld = 1;
+		Filter.MaxDaysOld = 1;
 
 		Assert.IsFalse(PackageFilter.IsAppWantedByFilter(app, Filter));
 
-		Filter.MinDaysOld = 20000;
+		Filter.MaxDaysOld = 20000;
 
 		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, Filter));
 	}

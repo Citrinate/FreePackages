@@ -125,8 +125,8 @@ namespace FreePackages {
 				return false;
 			}
 			
-			if (filter.MinDaysOld > 0 && DateTime.UtcNow.AddDays(-filter.MinDaysOld) > app.SteamReleaseDate) {
-				// Unwanted because the app isn't new enough
+			if (filter.MaxDaysOld > 0 && DateTime.UtcNow.AddDays(-filter.MaxDaysOld) > app.SteamReleaseDate) {
+				// Unwanted because the app is too old
 				return false;
 			}
 
