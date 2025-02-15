@@ -60,7 +60,7 @@ namespace FreePackages {
 		}
 
 		private async Task ProcessQueue() {
-			if (!Bot.IsConnectedAndLoggedOn) {
+			if (!Bot.IsConnectedAndLoggedOn || !PackageFilter.Ready) {
 				UpdateTimer(DateTime.Now.AddMinutes(1));
 
 				return;
