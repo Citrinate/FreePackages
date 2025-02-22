@@ -123,7 +123,7 @@ namespace FreePackages {
 			// Each bot has its own list, so that if any bots are offline, they'll be able to get caught up
 			HashSet<uint> appIDs = appChanges.Select(x => x.Key).ToHashSet<uint>();
 			HashSet<uint> packageIDs = packageChanges.Select(x => x.Key).ToHashSet<uint>();
-			Handlers.Values.ToList().ForEach(x => x.BotCache.AddChanges(appIDs, packageIDs));
+			Handlers.Values.ToList().ForEach(x => x.BotCache.AddChanges(appIDs, packageIDs, ignoreFailedApps: true));
 
 			Utilities.InBackground(async() => await HandleChanges().ConfigureAwait(false));
 		}

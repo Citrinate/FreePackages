@@ -171,8 +171,9 @@ namespace FreePackages {
 				return EResult.OK;
 			}
 
-			// Either app isn't available, or we're rate limited.  Impossible to tell the difference
-			// Assume invalid as to not attempt to activate invalid apps endlessly
+			// App isn't available (usually not available in this region, which we can't determine ahead of time)
+			// Ignore this AppID if we see it again in a PICS update (will not prevent us from activating it if it's discovered through a SubID or by some other method)
+			BotCache.IgnoreApp(appID);
 			Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), Strings.Unknown));
 
 			return EResult.Invalid;

@@ -40,6 +40,10 @@ namespace FreePackages {
 		[JsonDisallowNull]
 		internal ConcurrentHashSet<uint> WaitlistedPlaytests { get; private set; } = new();
 
+		[JsonInclude]
+		[JsonDisallowNull]
+		internal ConcurrentHashSet<uint> IgnoredApps { get; private set; } = new();
+
 		[JsonConstructor]
 		internal BotCache() { }
 
@@ -168,9 +172,13 @@ namespace FreePackages {
 			return lastActivation;
 		}
 
-		internal void AddChanges(HashSet<uint>? appIDs = null, HashSet<uint>? packageIDs = null, HashSet<uint>? newOwnedPackageIDs = null) {
+		internal void AddChanges(HashSet<uint>? appIDs = null, HashSet<uint>? packageIDs = null, HashSet<uint>? newOwnedPackageIDs = null, bool ignoreFailedApps = false) {
 			if (appIDs != null) {
 				ChangedApps.UnionWith(appIDs);
+
+				if (ignoreFailedApps) {
+					ChangedApps.ExceptWith(IgnoredApps);
+				}
 			}
 
 			if (packageIDs != null) {
@@ -227,6 +235,12 @@ namespace FreePackages {
 					AddActivation(license.TimeCreated.ToLocalTime());
 				}
 			}
+
+			Utilities.InBackground(Save);
+		}
+
+		internal void IgnoreApp(uint appID) {
+			IgnoredApps.Add(appID);
 
 			Utilities.InBackground(Save);
 		}

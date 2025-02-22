@@ -74,7 +74,7 @@ namespace FreePackages {
 								filter.IgnoredTypes.Remove("Demo");
 							}
 
-							// Handles filter config changes made in V1.5.4.11
+							// Handles filter config changes made in V1.5.5.0
 							if (filter.MinDaysOld > 0 && filter.MaxDaysOld == 0) {
 								filter.MaxDaysOld = filter.MinDaysOld;
 							}
@@ -94,7 +94,7 @@ namespace FreePackages {
 									filter.IgnoredTypes.Remove("Demo");
 								}
 
-								// Handles filter config changes made in V1.5.4.11
+								// Handles filter config changes made in V1.5.5.0
 								if (filter.MinDaysOld > 0 && filter.MaxDaysOld == 0) {
 									filter.MaxDaysOld = filter.MinDaysOld;
 								}
