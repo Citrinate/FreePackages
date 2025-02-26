@@ -18,6 +18,10 @@ namespace FreePackages {
 		internal bool Ready { get { return OwnedAppIDs != null && Country != null && UserData != null; }}
 
 		internal PackageFilter(BotCache botCache, List<FilterConfig> filterConfigs) {
+			if (filterConfigs.Count == 0) {
+				filterConfigs.Add(new FilterConfig());
+			}
+
 			BotCache = botCache;
 			FilterConfigs = filterConfigs;
 		}
