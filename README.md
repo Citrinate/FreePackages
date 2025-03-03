@@ -423,11 +423,12 @@ All filter options are explained below:
 
 ### Using multiple package filters
 
-You can define as many filters as you'd like, and packages that pass any one of your filters will be added to your account.  For example, with the three filters below we can allow for any of:
+You can define as many filters as you'd like, and packages that pass any one of your filters will be added to your account.  For example, with the four filters below we can allow for any of:
 
   - Free games with Steam Trading Cards, but without nudity
   - Free games or playtests which have English or French language support, and Puzzle or Programming tags
   - Free DLC for games you own
+  - Games which are free for a limited time only
 
 ```json
 "FreePackagesFilters": [{
@@ -442,6 +443,8 @@ You can define as many filters as you'd like, and packages that pass any one of 
 },{
   "Types": ["DLC"],
   "IgnoredTypes": ["Game", "Application"],
+},{
+  "NoCostOnly": true,
 }],
 ```
 
