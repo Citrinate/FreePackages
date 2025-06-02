@@ -3,7 +3,7 @@
 // @namespace   https://github.com/Citrinate
 // @author      Citrinate
 // @description Transfer packages from SteamDB's free packages tool to the ASF Free Packages plugin
-// @version     1.0.3
+// @version     1.0.4
 // @match       *://steamdb.info/freepackages/*
 // @connect     localhost
 // @connect     127.0.0.1
@@ -188,7 +188,7 @@
 					</dl>
 					<dl class="form flattened">
 						<dt class="span2">
-							<label for="js-freepackages-settings-asf-password">ASF IPC Password</label>
+							<label>ASF IPC Password</label>
 						</dt>
 						<dd style="color:var(--muted-color)">
 							<div style="color:var(--muted-color)">
@@ -229,7 +229,6 @@
 
 			document.getElementById("js-freepackages-settings-asf-server").value = GetSetting(SETTING_ASF_SERVER);
 			document.getElementById("js-freepackages-settings-asf-port").value = GetSetting(SETTING_ASF_PORT);
-			document.getElementById("js-freepackages-settings-asf-password").value = GetSetting(SETTING_ASF_PASSWORD);
 			document.getElementById("js-freepackages-settings-filter").checked = GetSetting(SETTING_USE_FILTER);
 		});
 
@@ -237,12 +236,10 @@
 		document.getElementById("js-freepackages-settings-save").addEventListener("click", function() {
 			let asfServer = document.getElementById("js-freepackages-settings-asf-server").value;
 			let asfPort = document.getElementById("js-freepackages-settings-asf-port").value;
-			let asfPassword = document.getElementById("js-freepackages-settings-asf-password").value;
 			let useFilter = document.getElementById("js-freepackages-settings-filter").checked;
 
 			SetSetting(SETTING_ASF_SERVER, asfServer);
 			SetSetting(SETTING_ASF_PORT, asfPort);
-			SetSetting(SETTING_ASF_PASSWORD, asfPassword);
 			SetSetting(SETTING_USE_FILTER, useFilter);
 
 			location.reload();
