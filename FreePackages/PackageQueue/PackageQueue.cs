@@ -132,6 +132,10 @@ namespace FreePackages {
 				return await ClaimPlaytest(package.ID).ConfigureAwait(false);
 			}
 
+			if (package.Type == EPackageType.Removal) {
+				return await RemoveFreeSub(package.ID).ConfigureAwait(false);
+			}
+
 			return EResult.Invalid;
 		}
 
@@ -247,6 +251,36 @@ namespace FreePackages {
 
 			// Access to unlimited playtest granted
 			Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", appID), EResult.OK));
+
+			return EResult.OK;
+		}
+
+		private async Task<EResult> RemoveFreeSub(uint subID) {
+			Steam.RemoveLicenseResponse? response = await WebRequest.RemoveLicense(Bot, subID).ConfigureAwait(false);
+
+			if (response == null) {
+				// Don't know when this happens
+				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("remove/{0}", subID), EResult.Fail));
+
+				return EResult.Invalid;
+			}
+
+			if (response.Success == 84) {
+				// Rate limit exceeded?
+				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("remove/{0}", subID), EResult.RateLimitExceeded));
+
+				return EResult.RateLimitExceeded;
+			}
+
+			if (response.Success != 1) {
+				// Succees = 8 when package is unowned, don't know about other fail states
+				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("remove/{0}", subID), EResult.Invalid));
+
+				return EResult.Invalid;
+			}
+			
+			// Sub removed
+			Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("remove/{0}", subID), EResult.OK));
 
 			return EResult.OK;
 		}

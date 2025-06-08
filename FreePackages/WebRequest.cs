@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using AngleSharp.Dom;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Integration;
 using ArchiSteamFarm.Web.Responses;
@@ -38,6 +39,24 @@ namespace FreePackages {
 			ObjectResponse<Steam.PlaytestAccessResponse>? playtestAccessResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<Steam.PlaytestAccessResponse>(request, data: data, maxTries: 1).ConfigureAwait(false);
 
 			return playtestAccessResponse?.Content;
+		}
+
+		internal static async Task<IDocument?> GetAccountLicenses(Bot bot) {
+			Uri request = new(ArchiWebHandler.SteamStoreURL, "/account/licenses/");
+			HtmlDocumentResponse? accountLicensesResponse = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request).ConfigureAwait(false);
+
+			return accountLicensesResponse?.Content;
+		}
+
+		internal static async Task<Steam.RemoveLicenseResponse?> RemoveLicense(Bot bot, uint packageID) {
+			Uri request = new(ArchiWebHandler.SteamStoreURL, "/account/removelicense/");
+			Dictionary<string, string> data = new(2) { // Extra entry for sessionID
+				{ "packageid", packageID.ToString() }
+			};
+
+			ObjectResponse<Steam.RemoveLicenseResponse>? removeLicenseResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<Steam.RemoveLicenseResponse>(request, data: data).ConfigureAwait(false);
+
+			return removeLicenseResponse?.Content;
 		}
 	}
 }

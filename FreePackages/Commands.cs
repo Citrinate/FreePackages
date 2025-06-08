@@ -5,13 +5,16 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using AngleSharp.Dom;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
 using FreePackages.Localization;
 
 namespace FreePackages {
 	internal static class Commands {
-		internal static string? Response(Bot bot, EAccess access, ulong steamID, string message, string[] args) {
+		internal static async Task<string?> Response(Bot bot, EAccess access, ulong steamID, string message, string[] args) {
 			if (!Enum.IsDefined(access)) {
 				throw new InvalidEnumArgumentException(nameof(access), (int) access, typeof(EAccess));
 			}
@@ -34,6 +37,9 @@ namespace FreePackages {
 						case "QSTATUS" or "QUEUESTATUS":
 							return ResponseQueueStatus(bot, access);
 
+						case "REMOVEALLFREEPACKAGES":
+							return await ResponseRemoveAllFreePackages(bot, access).ConfigureAwait(false);
+
 						default:
 							return null;
 					};
@@ -54,6 +60,9 @@ namespace FreePackages {
 							return ResponseQueueLicense(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, ","), useFilter: true);
 						case "QLICENSE^" or "QUEUELICENSE^" or "QLICENCE^" or "QUEUELICENCE^" :
 							return ResponseQueueLicense(bot, access, args[1], useFilter: true);
+
+						case "REMOVEALLFREEPACKAGES" :
+							return await ResponseRemoveAllFreePackages(access, steamID, args[1]).ConfigureAwait(false);
 
 						default:
 							return null;
@@ -203,6 +212,64 @@ namespace FreePackages {
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
 			Utilities.InBackground(async() => await PackageHandler.HandleChanges().ConfigureAwait(false));
+
+			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static async Task<string?> ResponseRemoveAllFreePackages(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
+			}
+
+			if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
+				return FormatBotResponse(bot, "Free Packages plugin not enabled");
+			}
+
+			IDocument? accountLicensesPage = await WebRequest.GetAccountLicenses(bot);
+			if (accountLicensesPage == null) {
+				return FormatBotResponse(bot, "Failed to fetch licenses page");
+			}
+
+			Regex removablePackageIDsRegex = new Regex("(?<=javascript:RemoveFreeLicense\\( )[0-9]+", RegexOptions.CultureInvariant);
+			MatchCollection removablePackageIDMatches = removablePackageIDsRegex.Matches(accountLicensesPage.Source.Text);
+			if (removablePackageIDMatches.Count == 0) {
+				return FormatBotResponse(bot, "Failed to find any removable package ids");
+			}
+
+			HashSet<uint> removablePackgeIDs = new();
+			foreach (Match match in removablePackageIDMatches) {
+				if (uint.TryParse(match.Value, out uint packageID)) {
+					removablePackgeIDs.Add(packageID);
+				} else {
+					return FormatBotResponse(bot, String.Format("Failed to parse package ids match: {0}", match.Value));
+				}
+			}
+
+			foreach (uint packageID in removablePackgeIDs) {
+				PackageHandler.Handlers[bot.BotName].AddPackage(EPackageType.Removal, packageID, false);
+			}
+
+			return String.Format("Removing {0} packages", removablePackgeIDs.Count);
+		}
+
+		private static async Task<string?> ResponseRemoveAllFreePackages(EAccess access, ulong steamID, string botNames) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+			}
+
+			IEnumerable<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseRemoveAllFreePackages(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}

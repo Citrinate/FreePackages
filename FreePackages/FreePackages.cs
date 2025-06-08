@@ -23,8 +23,8 @@ namespace FreePackages {
 			return Task.CompletedTask;
 		}
 
-		public Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0) {
-			return Task.FromResult(Commands.Response(bot, access, steamID, message, args));
+		public async Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0) {
+			return await Commands.Response(bot, access, steamID, message, args).ConfigureAwait(false);
 		}
 
 		public async Task OnASFInit(IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
