@@ -84,15 +84,6 @@ namespace FreePackages {
 			[JsonConstructor]
 			internal Tag() {}
 		}
-		internal sealed class RemoveLicenseResponse {
-			[JsonInclude]
-			[JsonPropertyName("success")]
-			[JsonRequired]
-			internal int Success  { get; private init; } = 0;
-
-			[JsonConstructor]
-			internal RemoveLicenseResponse() {}
-		}
 
 		// https://stackoverflow.com/questions/12221950/how-to-deserialize-object-that-can-be-an-array-or-a-dictionary-with-newtonsoft
 		public class EmptyArrayOrDictionaryConverter : JsonConverter<Dictionary<uint, uint>> {

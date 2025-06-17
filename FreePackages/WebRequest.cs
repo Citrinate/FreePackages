@@ -47,16 +47,5 @@ namespace FreePackages {
 
 			return accountLicensesResponse?.Content;
 		}
-
-		internal static async Task<Steam.RemoveLicenseResponse?> RemoveLicense(Bot bot, uint packageID) {
-			Uri request = new(ArchiWebHandler.SteamStoreURL, "/account/removelicense/");
-			Dictionary<string, string> data = new(2) { // Extra entry for sessionID
-				{ "packageid", packageID.ToString() }
-			};
-
-			ObjectResponse<Steam.RemoveLicenseResponse>? removeLicenseResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<Steam.RemoveLicenseResponse>(request, data: data).ConfigureAwait(false);
-
-			return removeLicenseResponse?.Content;
-		}
 	}
 }

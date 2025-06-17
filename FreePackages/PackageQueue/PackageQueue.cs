@@ -256,31 +256,32 @@ namespace FreePackages {
 		}
 
 		private async Task<EResult> RemoveFreeSub(uint subID) {
-			Steam.RemoveLicenseResponse? response = await WebRequest.RemoveLicense(Bot, subID).ConfigureAwait(false);
-
-			if (response == null) {
-				// Don't know when this happens
-				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("remove/{0}", subID), EResult.Fail));
+			EResult result;
+			try {
+				result = await Bot.Actions.RemoveLicensePackage(subID).ConfigureAwait(false);
+			} catch (Exception e) {
+				Bot.ArchiLogger.LogGenericException(e);
 
 				return EResult.Invalid;
 			}
 
-			if (response.Success == 84) {
-				// Rate limit exceeded?
-				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("remove/{0}", subID), EResult.RateLimitExceeded));
+			if (result == EResult.OK) {
+				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("remove/{0}", subID), result));
+			} else {
+				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("remove/{0}", subID), result));
+			}
 
+			if (result == EResult.RateLimitExceeded) {
 				return EResult.RateLimitExceeded;
 			}
 
-			if (response.Success != 1) {
-				// Succees = 8 when package is unowned, don't know about other fail states
-				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("remove/{0}", subID), EResult.Invalid));
+			if (result == EResult.Timeout) {
+				return EResult.Timeout;
+			}
 
+			if (result != EResult.OK) {
 				return EResult.Invalid;
 			}
-			
-			// Sub removed
-			Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("remove/{0}", subID), EResult.OK));
 
 			return EResult.OK;
 		}

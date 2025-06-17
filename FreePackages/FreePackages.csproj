@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.ResxSourceGenerator"  Version="3.11.0-beta1.24508.2" PrivateAssets="all" />
-    <PackageReference Include="System.Composition.AttributedModel" Version="9.0.0" />
+    <PackageReference Include="System.Composition.AttributedModel" Version="9.0.6" />
   </ItemGroup>
 
   <ItemGroup>
