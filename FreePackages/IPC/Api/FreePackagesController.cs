@@ -13,6 +13,7 @@ using FreePackages.Localization;
 // EndpointSummary lines commented out temporarily to allow plugin to work with generic/non-generic ASF V6.1.2.0 and V6.1.1.3
 using Microsoft.AspNetCore.Mvc;
 using SteamKit2;
+using SteamKit2.Internal;
 
 namespace FreePackages.IPC {
 	[Route("Api/FreePackages")]
@@ -202,9 +203,9 @@ namespace FreePackages.IPC {
 		[HttpGet("{botName:required}/GetOwnedApps")]
 		// [EndpointSummary("Retrieves all apps owned by the given bot")]
 		[ProducesResponseType(typeof(GenericResponse<IEnumerable<uint>>), (int) HttpStatusCode.OK)]
-		[ProducesResponseType(typeof(GenericResponse<Dictionary<uint, string>>), (int) HttpStatusCode.OK)]
+		[ProducesResponseType(typeof(GenericResponse<Dictionary<uint, CPlayer_GetOwnedGames_Response.Game?>>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
-		public async Task<ActionResult<GenericResponse>> GetOwnedApps(string botName, bool showNames = false) {
+		public async Task<ActionResult<GenericResponse>> GetOwnedApps(string botName, bool showDetails = false) {
 			if (string.IsNullOrEmpty(botName)) {
 				throw new ArgumentNullException(nameof(botName));
 			}
@@ -226,18 +227,35 @@ namespace FreePackages.IPC {
 			var ownedAppIDs = ASF.GlobalDatabase!.PackagesDataReadOnly.Where(x => ownedPackageIDs.Contains(x.Key) && x.Value.AppIDs != null).SelectMany(x => x.Value.AppIDs!).ToHashSet().ToList();
 			ownedAppIDs.Sort();
 
-			if (showNames) {
-				Dictionary<uint, string>? appList;
+			if (showDetails) {
+				Dictionary<uint, string>? nameList;
+				Dictionary<uint, CPlayer_GetOwnedGames_Response.Game>? detailsList;
 				try {
-					appList = await WebRequest.GetAppList(bot).ConfigureAwait(false);
-					if (appList == null) {
+					nameList = await WebRequest.GetAppList(bot).ConfigureAwait(false);
+					detailsList = await SteamHandler.Handlers[bot.BotName].GetOwnedGames(bot.SteamID).ConfigureAwait(false);
+
+					if (nameList == null || detailsList == null) {
 						return BadRequest(new GenericResponse(false, Strings.AppListFetchFailed));
 					}
-				} catch (Exception e) {
+				}
+				catch (Exception e) {
 					return BadRequest(new GenericResponse(false, e.Message));
 				}
 
-				return Ok(new GenericResponse<Dictionary<uint, string>>(true, ownedAppIDs.ToDictionary(x => x, x => appList.TryGetValue(x, out string? name) ? name : String.Format("Unknown App {0}", x))));
+				return Ok(new GenericResponse<Dictionary<uint, CPlayer_GetOwnedGames_Response.Game?>>(true, ownedAppIDs.ToDictionary(appID => appID, appID => {
+					if (detailsList.TryGetValue(appID, out CPlayer_GetOwnedGames_Response.Game? game)) {
+						return game;
+					}
+
+					if (nameList.TryGetValue(appID, out string? name)) {
+						return new CPlayer_GetOwnedGames_Response.Game {
+							appid = (int) appID,
+							name = name
+						};
+					}
+
+					return null;
+				})));
 			}
 
 			return Ok(new GenericResponse<IEnumerable<uint>>(true, ownedAppIDs));

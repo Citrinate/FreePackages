@@ -135,7 +135,7 @@ namespace FreePackages {
 		}
 
 		public Task<IReadOnlyCollection<ClientMsgHandler>?> OnBotSteamHandlersInit(Bot bot) {
-			return Task.FromResult((IReadOnlyCollection<ClientMsgHandler>?) null);
+			return Task.FromResult<IReadOnlyCollection<ClientMsgHandler>?>(new List<ClientMsgHandler> { SteamHandler.AddHandler(bot) });
 		}
 
 		private static void OnAccountInfo(Bot bot, SteamUser.AccountInfoCallback callback) {

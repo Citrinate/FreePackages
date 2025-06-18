@@ -478,7 +478,7 @@ Command | Alias |
 API | Method | Parameters | Description
 --- | --- | --- | ---
 `/Api/FreePackages/{botNames}/GetChangesSince/{changeNumber}`|`GET`| |Request changes for apps and packages since a given change number [^1]
-`/Api/FreePackages/{botName}/GetOwnedApps`|`GET`|`showNames`|Retrieves all apps owned by the given bot
+`/Api/FreePackages/{botName}/GetOwnedApps`|`GET`|`showDetails`|Retrieves all apps owned by the given bot
 `/Api/FreePackages/{botName}/GetOwnedPackages`|`GET`| |Retrieves all packages owned by the given bot
 `/Api/FreePackages/{botNames}/GetProductInfo`|`GET`|`appIDs`, `packageIDs`|Request product information for a list of apps or packages [^1]
 `/Api/FreePackages/{botNames}/QueueLicenses`|`POST`|`appIDs`, `packageIDs`, `useFilter`|Adds the given appIDs and packageIDs to the given bot's package queue
