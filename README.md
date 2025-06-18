@@ -458,7 +458,7 @@ While the plugin can be used passively, you can also manually import free packag
 
 Command | Access | Description
 --- | --- | ---
-`freepackages`|`FamilySharing`|Prints version of plugin.
+`freepackages`|`Master`|Prints version of plugin.
 `queuestatus [Bots]`|`Master`|Prints the status of the given bot's packages queue
 `queuelicense [Bots] <Licenses>`|`Master`|Adds given `licenses`, explained [here](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Commands#addlicense-licenses), to the given bot's packages queue.  Playtests cannot be added to the package queue using this command
 `queuelicense^ [Bots] <Licenses>`|`Master`|Adds given `licenses`, explained [here](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Commands#addlicense-licenses), to the given bot's packages queue using that bot's package filters
