@@ -9,8 +9,7 @@ using ArchiSteamFarm.IPC.Controllers.Api;
 using ArchiSteamFarm.IPC.Responses;
 using ArchiSteamFarm.Steam;
 using FreePackages.Localization;
-// using Microsoft.AspNetCore.Http; 
-// EndpointSummary lines commented out temporarily to allow plugin to work with generic/non-generic ASF V6.1.2.0 and V6.1.1.3
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SteamKit2;
 
@@ -18,7 +17,7 @@ namespace FreePackages.IPC {
 	[Route("Api/FreePackages")]
 	public sealed class FreePackagesController : ArchiController {
 		[HttpGet("{botNames:required}/GetChangesSince/{changeNumber:required}")]
-		// [EndpointSummary("Request changes for apps and packages since a given change number")]
+		[EndpointSummary("Request changes for apps and packages since a given change number")]
 		[ProducesResponseType(typeof(GenericResponse<SteamApps.PICSChangesCallback>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
 		public async Task<ActionResult<GenericResponse>> GetChangesSince(string botNames, uint changeNumber, bool showAppChanges = true, bool showPackageChanges = true) {
@@ -49,7 +48,7 @@ namespace FreePackages.IPC {
 		}
 
 		[HttpGet("{botNames:required}/GetProductInfo")]
-		// [EndpointSummary("Request product information for a list of apps or packages")]
+		[EndpointSummary("Request product information for a list of apps or packages")]
 		[ProducesResponseType(typeof(GenericResponse<IEnumerable<SteamApps.PICSProductInfoCallback>>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(byte[]), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
@@ -105,7 +104,7 @@ namespace FreePackages.IPC {
 		}
 
 		[HttpGet("{botName:required}/RequestFreeAppLicense")]
-		// [EndpointSummary("Request a free license for given appids")]
+		[EndpointSummary("Request a free license for given appids")]
 		[ProducesResponseType(typeof(GenericResponse<SteamApps.FreeLicenseCallback>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
 		public async Task<ActionResult<GenericResponse>> RequestFreeAppLicense(string botName, string appIDs) {
@@ -148,7 +147,7 @@ namespace FreePackages.IPC {
 		}
 
 		[HttpGet("{botName:required}/RequestFreeSubLicense")]
-		// [EndpointSummary("Request a free license for given subid")]
+		[EndpointSummary("Request a free license for given subid")]
 		[ProducesResponseType(typeof(GenericResponse<FreeSubResponse>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
 		public async Task<ActionResult<GenericResponse>> RequestFreeSubLicense(string botName, uint subID) {
@@ -179,7 +178,7 @@ namespace FreePackages.IPC {
 		}
 
 		[HttpGet("{botName:required}/GetOwnedPackages")]
-		// [EndpointSummary("Retrieves all packages owned by the given bot")]
+		[EndpointSummary("Retrieves all packages owned by the given bot")]
 		[ProducesResponseType(typeof(GenericResponse<IEnumerable<uint>>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
 		public ActionResult<GenericResponse> GetOwnedPackages(string botName) {
@@ -200,7 +199,7 @@ namespace FreePackages.IPC {
 		}
 
 		[HttpGet("{botName:required}/GetOwnedApps")]
-		// [EndpointSummary("Retrieves all apps owned by the given bot")]
+		[EndpointSummary("Retrieves all apps owned by the given bot")]
 		[ProducesResponseType(typeof(GenericResponse<IEnumerable<uint>>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse<Dictionary<uint, string>>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
@@ -245,7 +244,7 @@ namespace FreePackages.IPC {
 
 		[Consumes("application/json")]
 		[HttpPost("{botNames:required}/QueueLicenses")]
-		// [EndpointSummary("Adds the provided appids and subids to the given bot's package queue")]
+		[EndpointSummary("Adds the provided appids and subids to the given bot's package queue")]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
 		public ActionResult<GenericResponse> QueueLicenses(string botNames, [FromBody] QueueLicensesRequest request) {
