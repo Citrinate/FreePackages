@@ -144,7 +144,7 @@ namespace FreePackages {
 		}
 
 		internal void AddActivation(DateTime activation, uint count = 1) {
-			var activationsToPrune = Activations.Where(x => x < DateTime.Now.AddMinutes(-1 * PackageQueue.ActivationPeriodMinutes)).ToList();
+			var activationsToPrune = Activations.Where(x => x < DateTime.Now.AddMinutes(-1 * ActivationQueue.ActivationPeriodMinutes)).ToList();
 			if (activationsToPrune.Count > 0) {
 				activationsToPrune.ForEach(x => Activations.Remove(x));
 			}
@@ -157,7 +157,7 @@ namespace FreePackages {
 		}
 
 		internal int NumActivationsPastPeriod() {
-			return Activations.Where(activation => activation > DateTime.Now.AddMinutes(-1 * PackageQueue.ActivationPeriodMinutes)).Count();
+			return Activations.Where(activation => activation > DateTime.Now.AddMinutes(-1 * ActivationQueue.ActivationPeriodMinutes)).Count();
 		}
 
 		internal DateTime? GetLastActivation() {
@@ -230,7 +230,7 @@ namespace FreePackages {
 			// TODO: Do other PaymentMethod values also count against the free package limit?
 			foreach(SteamApps.LicenseListCallback.License license in newLicenses) {
 				if (license.PaymentMethod == EPaymentMethod.Complimentary &&
-					license.TimeCreated.ToLocalTime() > DateTime.Now.AddMinutes(-1 * PackageQueue.ActivationPeriodMinutes)
+					license.TimeCreated.ToLocalTime() > DateTime.Now.AddMinutes(-1 * ActivationQueue.ActivationPeriodMinutes)
 				) {
 					AddActivation(license.TimeCreated.ToLocalTime());
 				}

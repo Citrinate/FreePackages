@@ -14,7 +14,7 @@ namespace FreePackages {
 		internal readonly Bot Bot;
 		internal readonly BotCache BotCache;
 		internal readonly PackageFilter PackageFilter;
-		private readonly PackageQueue PackageQueue;
+		private readonly ActivationQueue ActivationQueue;
 		internal static ConcurrentDictionary<string, PackageHandler> Handlers = new();
 
 		private readonly Timer UserDataRefreshTimer;
@@ -25,12 +25,12 @@ namespace FreePackages {
 			Bot = bot;
 			BotCache = botCache;
 			PackageFilter = new PackageFilter(botCache, filterConfigs);
-			PackageQueue = new PackageQueue(bot, botCache, packageLimit, pauseWhilePlaying);
+			ActivationQueue = new ActivationQueue(bot, botCache, packageLimit, pauseWhilePlaying);
 			UserDataRefreshTimer = new Timer(async e => await FetchUserData().ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
 		}
 
 		public void Dispose() {
-			PackageQueue.Dispose();
+			ActivationQueue.Dispose();
 			UserDataRefreshTimer.Dispose();
 		}
 
@@ -84,9 +84,9 @@ namespace FreePackages {
 			if (!Handlers.ContainsKey(bot.BotName)) {
 				return;
 			}
-			
+
 			await Handlers[bot.BotName].FetchUserData().ConfigureAwait(false);
-			Handlers[bot.BotName].PackageQueue.Start();
+			Handlers[bot.BotName].ActivationQueue.Start();
 		}
 
 		private void UpdateUserData() {
@@ -115,7 +115,7 @@ namespace FreePackages {
 
 		internal static void AddChanges(IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> appChanges, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> packageChanges) {
 			if (Handlers.Count == 0) {
-				return;	
+				return;
 			}
 
 			// It's possible for a PICS change to effect thousands of apps and packages, Ex: https://steamdb.info/changelist/20445399/ (47,074 apps total, 31,529 packages total)
@@ -188,7 +188,7 @@ namespace FreePackages {
 
 				// Get the parents of the free apps
 				HashSet<uint> parentIDs = apps.Where(app => app.ParentID != null).Select(app => app.ParentID!.Value).ToHashSet();
-				var parentProductInfos = (await ProductInfo.GetProductInfo(appIDs: parentIDs).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);				
+				var parentProductInfos = (await ProductInfo.GetProductInfo(appIDs: parentIDs).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);
 				if (parentProductInfos == null) {
 					ASF.ArchiLogger.LogNullError(parentProductInfos);
 
@@ -260,7 +260,7 @@ namespace FreePackages {
 
 				// Get the parents for the apps in each package
 				HashSet<uint> parentIDs = packages.SelectMany(package => package.PackageContentParentIDs).ToHashSet();
-				var parentProductInfos = (await ProductInfo.GetProductInfo(appIDs: parentIDs).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);				
+				var parentProductInfos = (await ProductInfo.GetProductInfo(appIDs: parentIDs).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);
 				if (parentProductInfos == null) {
 					ASF.ArchiLogger.LogNullError(parentProductInfos);
 
@@ -318,7 +318,7 @@ namespace FreePackages {
 					return;
 				}
 
-				PackageQueue.AddPackage(new Package(EPackageType.App, app.ID));				
+				BotCache.AddPackage(new Package(EPackageType.App, app.ID));
 			} finally {
 				BotCache.RemoveChange(appID: app.ID);
 			}
@@ -342,7 +342,12 @@ namespace FreePackages {
 					return;
 				}
 
-				PackageQueue.AddPackage(new Package(EPackageType.Sub, package.ID, package.StartTime), package.PackageContentIDs);
+				if (BotCache.AddPackage(new Package(EPackageType.Sub, package.ID, package.StartTime))) {
+					// Remove duplicates.  
+					// Whenever we're trying to activate an app and also an package for that app, get rid of the app.
+					// This is because the error messages for activating packages are more descriptive and useful.
+					BotCache.RemoveAppPackages(package.PackageContentIDs);
+				}
 			} finally {
 				BotCache.RemoveChange(packageID: package.ID);
 			}
@@ -370,7 +375,7 @@ namespace FreePackages {
 					return;
 				}
 
-				PackageQueue.AddPackage(new Package(EPackageType.Playtest, app.Parent.ID));
+				BotCache.AddPackage(new Package(EPackageType.Playtest, app.Parent.ID));
 			} finally {
 				BotCache.RemoveChange(appID: app.ID);
 			}
@@ -434,7 +439,25 @@ namespace FreePackages {
 		}
 
 		internal string GetStatus() {
-			return PackageQueue.GetStatus();
+			HashSet<string> responses = new HashSet<string>();
+
+			int activationsPastPeriod = Math.Min(BotCache.NumActivationsPastPeriod(), (int)ActivationQueue.MaxActivationsPerPeriod);
+			responses.Add(String.Format(Strings.QueueStatus, BotCache.Packages.Count, activationsPastPeriod, ActivationQueue.ActivationsPerPeriod));
+
+			if (ActivationQueue.PauseWhilePlaying && !Bot.IsPlayingPossible) {
+				responses.Add(Strings.QueuePausedWhileIngame);
+			}
+
+			if (activationsPastPeriod >= ActivationQueue.ActivationsPerPeriod) {
+				DateTime resumeTime = BotCache.GetLastActivation()!.Value.AddMinutes(ActivationQueue.ActivationPeriodMinutes + 1);
+				responses.Add(String.Format(Strings.QueueLimitedUntil, String.Format("{0:T}", resumeTime)));
+			}
+
+			if (BotCache.ChangedApps.Count > 0 || BotCache.ChangedPackages.Count > 0) {
+				responses.Add(String.Format(Strings.QueueDiscoveryStatus, BotCache.ChangedApps.Count, BotCache.ChangedPackages.Count));
+			}
+
+			return String.Join(" ", responses);
 		}
 
 		internal string ClearQueue() {
@@ -449,7 +472,7 @@ namespace FreePackages {
 			BotCache.Clear();
 
 			HashSet<string> responses = new HashSet<string>();
-			
+
 			if (numPackages > 0) {
 				responses.Add(String.Format(Strings.PackagesRemoved, numPackages));
 			}
@@ -466,17 +489,17 @@ namespace FreePackages {
 		internal string AddPackage(EPackageType type, uint id, bool useFilter) {
 			if (useFilter) {
 				if (type == EPackageType.App) {
-					BotCache.AddChanges(appIDs: new HashSet<uint> {id});
+					BotCache.AddChanges(appIDs: new HashSet<uint> { id });
 
 					return String.Format(Strings.DiscoveredAppsAdded, String.Format("app/{0}", id));
 				} else {
-					BotCache.AddChanges(packageIDs: new HashSet<uint> {id});
+					BotCache.AddChanges(packageIDs: new HashSet<uint> { id });
 
 					return String.Format(Strings.DiscoveredPackagesAdded, String.Format("sub/{0}", id));
 				}
 			}
 
-			PackageQueue.AddPackage(new Package(type, id));
+			BotCache.AddPackage(new Package(type, id));
 
 			if (type == EPackageType.App) {
 				return String.Format(Strings.AppsQueued, String.Format("app/{0}", id));
@@ -500,7 +523,7 @@ namespace FreePackages {
 				packages.UnionWith(packageIDs.Select(static id => new Package(EPackageType.Sub, id)));
 			}
 
-			PackageQueue.AddPackages(packages);
+			BotCache.AddPackages(packages);
 		}
 	}
 }

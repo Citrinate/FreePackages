@@ -250,7 +250,7 @@ namespace FreePackages {
 			}
 
 			foreach (uint packageID in removablePackgeIDs) {
-				PackageHandler.Handlers[bot.BotName].AddPackage(EPackageType.Removal, packageID, false);
+				PackageHandler.Handlers[bot.BotName].AddPackage(EPackageType.RemoveSub, packageID, false);
 			}
 
 			return String.Format("Removing {0} packages", removablePackgeIDs.Count);

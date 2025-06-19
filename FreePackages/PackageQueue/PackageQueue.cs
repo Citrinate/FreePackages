@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,50 +8,20 @@ using FreePackages.Localization;
 using SteamKit2;
 
 namespace FreePackages {
-	internal sealed class PackageQueue : IDisposable {
-		private readonly Bot Bot;
-		private readonly BotCache BotCache;
+	internal abstract class PackageQueue : IDisposable {
+		protected readonly Bot Bot;
+		protected readonly BotCache BotCache;
 		private PackageFilter PackageFilter => PackageHandler.Handlers[Bot.BotName].PackageFilter;
 		private Timer Timer;
-		private const int DelayBetweenActivationsSeconds = 5;
-		private readonly uint ActivationsPerPeriod = 25;
-		private const uint MaxActivationsPerPeriod = 30; // Steam's imposed limit
-		internal const uint ActivationPeriodMinutes = 90; // Steam's imposed limit
-		private bool PauseWhilePlaying = false;
 
-		internal PackageQueue(Bot bot, BotCache botCache, uint? packageLimit, bool pauseWhilePlaying) {
+		internal PackageQueue(Bot bot, BotCache botCache) {
 			Bot = bot;
 			BotCache = botCache;
-			PauseWhilePlaying = pauseWhilePlaying;
-
-			if (packageLimit != null) {
-				ActivationsPerPeriod = Math.Min(packageLimit.Value, MaxActivationsPerPeriod);
-			}
-
 			Timer = new Timer(async e => await ProcessQueue().ConfigureAwait(false), null, 0, Timeout.Infinite);
 		}
 
 		public void Dispose() {
 			Timer.Dispose();
-		}
-
-		internal void AddPackage(Package package, HashSet<uint>? appIDsToRemove = null) {
-			if (!BotCache.AddPackage(package)) {
-				return;
-			}
-
-			if (package.Type == EPackageType.Sub && appIDsToRemove != null) {
-				// Used to remove duplicates.  
-				// Whenever we're trying to activate an app and also an package for that app, get rid of the app.
-				// I only really like to do this because the error messages for packages are more descriptive and useful.
-				BotCache.RemoveAppPackages(appIDsToRemove);
-			}
-		}
-
-		internal void AddPackages(IEnumerable<Package> packages) {
-			if (!BotCache.AddPackages(packages)) {
-				return;
-			}
 		}
 
 		internal void Start() {
@@ -66,7 +35,7 @@ namespace FreePackages {
 				return;
 			}
 
-			Package? package = BotCache.GetNextPackage();
+			Package? package = GetNextPackage();
 			if (package == null) {
 				// No packages to activate
 				UpdateTimer(DateTime.Now.AddMinutes(1));
@@ -74,52 +43,36 @@ namespace FreePackages {
 				return;
 			}
 
-			if (BotCache.NumActivationsPastPeriod() >= ActivationsPerPeriod) {
-				// Rate limit reached
-				DateTime resumeTime = BotCache.GetLastActivation()!.Value.AddMinutes(ActivationPeriodMinutes + 1);
-				Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.ActivationPaused, String.Format("{0:T}", resumeTime)));
-				UpdateTimer(resumeTime);
-				
-				return;
+			{
+				DateTime? waitUntil = BeforeProcessing();
+				if (waitUntil != null) {
+					UpdateTimer(waitUntil.Value);
+
+					return;
+				}
 			}
 
-			if (PauseWhilePlaying && !Bot.IsPlayingPossible) {
-				// Don't activate anything while the user is playing a game (does not apply to ASF card farming)
-				UpdateTimer(DateTime.Now.AddMinutes(1));
+			EResult result = await ProcessPackage(package).ConfigureAwait(false);
 
-				return;
-			}
+			{
+				DateTime? waitUntil = HandleResult(package, result);
+				if (waitUntil != null) {
+					UpdateTimer(waitUntil.Value);
 
-			EResult result = await ClaimPackage(package).ConfigureAwait(false);
-
-			if (result == EResult.RateLimitExceeded) {
-				BotCache.AddActivation(DateTime.Now, MaxActivationsPerPeriod); // However many activations we thought were made, we were wrong.  Correct for this by adding a bunch of fake times to our cache
-				DateTime resumeTime = DateTime.Now.AddMinutes(ActivationPeriodMinutes + 1);
-				Bot.ArchiLogger.LogGenericInfo(Strings.RateLimitExceeded);
-				Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.ActivationPaused, String.Format("{0:T}", resumeTime)));
-				UpdateTimer(resumeTime);
-
-				return;
-			}
-
-			if (result == EResult.OK || result == EResult.Invalid || result == EResult.AlreadyOwned) {
-				BotCache.RemovePackage(package);
-			} else if (result == EResult.Timeout) {
-				UpdateTimer(DateTime.Now.AddMinutes(5));
-
-				return;
-			}
-
-			if (BotCache.Packages.Count > 0) {
-				UpdateTimer(DateTime.Now.AddSeconds(DelayBetweenActivationsSeconds));
-
-				return;
+					return;
+				}
 			}
 
 			UpdateTimer(DateTime.Now.AddMinutes(1));
 		}
 
-		private async Task<EResult> ClaimPackage(Package package) {
+		protected abstract Package? GetNextPackage();
+
+		protected abstract DateTime? BeforeProcessing();
+
+		protected abstract DateTime? HandleResult(Package package, EResult result);
+
+		private async Task<EResult> ProcessPackage(Package package) {
 			if (package.Type == EPackageType.App) {
 				return await ClaimFreeApp(package.ID).ConfigureAwait(false);
 			}
@@ -132,8 +85,8 @@ namespace FreePackages {
 				return await ClaimPlaytest(package.ID).ConfigureAwait(false);
 			}
 
-			if (package.Type == EPackageType.Removal) {
-				return await RemoveFreeSub(package.ID).ConfigureAwait(false);
+			if (package.Type == EPackageType.RemoveSub) {
+				return await RemoveSub(package.ID).ConfigureAwait(false);
 			}
 
 			return EResult.Invalid;
@@ -255,7 +208,7 @@ namespace FreePackages {
 			return EResult.OK;
 		}
 
-		private async Task<EResult> RemoveFreeSub(uint subID) {
+		private async Task<EResult> RemoveSub(uint subID) {
 			EResult result;
 			try {
 				result = await Bot.Actions.RemoveLicensePackage(subID).ConfigureAwait(false);
@@ -266,9 +219,9 @@ namespace FreePackages {
 			}
 
 			if (result == EResult.OK) {
-				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("remove/{0}", subID), result));
+				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("removeSub/{0}", subID), result));
 			} else {
-				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("remove/{0}", subID), result));
+				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("removeSub/{0}", subID), result));
 			}
 
 			if (result == EResult.RateLimitExceeded) {
@@ -286,29 +239,7 @@ namespace FreePackages {
 			return EResult.OK;
 		}
 
-		internal string GetStatus() {
-			HashSet<string> responses = new HashSet<string>();
-
-			int activationsPastPeriod = Math.Min(BotCache.NumActivationsPastPeriod(), (int) MaxActivationsPerPeriod);
-			responses.Add(String.Format(Strings.QueueStatus, BotCache.Packages.Count, activationsPastPeriod, ActivationsPerPeriod));
-
-			if (PauseWhilePlaying && !Bot.IsPlayingPossible) {
-				responses.Add(Strings.QueuePausedWhileIngame);
-			}
-
-			if (activationsPastPeriod >= ActivationsPerPeriod) {
-				DateTime resumeTime = BotCache.GetLastActivation()!.Value.AddMinutes(ActivationPeriodMinutes + 1);
-				responses.Add(String.Format(Strings.QueueLimitedUntil, String.Format("{0:T}", resumeTime)));
-			}
-
-			if (BotCache.ChangedApps.Count > 0 || BotCache.ChangedPackages.Count > 0) {
-				responses.Add(String.Format(Strings.QueueDiscoveryStatus, BotCache.ChangedApps.Count, BotCache.ChangedPackages.Count));
-			}
-
-			return String.Join(" ", responses);;
-		}
-
-		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
+		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int)(then - DateTime.Now).TotalMilliseconds);
 		private void UpdateTimer(DateTime then) => Timer?.Change(GetMillisecondsFromNow(then), Timeout.Infinite);
 	}
 }

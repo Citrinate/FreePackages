@@ -13,8 +13,9 @@ namespace FreePackages {
 		public uint ID { get; private init; }
 
 		[JsonInclude]
-		[JsonRequired]
 		public ulong? StartTime { get; private init; } = null;
+
+		public bool ShouldSerializeStartTime() => StartTime != null;
 		
 		[JsonConstructor]
 		public Package(EPackageType type, uint id, ulong? startTime = null) {
@@ -31,7 +32,7 @@ namespace FreePackages {
 		App = 0,
 		Sub = 1,
 		Playtest = 2,
-		Removal = 3
+		RemoveSub = 3
 	}
 
 	public class PackageComparer : IEqualityComparer<Package> {
