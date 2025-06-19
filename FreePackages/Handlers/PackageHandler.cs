@@ -15,6 +15,7 @@ namespace FreePackages {
 		internal readonly BotCache BotCache;
 		internal readonly PackageFilter PackageFilter;
 		private readonly ActivationQueue ActivationQueue;
+		private readonly RemovalQueue RemovalQueue;
 		internal static ConcurrentDictionary<string, PackageHandler> Handlers = new();
 
 		private readonly Timer UserDataRefreshTimer;
@@ -26,6 +27,7 @@ namespace FreePackages {
 			BotCache = botCache;
 			PackageFilter = new PackageFilter(botCache, filterConfigs);
 			ActivationQueue = new ActivationQueue(bot, botCache, packageLimit, pauseWhilePlaying);
+			RemovalQueue = new RemovalQueue(bot, botCache);
 			UserDataRefreshTimer = new Timer(async e => await FetchUserData().ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
 		}
 
@@ -87,6 +89,7 @@ namespace FreePackages {
 
 			await Handlers[bot.BotName].FetchUserData().ConfigureAwait(false);
 			Handlers[bot.BotName].ActivationQueue.Start();
+			Handlers[bot.BotName].RemovalQueue.Start();
 		}
 
 		private void UpdateUserData() {
@@ -441,20 +444,29 @@ namespace FreePackages {
 		internal string GetStatus() {
 			HashSet<string> responses = new HashSet<string>();
 
+			// x packages queued. y activations used
 			int activationsPastPeriod = Math.Min(BotCache.NumActivationsPastPeriod(), (int)ActivationQueue.MaxActivationsPerPeriod);
-			responses.Add(String.Format(Strings.QueueStatus, BotCache.Packages.Count, activationsPastPeriod, ActivationQueue.ActivationsPerPeriod));
+			responses.Add(String.Format(Strings.QueueStatus, ActivationQueue.ActivationsRemaining, activationsPastPeriod, ActivationQueue.ActivationsPerPeriod));
 
+			// activations are paused
 			if (ActivationQueue.PauseWhilePlaying && !Bot.IsPlayingPossible) {
 				responses.Add(Strings.QueuePausedWhileIngame);
 			}
 
+			// activations will resume when
 			if (activationsPastPeriod >= ActivationQueue.ActivationsPerPeriod) {
 				DateTime resumeTime = BotCache.GetLastActivation()!.Value.AddMinutes(ActivationQueue.ActivationPeriodMinutes + 1);
 				responses.Add(String.Format(Strings.QueueLimitedUntil, String.Format("{0:T}", resumeTime)));
 			}
 
+			// x apps and y packages discovered but not processed
 			if (BotCache.ChangedApps.Count > 0 || BotCache.ChangedPackages.Count > 0) {
 				responses.Add(String.Format(Strings.QueueDiscoveryStatus, BotCache.ChangedApps.Count, BotCache.ChangedPackages.Count));
+			}
+
+			// removing x packages
+			if (RemovalQueue.RemovalsRemaining > 0) {
+				responses.Add(String.Format(Strings.RemovingPackages, RemovalQueue.RemovalsRemaining));
 			}
 
 			return String.Join(" ", responses);

@@ -132,10 +132,10 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal Package? GetNextPackage() {
+		internal Package? GetNextPackage(HashSet<EPackageType> types) {
 			// Return the package which should be activated first, prioritizing first packages which have a start and end date
 			ulong now = DateUtils.DateTimeToUnixTime(DateTime.UtcNow);
-			Package? package = Packages.FirstOrDefault(x => x.StartTime != null && now > x.StartTime);
+			Package? package = Packages.FirstOrDefault(x => x.StartTime != null && now > x.StartTime && types.Contains(x.Type));
 			if (package != null) {
 				return package;
 			}
@@ -161,7 +161,7 @@ namespace FreePackages {
 		}
 
 		internal DateTime? GetLastActivation() {
-			// Can't use Activations.Max() because it breaks on non-generic ASF
+			// Can't use Activations.Max() because it's missing on non-generic ASF
 			DateTime? lastActivation = null;
 			foreach (DateTime activation in Activations) {
 				if (lastActivation == null || activation > lastActivation) {

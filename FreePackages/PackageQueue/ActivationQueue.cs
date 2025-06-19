@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using ArchiSteamFarm.Steam;
 using FreePackages.Localization;
 using SteamKit2;
@@ -10,6 +12,8 @@ namespace FreePackages {
 		internal const uint MaxActivationsPerPeriod = 30; // Steam's imposed limit
 		internal const uint ActivationPeriodMinutes = 90; // Steam's imposed limit
 		internal bool PauseWhilePlaying = false;
+		private readonly HashSet<EPackageType> ActivationTypes = [EPackageType.App, EPackageType.Sub, EPackageType.Playtest];
+		internal int ActivationsRemaining => BotCache.Packages.Where(x => ActivationTypes.Contains(x.Type)).Count();
 
 		internal ActivationQueue(Bot bot, BotCache botCache, uint? packageLimit, bool pauseWhilePlaying) : base(bot, botCache) {
 			PauseWhilePlaying = pauseWhilePlaying;
@@ -19,9 +23,7 @@ namespace FreePackages {
 			}
 		}
 
-		protected override Package? GetNextPackage() {
-			return BotCache.GetNextPackage();
-		}
+		protected override Package? GetNextPackage() => BotCache.GetNextPackage(ActivationTypes);
 
 		protected override DateTime? BeforeProcessing() {
 			if (BotCache.NumActivationsPastPeriod() >= ActivationsPerPeriod) {
@@ -49,14 +51,16 @@ namespace FreePackages {
 
 				return resumeTime;
 			}
-
-			if (result == EResult.OK || result == EResult.Invalid || result == EResult.AlreadyOwned) {
-				BotCache.RemovePackage(package);
-			} else if (result == EResult.Timeout) {
+			
+			if (result == EResult.Timeout) {
 				return DateTime.Now.AddMinutes(5);
 			}
 
-			if (BotCache.Packages.Count > 0) {
+			if (result == EResult.OK || result == EResult.Invalid || result == EResult.AlreadyOwned) {
+				BotCache.RemovePackage(package);
+			}
+
+			if (ActivationsRemaining > 0) {
 				return DateTime.Now.AddSeconds(DelayBetweenActivationsSeconds);
 			}
 
