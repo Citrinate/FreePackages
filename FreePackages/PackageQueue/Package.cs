@@ -32,7 +32,8 @@ namespace FreePackages {
 		App = 0,
 		Sub = 1,
 		Playtest = 2,
-		RemoveSub = 3
+		RemoveSub = 3,
+		RemoveApp = 4
 	}
 
 	public class PackageComparer : IEqualityComparer<Package> {

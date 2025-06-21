@@ -12,7 +12,7 @@ namespace FreePackages {
 		internal const uint MaxActivationsPerPeriod = 30; // Steam's imposed limit
 		internal const uint ActivationPeriodMinutes = 90; // Steam's imposed limit
 		internal bool PauseWhilePlaying = false;
-		private readonly HashSet<EPackageType> ActivationTypes = [EPackageType.App, EPackageType.Sub, EPackageType.Playtest];
+		internal static readonly HashSet<EPackageType> ActivationTypes = [EPackageType.App, EPackageType.Sub, EPackageType.Playtest];
 		internal int ActivationsRemaining => BotCache.Packages.Where(x => ActivationTypes.Contains(x.Type)).Count();
 
 		internal ActivationQueue(Bot bot, BotCache botCache, uint? packageLimit, bool pauseWhilePlaying) : base(bot, botCache) {

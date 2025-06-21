@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using ArchiSteamFarm.Core;
 using SteamKit2;
 
 namespace FreePackages {
 	internal sealed class FilterablePackage {
-		internal bool IsNew; // This is used when finding DLC for new games added to account, and is not related to any Steam package property
 		internal List<FilterableApp> PackageContents = new();
 		internal HashSet<uint> PackageContentIDs;
 		internal HashSet<uint> PackageContentParentIDs = new();
@@ -26,10 +28,9 @@ namespace FreePackages {
 		internal bool FreeWeekend;
 		internal bool BetaTesterPackage;
 		
-		internal FilterablePackage(SteamApps.PICSProductInfoCallback.PICSProductInfo productInfo, bool isNew = false) : this(productInfo.ID, productInfo.KeyValues, isNew) {}
-		internal FilterablePackage(KeyValue kv, bool isNew = false) : this(Convert.ToUInt32(kv.Name), kv, isNew) {}
-		internal FilterablePackage(uint id, KeyValue kv, bool isNew) {
-			IsNew = isNew;
+		internal FilterablePackage(SteamApps.PICSProductInfoCallback.PICSProductInfo productInfo) : this(productInfo.ID, productInfo.KeyValues) {}
+		internal FilterablePackage(KeyValue kv) : this(Convert.ToUInt32(kv.Name), kv) {}
+		internal FilterablePackage(uint id, KeyValue kv) {
 			ID = id;
 			PackageContentIDs = kv["appids"].Children.Select(x => x.AsUnsignedInteger()).ToHashSet();
 			BillingType = (EBillingType) kv["billingtype"].AsInteger();
@@ -48,15 +49,78 @@ namespace FreePackages {
 			BetaTesterPackage = kv["extended"]["betatesterpackage"].AsBoolean();
 		}
 
+		internal static async Task<List<FilterablePackage>?> GetFilterables(List<SteamApps.PICSProductInfoCallback> productInfos, Func<FilterablePackage, bool>? onNonFreePackage = null, CancellationToken? cancellationToken = null) {
+			var packageProductInfos = productInfos.SelectMany(static result => result.Packages.Values);
+			if (packageProductInfos.Count() == 0) {
+				return [];
+			}
+			
+			List<FilterablePackage> packages = packageProductInfos.Select(x => new FilterablePackage(x)).ToList();
+
+			// Filter out non-free, non-new packages
+			packages.RemoveAll(package => {
+				if (!package.IsFree() || !package.IsAvailable()) {
+					if (onNonFreePackage?.Invoke(package) == false) {
+						return false;
+					}
+
+					return true;
+				}
+
+				return false;
+			});
+
+			// Get the apps contained in each package
+			HashSet<uint> packageContentsIDs = packages.SelectMany(package => package.PackageContentIDs).ToHashSet();
+			var packageContentProductInfos = (await ProductInfo.GetProductInfo(appIDs: packageContentsIDs, cancellationToken: cancellationToken).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);
+			if (packageContentProductInfos == null) {
+				ASF.ArchiLogger.LogNullError(packageContentProductInfos);
+
+				return null;
+			}
+
+			packages.ForEach(package => package.AddPackageContents(packageContentProductInfos.Where(x => package.PackageContentIDs.Contains(x.ID))));
+
+			// Filter out any packages which contain unavailable apps
+			packages.RemoveAll(package => {
+				if (!package.IsAvailablePackageContents() && package.BillingType != EBillingType.NoCost) {
+					// Ignore this check for NoCost packages; assume that everything is available
+					// Ex: https://steamdb.info/sub/1011710 is redeemable even though it contains https://steamdb.info/app/235901/ (which as of Feb 12 2024 is some unknown app)
+					if (onNonFreePackage?.Invoke(package) == false) {
+						return false;
+					}
+
+					return true;
+				}
+
+				return false;
+			});
+
+			// Get the parents for the apps in each package
+			HashSet<uint> parentIDs = packages.SelectMany(package => package.PackageContentParentIDs).ToHashSet();
+			var parentProductInfos = (await ProductInfo.GetProductInfo(appIDs: parentIDs, cancellationToken: cancellationToken).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);
+			if (parentProductInfos == null) {
+				ASF.ArchiLogger.LogNullError(parentProductInfos);
+
+				return null;
+			}
+
+			if (parentProductInfos.Count() > 0) {
+				packages.ForEach(package => {
+					if (package.PackageContentParentIDs.Count != 0) {
+						package.AddPackageContentParents(parentProductInfos.Where(parent => package.PackageContentParentIDs.Contains(parent.ID)));
+					}
+				});
+			}
+
+			return packages;
+		}
+
 		internal void AddPackageContents(IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> productInfos) => AddPackageContents(productInfos.Select(productInfo => (productInfo.ID, productInfo.KeyValues)));
 		internal void AddPackageContents(IEnumerable<KeyValue> kvs) => AddPackageContents(kvs.Select(kv => (kv["appid"].AsUnsignedInteger(), kv)));
 		internal void AddPackageContents(IEnumerable<(uint id, KeyValue kv)> packageContents) {
 			PackageContents = packageContents.Select(packageContent => new FilterableApp(packageContent.id, packageContent.kv)).ToList();
-
-			// Don't care about the parents of package contents on new packages (we scan new packages for free dlc and nothing else)
-			if (!IsNew) {
-				PackageContentParentIDs = PackageContents.Where(app => app.ParentID != null).Select(app => app.ParentID!.Value).ToHashSet<uint>();
-			}
+			PackageContentParentIDs = PackageContents.Where(app => app.ParentID != null).Select(app => app.ParentID!.Value).ToHashSet<uint>();
 		}
 
 		internal void AddPackageContentParents(IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> productInfos) => AddPackageContentParents(productInfos.Select(productInfo => (productInfo.ID, productInfo.KeyValues)));

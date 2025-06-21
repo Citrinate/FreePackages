@@ -454,15 +454,33 @@ You can define as many filters as you'd like, and packages that pass any one of 
 
 While the plugin can be used passively, you can also manually import free packages from [SteamDB](https://steamdb.info/freepackages/) using [the importer userscript](https://github.com/Citrinate/FreePackages/tree/main/FreePackagesImporter), or through the commands and [IPC interface](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/IPC) endpoints below.
 
-### Commands
+---
+
+### Activation Commands
 
 Command | Access | Description
 --- | --- | ---
-`freepackages`|`Master`|Prints version of plugin.
 `queuestatus [Bots]`|`Master`|Prints the status of the given bot's packages queue
 `queuelicense [Bots] <Licenses>`|`Master`|Adds given `licenses`, explained [here](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Commands#addlicense-licenses), to the given bot's packages queue.  Playtests cannot be added to the package queue using this command
 `queuelicense^ [Bots] <Licenses>`|`Master`|Adds given `licenses`, explained [here](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Commands#addlicense-licenses), to the given bot's packages queue using that bot's package filters
 `clearfreepackagesqueue [Bots]`|`Master`|Removes everything from the given bot's packages queue
+
+### Removal Commands
+
+Command | Access | Description
+--- | --- | ---
+`removefreepackages [Bot]`|`Master`|Removes all free packages from the given bot's account that don't pass any of the given bot's package filters, and that can also currently be re-activated for free.  After this command is used, you'll be presented with a list of packages to review, edit, and then confirm the removal of.
+`cancelremove [Bots]`|`Master`|Cancels any package removals
+`confirmremove [Bots]`|`Master`|After `removefreepackages` is used, begins the process of removing unwanted free packages
+`dontremove [Bots] <Licenses>`|`Master`|After `removefreepackages` and before `confirmremove` is used, removes given `licenses` (explained [here](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Commands#addlicense-licenses)) from the list of packages about to be removed
+
+### Other Commands
+
+Command | Access | Description
+--- | --- | ---
+`freepackages`|`Master`|Prints version of plugin.
+
+---
 
 #### Command Aliases
 
@@ -472,6 +490,8 @@ Command | Alias |
 `queuestatus asf`|`qsa`
 `queuelicense`|`queuelicence`, `qlicense`, `qlicence`
 `queuelicense^`|`queuelicence^`, `qlicense^`, `qlicence^`
+
+---
 
 ### IPC Interface
 

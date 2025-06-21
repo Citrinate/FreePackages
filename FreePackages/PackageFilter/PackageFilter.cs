@@ -87,7 +87,7 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsAppWantedByFilter(FilterableApp app, FilterConfig filter) {
+		internal bool IsAppWantedByFilter(FilterableApp app, FilterConfig filter, bool ignoreAgeFilters = false) {
 			if (UserData == null) {
 				throw new InvalidOperationException(nameof(UserData));
 			}
@@ -129,7 +129,7 @@ namespace FreePackages {
 				return false;
 			}
 			
-			if (filter.MaxDaysOld > 0 && DateTime.UtcNow.AddDays(-filter.MaxDaysOld) > app.SteamReleaseDate) {
+			if (!ignoreAgeFilters && filter.MaxDaysOld > 0 && DateTime.UtcNow.AddDays(-filter.MaxDaysOld) > app.SteamReleaseDate) {
 				// Unwanted because the app is too old
 				return false;
 			}
@@ -244,8 +244,8 @@ namespace FreePackages {
 			return true;
 		}
 
-		internal bool IsPackageWantedByFilter(FilterablePackage package, FilterConfig filter) {
-			bool hasWantedApp = package.PackageContents.Any(app => IsAppWantedByFilter(app, filter));
+		internal bool IsPackageWantedByFilter(FilterablePackage package, FilterConfig filter, bool ignoreAgeFilters = false) {
+			bool hasWantedApp = package.PackageContents.Any(app => IsAppWantedByFilter(app, filter, ignoreAgeFilters));
 			if (!hasWantedApp) {
 				return false;
 			}
@@ -344,12 +344,12 @@ namespace FreePackages {
 			return FilterConfigs.Any(filter => !FilterOnlyAllowsPackages(filter) && IsAppWantedByFilter(app, filter) && !IsAppIgnoredByFilter(app, filter));
 		}
 
-		internal bool IsWantedPackage(FilterablePackage package) {
+		internal bool IsWantedPackage(FilterablePackage package, bool ignoreAgeFilters = false) {
 			if (FilterConfigs.Count == 0) {
 				return true;
 			}
 
-			return FilterConfigs.Any(filter => IsPackageWantedByFilter(package, filter) && !IsPackageIgnoredByFilter(package, filter));
+			return FilterConfigs.Any(filter => IsPackageWantedByFilter(package, filter, ignoreAgeFilters) && !IsPackageIgnoredByFilter(package, filter));
 		}
 
 		internal bool IsWantedPlaytest(FilterableApp app) {

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ArchiSteamFarm.Collections;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
 using FreePackages.Localization;
@@ -16,6 +17,8 @@ namespace FreePackages {
 		internal readonly PackageFilter PackageFilter;
 		private readonly ActivationQueue ActivationQueue;
 		private readonly RemovalQueue RemovalQueue;
+		private CancellationTokenSource? RemovalCancellation;
+		ConcurrentHashSet<Package> PackagesToRemove = new(new PackageComparer());
 		internal static ConcurrentDictionary<string, PackageHandler> Handlers = new();
 
 		private readonly Timer UserDataRefreshTimer;
@@ -146,7 +149,10 @@ namespace FreePackages {
 		}
 
 		internal async static Task HandleChanges() {
-			await ProcessChangesSemaphore.WaitAsync().ConfigureAwait(false);
+			if (!await ProcessChangesSemaphore.WaitAsync(0).ConfigureAwait(false)) {
+				return;
+			}
+
 			try {
 				await IsReady().ConfigureAwait(false);
 
@@ -172,129 +178,69 @@ namespace FreePackages {
 			}
 		}
 
-		private async static Task HandleProductInfo(List<SteamApps.PICSProductInfoCallback> productInfo) {
-			// Figure out which apps are free and add any wanted apps to the queue
-			var appProductInfos = productInfo.SelectMany(static result => result.Apps.Values);
-			if (appProductInfos.Count() > 0) {
-				List<FilterableApp> apps = appProductInfos.Select(x => new FilterableApp(x)).ToList();
-
-				// Filter out non-free apps
-				apps.RemoveAll(app => {
-					if (!app.IsFree() || !app.IsAvailable()) {
+		private async static Task HandleProductInfo(List<SteamApps.PICSProductInfoCallback> productInfos) {
+			{ // Add wanted apps to the queue
+				List<FilterableApp>? apps = await FilterableApp.GetFilterables(
+					productInfos,
+					app => {
 						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(appID: app.ID));
 
 						return true;
 					}
+				).ConfigureAwait(false);
 
-					return false;
-				});
-
-				// Get the parents of the free apps
-				HashSet<uint> parentIDs = apps.Where(app => app.ParentID != null).Select(app => app.ParentID!.Value).ToHashSet();
-				var parentProductInfos = (await ProductInfo.GetProductInfo(appIDs: parentIDs).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);
-				if (parentProductInfos == null) {
-					ASF.ArchiLogger.LogNullError(parentProductInfos);
+				if (apps == null) {
+					ASF.ArchiLogger.LogGenericError(Strings.ProductInfoFetchFailed);
 
 					return;
 				}
 
-				if (parentProductInfos.Count() > 0) {
+				if (apps.Count > 0) {
 					apps.ForEach(app => {
-						if (app.ParentID != null) {
-							app.AddParent(parentProductInfos.FirstOrDefault(parent => parent.ID == app.ParentID));
+						if (app.Type == EAppType.Beta) {
+							Handlers.Values.ToList().ForEach(x => x.HandlePlaytest(app));
+						} else {
+							Handlers.Values.ToList().ForEach(x => x.HandleFreeApp(app));
 						}
 					});
 				}
-
-				// Add wanted apps to the queue
-				apps.ForEach(app => {
-					if (app.Type == EAppType.Beta) {
-						Handlers.Values.ToList().ForEach(x => x.HandlePlaytest(app));
-					} else {
-						Handlers.Values.ToList().ForEach(x => x.HandleFreeApp(app));
-					}
-				});
 			}
 
-			// Figure out which packages are free and add any wanted packages to the queue
-			var packageProductInfos = productInfo.SelectMany(static result => result.Packages.Values);
-			if (packageProductInfos.Count() > 0) {
+			{ // Add wanted packages to the queue or check new packages for free DLC
 				HashSet<uint> newOwnedPackageIDs = Handlers.Values.Where(x => x.Bot.IsConnectedAndLoggedOn).SelectMany(x => x.BotCache.NewOwnedPackages).ToHashSet<uint>();
-				List<FilterablePackage> packages = packageProductInfos.Select(x => new FilterablePackage(x, newOwnedPackageIDs.Contains(x.ID))).ToList();
-
-				// Filter out non-free, non-new packages
-				packages.RemoveAll(package => {
-					if (!package.IsFree() || !package.IsAvailable()) {
+				List<FilterablePackage>? packages = await FilterablePackage.GetFilterables(
+					productInfos,
+					package => {
 						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(packageID: package.ID));
 
-						if (!package.IsNew) {
-							return true;
-						}
+						return !newOwnedPackageIDs.Contains(package.ID);
 					}
+				).ConfigureAwait(false);
 
-					return false;
-				});
-
-				// Get the apps contained in each package
-				HashSet<uint> packageContentsIDs = packages.SelectMany(package => package.PackageContentIDs).ToHashSet();
-				var packageContentProductInfos = (await ProductInfo.GetProductInfo(appIDs: packageContentsIDs).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);
-				if (packageContentProductInfos == null) {
-					ASF.ArchiLogger.LogNullError(packageContentProductInfos);
+				if (packages == null) {
+					ASF.ArchiLogger.LogGenericError(Strings.ProductInfoFetchFailed);
 
 					return;
 				}
 
-				packages.ForEach(package => package.AddPackageContents(packageContentProductInfos.Where(x => package.PackageContentIDs.Contains(x.ID))));
-
-				// Filter out any packages which contain unavailable apps
-				packages.RemoveAll(package => {
-					if (!package.IsAvailablePackageContents() && package.BillingType != EBillingType.NoCost) {
-						// Ignore this check for NoCost packages; assume that everything is available
-						// Ex: https://steamdb.info/sub/1011710 is redeemable even though it contains https://steamdb.info/app/235901/ (which as of Feb 12 2024 is some unknown app)
-						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(packageID: package.ID));
-
-						if (!package.IsNew) {
-							return true;
-						}
-					}
-
-					return false;
-				});
-
-				// Get the parents for the apps in each package
-				HashSet<uint> parentIDs = packages.SelectMany(package => package.PackageContentParentIDs).ToHashSet();
-				var parentProductInfos = (await ProductInfo.GetProductInfo(appIDs: parentIDs).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);
-				if (parentProductInfos == null) {
-					ASF.ArchiLogger.LogNullError(parentProductInfos);
-
-					return;
-				}
-
-				if (parentProductInfos.Count() > 0) {
+				if (packages.Count > 0) {
 					packages.ForEach(package => {
-						if (package.PackageContentParentIDs.Count != 0) {
-							package.AddPackageContentParents(parentProductInfos.Where(parent => package.PackageContentParentIDs.Contains(parent.ID)));
+						if (newOwnedPackageIDs.Contains(package.ID)) {
+							Handlers.Values.ToList().ForEach(x => x.HandleNewPackage(package));
+						} else {
+							Handlers.Values.ToList().ForEach(x => x.HandleFreePackage(package));
 						}
 					});
 				}
-
-				// Add wanted packages to the queue or check new packages for free DLC
-				packages.ForEach(package => {
-					if (package.IsNew) {
-						Handlers.Values.ToList().ForEach(x => x.HandleNewPackage(package));
-					} else {
-						Handlers.Values.ToList().ForEach(x => x.HandleFreePackage(package));
-					}
-				});
 			}
 
 			// Remove invalid apps from the app change list
-			foreach (uint unknownAppID in productInfo.SelectMany(static result => result.UnknownApps)) {
+			foreach (uint unknownAppID in productInfos.SelectMany(static result => result.UnknownApps)) {
 				Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(appID: unknownAppID));
 			}
 
 			// Remove invalid packages from the package change list
-			foreach (uint unknownPackageID in productInfo.SelectMany(static result => result.UnknownPackages)) {
+			foreach (uint unknownPackageID in productInfos.SelectMany(static result => result.UnknownPackages)) {
 				Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(packageID: unknownPackageID));
 				Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(newOwnedPackageID: unknownPackageID));
 			}
@@ -473,7 +419,7 @@ namespace FreePackages {
 		}
 
 		internal string ClearQueue() {
-			int numPackages = BotCache.Packages.Count;
+			int numPackages = BotCache.Packages.Where(package => ActivationQueue.ActivationTypes.Contains(package.Type)).Count();
 			int numChangedApps = BotCache.ChangedApps.Count;
 			int numChangedPackages = BotCache.ChangedPackages.Count;
 
@@ -481,9 +427,9 @@ namespace FreePackages {
 				return Strings.QueueEmpty;
 			}
 
-			BotCache.Clear();
+			BotCache.ClearQueue();
 
-			HashSet<string> responses = new HashSet<string>();
+			List<string> responses = new List<string>();
 
 			if (numPackages > 0) {
 				responses.Add(String.Format(Strings.PackagesRemoved, numPackages));
@@ -536,6 +482,141 @@ namespace FreePackages {
 			}
 
 			BotCache.AddPackages(packages);
+		}
+
+		internal async Task ScanRemovables(HashSet<uint> removablePackageIDs, StatusReporter statusReporter) {
+			if (RemovalCancellation != null) {
+				statusReporter.Report(Bot, Strings.RemovalScanAlreadyRunning);
+
+				return;
+			}
+			
+			RemovalCancellation = new CancellationTokenSource();
+			try {
+				await ProcessChangesSemaphore.WaitAsync(RemovalCancellation.Token).ConfigureAwait(false);
+				try {
+					await IsReady().ConfigureAwait(false);
+
+					var productInfos = await ProductInfo.GetProductInfo(packageIDs: removablePackageIDs, cancellationToken: RemovalCancellation.Token).ConfigureAwait(false);
+					if (productInfos == null) {
+						statusReporter.Report(Bot, Strings.ProductInfoFetchFailed);
+
+						return;
+					}
+
+					List<FilterablePackage>? packages = await FilterablePackage.GetFilterables(productInfos, cancellationToken: RemovalCancellation.Token).ConfigureAwait(false);
+					if (packages == null) {
+						statusReporter.Report(Bot, Strings.ProductInfoFetchFailed);
+
+						return;
+					}
+
+					if (packages.Count == 0) {
+						statusReporter.Report(Bot, Strings.RemovingNoPackages);
+
+						return;
+					}
+
+					RemovalCancellation.Token.ThrowIfCancellationRequested();
+
+					PackagesToRemove.Clear();
+					List<string> previewResponses = [];
+					foreach (FilterablePackage package in packages.Where(package => !PackageFilter.IsWantedPackage(package, ignoreAgeFilters: true))) {
+						if (package.PackageContents.Count == 1) {
+							// Single app package, can remove the app directly, which uses an API with a more generous rate limit
+							FilterableApp app = package.PackageContents.First();
+							PackagesToRemove.Add(new Package(EPackageType.RemoveApp, app.ID));
+							previewResponses.Add(String.Format("app/{0} ({1})", app.ID, app.Name));
+						} else {
+							PackagesToRemove.Add(new Package(EPackageType.RemoveSub, package.ID));
+							previewResponses.Add(String.Format("sub/{0} ({1})", package.ID, String.Join(" + ", package.PackageContents.Select(static app => app.Name))));
+						}
+					}
+
+					if (PackagesToRemove.Count == 0) {
+						statusReporter.Report(Bot, Strings.RemovingNoUnwatedPackages);
+
+						return;
+					}
+
+					statusReporter.Report(Bot, String.Format(Strings.RemovablePackagesFound, 
+						PackagesToRemove.Count, 
+						String.Join(PackagesToRemove.Count > 100 ? ", " : Environment.NewLine, previewResponses),
+						String.Format("!cancelremove {0}", Bot.BotName),
+						String.Format("!confirmremove {0}", Bot.BotName),
+						String.Format("!dontremove {0} <Licenses>", Bot.BotName)
+					));
+				} finally {
+					ProcessChangesSemaphore.Release();
+				}
+			} catch (OperationCanceledException) {
+				statusReporter.Report(Bot, Strings.RemovalScanCancelled);
+			} finally {
+				RemovalCancellation?.Dispose();
+				RemovalCancellation = null;
+			}
+		}
+
+		internal string ConfirmRemoval() {
+			if (PackagesToRemove.Count == 0) {
+				return String.Format(Strings.RemovalScanNeeded, String.Format("!removefreepackages {0}", Bot.BotName));
+			}
+
+			int numRemovalsDiscovered = PackagesToRemove.Count;
+			BotCache.AddPackages(PackagesToRemove);
+			PackagesToRemove.Clear();
+
+			return String.Format(Strings.RemovingPackages, numRemovalsDiscovered);
+		}
+
+		internal string ModifyRemovables(EPackageType type, uint id) {
+			if (PackagesToRemove.Count == 0) {
+				return String.Format(Strings.RemovalScanNeeded, String.Format("!removefreepackages {0}", Bot.BotName));
+			}
+
+			Package? package = PackagesToRemove.FirstOrDefault(package => package.Type == type && package.ID == id);
+			if (package == null) {
+				if (type == EPackageType.RemoveApp) {
+					return String.Format(Strings.RemovalPackageNotFound, String.Format("app/{0}", id)) + " :steamthumbsdown:";
+				} else {
+					return String.Format(Strings.RemovalPackageNotFound, String.Format("sub/{0}", id)) + " :steamthumbsdown:";
+				}
+			}
+
+			PackagesToRemove.Remove(package);
+
+			if (type == EPackageType.RemoveApp) {
+				return String.Format(Strings.RemovalPackageCancelled, String.Format("app/{0}", id));
+			} else {
+				return String.Format(Strings.RemovalPackageCancelled, String.Format("sub/{0}", id));
+			}
+		}
+
+		internal string CancelRemoval() {
+			bool stoppingScan = RemovalCancellation != null;
+			int numRemovalsDiscovered = PackagesToRemove.Count;
+			int numRemovals = BotCache.Packages.Where(package => RemovalQueue.RemovalTypes.Contains(package.Type)).Count();
+
+			if (!stoppingScan && numRemovalsDiscovered == 0 && numRemovals == 0) {
+				return Strings.RemovalQueueEmpty;
+			}
+
+			RemovalCancellation?.Cancel();
+			PackagesToRemove.Clear();
+			BotCache.CancelRemoval();
+
+			List<string> responses = new List<string>();
+			if (numRemovals > 0) {
+				responses.Add(String.Format(Strings.RemovalsCancelled, numRemovals));
+			}
+			if (numRemovalsDiscovered > 0) {
+				responses.Add(String.Format(Strings.RemovalScanCancelled));
+			}
+			if (stoppingScan) {
+				responses.Add(String.Format(Strings.RemovalScanCanceling));
+			}
+
+			return String.Join(" ", responses);
 		}
 	}
 }

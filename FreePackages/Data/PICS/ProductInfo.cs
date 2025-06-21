@@ -10,13 +10,15 @@ using SteamKit2;
 namespace FreePackages {
 	internal static class ProductInfo {
 		private static SemaphoreSlim ProductInfoSemaphore = new SemaphoreSlim(1, 1);
-		private const int ProductInfoLimitingDelaySeconds = 10;
-		private const int ItemsPerProductInfoRequest = 255;
+		internal const int ProductInfoLimitingDelaySeconds = 10;
+		internal const int ItemsPerProductInfoRequest = 255;
 
-		internal async static Task<List<SteamApps.PICSProductInfoCallback>?> GetProductInfo(HashSet<uint>? appIDs = null, HashSet<uint>? packageIDs = null) {
+		internal async static Task<List<SteamApps.PICSProductInfoCallback>?> GetProductInfo(HashSet<uint>? appIDs = null, HashSet<uint>? packageIDs = null, CancellationToken? cancellationToken = null) {
 			List<SteamApps.PICSProductInfoCallback> productInfo = new();
 
 			foreach ((HashSet<uint>? batchedAppIDs, HashSet<uint>? batchedPackageIDs) in GetProductIDBatches(appIDs, packageIDs)) {
+				cancellationToken?.ThrowIfCancellationRequested();
+
 				List<SteamApps.PICSProductInfoCallback>? partialProductInfo = await FetchProductInfo(batchedAppIDs, batchedPackageIDs).ConfigureAwait(false);
 				if (partialProductInfo == null) {
 					return null;
@@ -29,7 +31,7 @@ namespace FreePackages {
 		}
 
 		internal static IEnumerable<(HashSet<uint>?, HashSet<uint>?)> GetProductIDBatches(HashSet<uint>? appIDs = null, HashSet<uint>? packageIDs = null) {
-			if ((appIDs?.Count ?? 0) + (packageIDs?.Count ?? 0) <= 255) {
+			if ((appIDs?.Count ?? 0) + (packageIDs?.Count ?? 0) <= ItemsPerProductInfoRequest) {
 				 yield return (appIDs, packageIDs);
 			} else {
 				if (appIDs != null) {

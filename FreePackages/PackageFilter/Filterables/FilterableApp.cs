@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using ArchiSteamFarm.Core;
 using SteamKit2;
 
 namespace FreePackages {
@@ -9,6 +11,7 @@ namespace FreePackages {
 		internal uint? ParentID = null;
 
 		internal uint ID;
+		internal string Name;
 		internal EAppType Type;
 		internal bool IsFreeApp;
 		internal string? ReleaseState;
@@ -33,6 +36,7 @@ namespace FreePackages {
 		internal FilterableApp(KeyValue kv) : this(kv["appid"].AsUnsignedInteger(), kv) {}
 		internal FilterableApp(uint id, KeyValue kv) {
 			ID = id;
+			Name = kv["common"]["name"].AsString() ?? String.Format("App {0}", ID);
 			try {
 				Type = Enum.Parse<EAppType>(kv["common"]["type"].AsString() ?? EAppType.Invalid.ToString(), true);
 			} catch {
@@ -77,6 +81,47 @@ namespace FreePackages {
 					ParentID = parentID;
 				}
 			}
+		}
+
+		internal static async Task<List<FilterableApp>?> GetFilterables(List<SteamApps.PICSProductInfoCallback> productInfos, Func<FilterableApp, bool>? onNonFreeApp = null) {
+			var appProductInfos = productInfos.SelectMany(static result => result.Apps.Values);
+			if (appProductInfos.Count() == 0) {
+				return [];
+			}
+
+			List<FilterableApp> apps = appProductInfos.Select(x => new FilterableApp(x)).ToList();
+
+			// Filter out non-free apps
+			apps.RemoveAll(app => {
+				if (!app.IsFree() || !app.IsAvailable()) {
+					if (onNonFreeApp?.Invoke(app) == false) {
+						return false;
+					}
+
+					return true;
+				}
+
+				return false;
+			});
+
+			// Get the parents of the free apps
+			HashSet<uint> parentIDs = apps.Where(app => app.ParentID != null).Select(app => app.ParentID!.Value).ToHashSet();
+			var parentProductInfos = (await ProductInfo.GetProductInfo(appIDs: parentIDs).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);
+			if (parentProductInfos == null) {
+				ASF.ArchiLogger.LogNullError(parentProductInfos);
+
+				return null;
+			}
+
+			if (parentProductInfos.Count() > 0) {
+				apps.ForEach(app => {
+					if (app.ParentID != null) {
+						app.AddParent(parentProductInfos.FirstOrDefault(parent => parent.ID == app.ParentID));
+					}
+				});
+			}
+
+			return apps;
 		}
 
 		internal void AddParent(SteamApps.PICSProductInfoCallback.PICSProductInfo? productInfo) => AddParent(productInfo?.ID, productInfo?.KeyValues);

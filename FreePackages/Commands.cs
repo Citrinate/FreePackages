@@ -29,6 +29,12 @@ namespace FreePackages {
 						case "FREEPACKAGES" when access >= EAccess.Master:
 							return String.Format("{0} {1}", nameof(FreePackages), (typeof(FreePackages).Assembly.GetName().Version ?? new Version("0")).ToString());
 
+						case "CANCELREMOVE" or "CANCELREMOVAL":
+							return ResponseCancelRemove(bot, access);
+
+						case "CONFIRMREMOVE" or "CONFIRMREMOVAL":
+							return ResponseConfirmRemove(bot, access);
+
 						case "CLEARFREEPACKAGESQUEUE":
 							return ResponseClearQueue(bot, access);
 
@@ -37,16 +43,27 @@ namespace FreePackages {
 						case "QSTATUS" or "QUEUESTATUS":
 							return ResponseQueueStatus(bot, access);
 
-						case "REMOVEALLFREEPACKAGES":
-							return await ResponseRemoveAllFreePackages(bot, access).ConfigureAwait(false);
+						case "REMOVEFREEPACKAGES":
+							return await ResponseRemoveFreePackages(bot, access, new StatusReporter(bot, steamID)).ConfigureAwait(false);
 
 						default:
 							return null;
 					};
 				default:
 					switch (args[0].ToUpperInvariant()) {
+						case "CANCELREMOVE" or "CANCELREMOVAL":
+							return ResponseCancelRemove(access, steamID, args[1]);
+
+						case "CONFIRMREMOVE" or "CONFIRMREMOVAL":
+							return ResponseConfirmRemove(access, steamID, args[1]);
+
 						case "CLEARFREEPACKAGESQUEUE":
 							return ResponseClearQueue(access, steamID, args[1]);
+
+						case "DONTREMOVE" when args.Length > 2:
+							return ResponseDontRemove(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, ","));
+						case "DONTREMOVE":
+							return ResponseDontRemove(bot, access, args[1]);
 
 						case "QSTATUS" or "QUEUESTATUS":
 							return ResponseQueueStatus(access, steamID, args[1]);
@@ -61,13 +78,81 @@ namespace FreePackages {
 						case "QLICENSE^" or "QUEUELICENSE^" or "QLICENCE^" or "QUEUELICENCE^" :
 							return ResponseQueueLicense(bot, access, args[1], useFilter: true);
 
-						case "REMOVEALLFREEPACKAGES" :
-							return await ResponseRemoveAllFreePackages(access, steamID, args[1]).ConfigureAwait(false);
+						case "REMOVEFREEPACKAGES":
+							return await ResponseRemoveFreePackages(access, steamID, args[1], new StatusReporter(bot, steamID)).ConfigureAwait(false);
 
 						default:
 							return null;
 					}
 			}
+		}
+
+		private static string? ResponseCancelRemove(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
+			}
+
+			if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
+				return FormatBotResponse(bot, Strings.PluginNotEnabled);
+			}
+
+			return FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].CancelRemoval());
+		}
+
+		private static string? ResponseCancelRemove(EAccess access, ulong steamID, string botNames) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+			}
+
+			IEnumerable<string?> results = bots.Select(bot => ResponseCancelRemove(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)));
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static string? ResponseConfirmRemove(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
+			}
+
+			if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
+				return FormatBotResponse(bot, Strings.PluginNotEnabled);
+			}
+
+			return FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].ConfirmRemoval());
+		}
+
+		private static string? ResponseConfirmRemove(EAccess access, ulong steamID, string botNames) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+			}
+
+			IEnumerable<string?> results = bots.Select(bot => ResponseConfirmRemove(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)));
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
 		private static string? ResponseClearQueue(Bot bot, EAccess access) {
@@ -100,6 +185,80 @@ namespace FreePackages {
 			IEnumerable<string?> results = bots.Select(bot => ResponseClearQueue(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)));
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static string? ResponseDontRemove(Bot bot, EAccess access, string licenses) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
+			}
+
+			if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
+				return FormatBotResponse(bot, Strings.PluginNotEnabled);
+			}
+
+			// https://github.com/JustArchiNET/ArchiSteamFarm/blob/d972c93072dd8d2bf0f2cecda3561dc3ba77a9ed/ArchiSteamFarm/Steam/Interaction/Commands.cs#L626C3-L626C34
+			StringBuilder response = new();
+
+			string[] entries = licenses.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+			foreach (string entry in entries) {
+				uint gameID;
+				string type;
+
+				int index = entry.IndexOf('/', StringComparison.Ordinal);
+
+				if ((index > 0) && (entry.Length > index + 1)) {
+					if (!uint.TryParse(entry[(index + 1)..], out gameID) || (gameID == 0)) {
+						response.AppendLine(FormatBotResponse(bot, string.Format(CultureInfo.CurrentCulture, ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(gameID))));
+
+						continue;
+					}
+
+					type = entry[..index];
+				} else if (uint.TryParse(entry, out gameID) && (gameID > 0)) {
+					type = "SUB";
+				} else {
+					response.AppendLine(FormatBotResponse(bot, string.Format(CultureInfo.CurrentCulture, ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(gameID))));
+
+					continue;
+				}
+
+				EPackageType packageType;
+				type = type.ToUpperInvariant();
+				if (type == "A" || type == "APP") {
+					packageType = EPackageType.RemoveApp;
+				} else {
+					packageType = EPackageType.RemoveSub;
+				}
+
+				response.AppendLine(FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].ModifyRemovables(packageType, gameID)));
+			}
+
+			return response.Length > 0 ? response.ToString() : null;
+		}
+
+		private static string? ResponseDontRemove(EAccess access, ulong steamID, string botNames, string licenses) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+			}
+
+			IEnumerable<string?> results = bots.Select(bot => ResponseDontRemove(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), licenses));
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			Utilities.InBackground(async() => await PackageHandler.HandleChanges().ConfigureAwait(false));
 
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
@@ -148,7 +307,7 @@ namespace FreePackages {
 			}
 
 			if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
-				return FormatBotResponse(bot, "Free Packages plugin not enabled");
+				return FormatBotResponse(bot, Strings.PluginNotEnabled);
 			}
 
 			// https://github.com/JustArchiNET/ArchiSteamFarm/blob/d972c93072dd8d2bf0f2cecda3561dc3ba77a9ed/ArchiSteamFarm/Steam/Interaction/Commands.cs#L626C3-L626C34
@@ -216,7 +375,7 @@ namespace FreePackages {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static async Task<string?> ResponseRemoveAllFreePackages(Bot bot, EAccess access) {
+		private static async Task<string?> ResponseRemoveFreePackages(Bot bot, EAccess access, StatusReporter statusReporter) {
 			if (access < EAccess.Master) {
 				return null;
 			}
@@ -226,55 +385,55 @@ namespace FreePackages {
 			}
 
 			if (!PackageHandler.Handlers.Keys.Contains(bot.BotName)) {
-				return FormatBotResponse(bot, "Free Packages plugin not enabled");
+				return FormatBotResponse(bot, Strings.PluginNotEnabled);
 			}
 
 			IDocument? accountLicensesPage = await WebRequest.GetAccountLicenses(bot);
 			if (accountLicensesPage == null) {
-				return FormatBotResponse(bot, "Failed to fetch licenses page");
+				return FormatBotResponse(bot, Strings.LicensePageFetchFail);
 			}
 
-			Regex removablePackageIDsRegex = new Regex("(?<=javascript:RemoveFreeLicense\\( )[0-9]+", RegexOptions.CultureInvariant);
+			Regex removablePackageIDsRegex = new Regex("(?<=javascript:RemoveFreeLicense\\( )[0-9]+", RegexOptions.CultureInvariant); // matches the first parameter of: javascript:RemoveFreeLicense( 45946, 'UmV2ZXJzaW9uOiBUaGUgRXNjYXBl' );
 			MatchCollection removablePackageIDMatches = removablePackageIDsRegex.Matches(accountLicensesPage.Source.Text);
 			if (removablePackageIDMatches.Count == 0) {
-				return FormatBotResponse(bot, "Failed to find any removable package ids");
+				return FormatBotResponse(bot, Strings.LicensePageEmpty);
 			}
 
 			HashSet<uint> removablePackgeIDs = new();
 			foreach (Match match in removablePackageIDMatches) {
-				if (uint.TryParse(match.Value, out uint packageID)) {
-					removablePackgeIDs.Add(packageID);
-				} else {
-					return FormatBotResponse(bot, String.Format("Failed to parse package ids match: {0}", match.Value));
+				if (!uint.TryParse(match.Value, out uint packageID)) {
+					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(packageID)));
 				}
+
+				removablePackgeIDs.Add(packageID);
 			}
 
-			foreach (uint packageID in removablePackgeIDs) {
-				PackageHandler.Handlers[bot.BotName].AddPackage(EPackageType.RemoveSub, packageID, false);
-			}
+			Utilities.InBackground(
+				async() => {
+					await PackageHandler.Handlers[bot.BotName].ScanRemovables(removablePackgeIDs, statusReporter).ConfigureAwait(false);
+				}
+			);
 
-			return String.Format("Removing {0} packages", removablePackgeIDs.Count);
+			int removableScanTimeEstimateMinutes = (int) Math.Round(2.5 * ((double) removablePackgeIDs.Count / ProductInfo.ItemsPerProductInfoRequest) * ((double) ProductInfo.ProductInfoLimitingDelaySeconds / 60));
+
+			return FormatBotResponse(bot, String.Format(Strings.RemovalWaitMessage, removableScanTimeEstimateMinutes, String.Format("!cancelremove {0}", bot.BotName)));
 		}
 
-		private static async Task<string?> ResponseRemoveAllFreePackages(EAccess access, ulong steamID, string botNames) {
-			if (String.IsNullOrEmpty(botNames)) {
-				throw new ArgumentNullException(nameof(botNames));
+		private static async Task<string?> ResponseRemoveFreePackages(EAccess access, ulong steamID, string botName, StatusReporter statusReporter) {
+			if (String.IsNullOrEmpty(botName)) {
+				throw new ArgumentNullException(nameof(botName));
 			}
 
-			HashSet<Bot>? bots = Bot.GetBots(botNames);
+			Bot? bot = Bot.GetBot(botName);
 
-			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+			if (bot == null) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)) : null;
 			}
 
-			IEnumerable<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseRemoveAllFreePackages(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
-
-			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
-
-			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
+			return await ResponseRemoveFreePackages(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), statusReporter).ConfigureAwait(false);
 		}
 
-		private static string FormatStaticResponse(string response) => ArchiSteamFarm.Steam.Interaction.Commands.FormatStaticResponse(response);
-		private static string FormatBotResponse(Bot bot, string response) => bot.Commands.FormatBotResponse(response);
+		internal static string FormatStaticResponse(string response) => ArchiSteamFarm.Steam.Interaction.Commands.FormatStaticResponse(response);
+		internal static string FormatBotResponse(Bot bot, string response) => bot.Commands.FormatBotResponse(response);
 	}
 }

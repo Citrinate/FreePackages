@@ -232,4 +232,79 @@
     <value>Removing {0} packages.</value>
     <comment>{0} will be replaced by a number</comment>
   </data>
+  <data name="LicensePageFetchFail" xml:space="preserve">
+    <value>Failed to fetch licenses page</value>
+    <comment>
+</comment>
+  </data>
+  <data name="LicensePageEmpty" xml:space="preserve">
+    <value>Failed to find any removable packages</value>
+    <comment>
+</comment>
+  </data>
+  <data name="RemovingNoPackages" xml:space="preserve">
+    <value>Didn't find any free packages to remove</value>
+    <comment>
+</comment>
+  </data>
+  <data name="ProductInfoFetchFailed" xml:space="preserve">
+    <value>Failed to fetch product info</value>
+    <comment>
+</comment>
+  </data>
+  <data name="RemovalQueueEmpty" xml:space="preserve">
+    <value>No packages are being removed</value>
+  </data>
+  <data name="RemovalsCancelled" xml:space="preserve">
+    <value>Cancelled {0} removals.</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="RemovalWaitMessage" xml:space="preserve">
+    <value>Looking for free packages to remove, this scan will take ~{0} minutes. Cancel at any time using: {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced with a command</comment>
+  </data>
+  <data name="RemovablePackagesFound" xml:space="preserve">
+    <value>Found {0} packages to remove: 
+{1} 
+To cancel, use: {2}
+To continue with removal, use: {3}
+To remove items from the list above before continuing, use: {4}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a list, {2} will be replaced with a command, {3} will be replaced with a command, {4} will be replaced with a command</comment>
+  </data>
+  <data name="RemovingNoUnwatedPackages" xml:space="preserve">
+    <value>Didn't find any unwanted free packages to remove</value>
+    <comment>
+</comment>
+  </data>
+  <data name="RemovalScanCancelled" xml:space="preserve">
+    <value>Scan for unwanted free packages cancelled.</value>
+    <comment>
+</comment>
+  </data>
+  <data name="RemovalScanAlreadyRunning" xml:space="preserve">
+    <value>Already scanning for unwanted free packages</value>
+    <comment>
+</comment>
+  </data>
+  <data name="RemovalPackageNotFound" xml:space="preserve">
+    <value>{0} was not in the list of scanned packages</value>
+    <comment>{0} will be replaced by a packageID</comment>
+  </data>
+  <data name="RemovalPackageCancelled" xml:space="preserve">
+    <value>{0} removed</value>
+    <comment>{0} will be replaced by a packageID</comment>
+  </data>
+  <data name="RemovalScanCanceling" xml:space="preserve">
+    <value>Cancelling scan for unwanted free packages...</value>
+    <comment>
+</comment>
+  </data>
+  <data name="RemovalScanNeeded" xml:space="preserve">
+    <value>You must first scan for unwanted free packages using the command: {0}</value>
+    <comment>{0} will be replaced by a command</comment>
+  </data>
+  <data name="RemovalsPaused" xml:space="preserve">
+    <value>Pausing package removals until {0}</value>
+    <comment>{0} will be replaced by a time</comment>
+  </data>
 </root>

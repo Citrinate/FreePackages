@@ -140,7 +140,7 @@ namespace FreePackages {
 				return package;
 			}
 
-			return Packages.FirstOrDefault(x => x.StartTime == null);
+			return Packages.FirstOrDefault(x => x.StartTime == null && types.Contains(x.Type));
 		}
 
 		internal void AddActivation(DateTime activation, uint count = 1) {
@@ -210,10 +210,15 @@ namespace FreePackages {
 			Utilities.InBackground(Save);
 		}
 
-		internal void Clear() {
-			Packages.Clear();
+		internal void ClearQueue() {
+			Packages.RemoveWhere(package => ActivationQueue.ActivationTypes.Contains(package.Type));
 			ChangedApps.Clear();
 			ChangedPackages.Clear();
+			Utilities.InBackground(Save);
+		}
+
+		internal void CancelRemoval() {
+			Packages.RemoveWhere(package => RemovalQueue.RemovalTypes.Contains(package.Type));
 			Utilities.InBackground(Save);
 		}
 

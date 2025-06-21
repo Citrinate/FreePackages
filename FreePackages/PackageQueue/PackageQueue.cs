@@ -89,6 +89,10 @@ namespace FreePackages {
 				return await RemoveSub(package.ID).ConfigureAwait(false);
 			}
 
+			if (package.Type == EPackageType.RemoveApp) {
+				return await RemoveApp(package.ID).ConfigureAwait(false);
+			}
+
 			return EResult.Invalid;
 		}
 
@@ -219,9 +223,40 @@ namespace FreePackages {
 			}
 
 			if (result == EResult.OK) {
-				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("removeSub/{0}", subID), result));
+				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("sub/{0}", subID), result));
 			} else {
-				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("removeSub/{0}", subID), result));
+				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("sub/{0}", subID), result));
+			}
+
+			if (result == EResult.RateLimitExceeded) {
+				return EResult.RateLimitExceeded;
+			}
+
+			if (result == EResult.Timeout) {
+				return EResult.Timeout;
+			}
+
+			if (result != EResult.OK) {
+				return EResult.Invalid;
+			}
+
+			return EResult.OK;
+		}
+
+		private async Task<EResult> RemoveApp(uint appID) {
+			EResult result;
+			try {
+				result = await Bot.Actions.RemoveLicenseApp(appID).ConfigureAwait(false);
+			} catch (Exception e) {
+				Bot.ArchiLogger.LogGenericException(e);
+
+				return EResult.Invalid;
+			}
+
+			if (result == EResult.OK) {
+				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), result));
+			} else {
+				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), result));
 			}
 
 			if (result == EResult.RateLimitExceeded) {
