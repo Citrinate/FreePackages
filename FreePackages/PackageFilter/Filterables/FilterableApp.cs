@@ -11,7 +11,6 @@ namespace FreePackages {
 		internal uint? ParentID = null;
 
 		internal uint ID;
-		internal string Name;
 		internal EAppType Type;
 		internal bool IsFreeApp;
 		internal string? ReleaseState;
@@ -36,7 +35,6 @@ namespace FreePackages {
 		internal FilterableApp(KeyValue kv) : this(kv["appid"].AsUnsignedInteger(), kv) {}
 		internal FilterableApp(uint id, KeyValue kv) {
 			ID = id;
-			Name = kv["common"]["name"].AsString() ?? String.Format("App {0}", ID);
 			try {
 				Type = Enum.Parse<EAppType>(kv["common"]["type"].AsString() ?? EAppType.Invalid.ToString(), true);
 			} catch {

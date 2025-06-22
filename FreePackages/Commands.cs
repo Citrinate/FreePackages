@@ -393,28 +393,38 @@ namespace FreePackages {
 				return FormatBotResponse(bot, Strings.LicensePageFetchFail);
 			}
 
-			Regex removablePackageIDsRegex = new Regex("(?<=javascript:RemoveFreeLicense\\( )[0-9]+", RegexOptions.CultureInvariant); // matches the first parameter of: javascript:RemoveFreeLicense( 45946, 'UmV2ZXJzaW9uOiBUaGUgRXNjYXBl' );
-			MatchCollection removablePackageIDMatches = removablePackageIDsRegex.Matches(accountLicensesPage.Source.Text);
-			if (removablePackageIDMatches.Count == 0) {
+			Regex removablePackageIDsRegex = new Regex("RemoveFreeLicense\\(\\s*(?<subID>[0-9]+),\\s*'(?<encodedName>[A-Za-z0-9+/=]*)'", RegexOptions.CultureInvariant); // matches the parameters of: RemoveFreeLicense( 45946, 'UmV2ZXJzaW9uOiBUaGUgRXNjYXBl' );
+			MatchCollection removablePackageMatches = removablePackageIDsRegex.Matches(accountLicensesPage.Source.Text);
+			if (removablePackageMatches.Count == 0) {
 				return FormatBotResponse(bot, Strings.LicensePageEmpty);
 			}
 
-			HashSet<uint> removablePackgeIDs = new();
-			foreach (Match match in removablePackageIDMatches) {
-				if (!uint.TryParse(match.Value, out uint packageID)) {
-					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(packageID)));
+			Dictionary<uint, string> removeablePackages = new();
+			foreach (Match match in removablePackageMatches) {
+				string name;
+				try {
+					name = Encoding.UTF8.GetString(Convert.FromBase64String(match.Groups["encodedName"].Value));
+				} catch (Exception e) {
+					bot.ArchiLogger.LogGenericException(e);
+
+					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, "encodedName"));
 				}
 
-				removablePackgeIDs.Add(packageID);
+				string subIDString = match.Groups["subID"].Value;
+				if (!uint.TryParse(subIDString, out uint subID)) {
+					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, "subID"));
+				}
+
+				removeablePackages[subID] = name;				
 			}
 
 			Utilities.InBackground(
 				async() => {
-					await PackageHandler.Handlers[bot.BotName].ScanRemovables(removablePackgeIDs, statusReporter).ConfigureAwait(false);
+					await PackageHandler.Handlers[bot.BotName].ScanRemovables(removeablePackages, statusReporter).ConfigureAwait(false);
 				}
 			);
 
-			int removableScanTimeEstimateMinutes = (int) Math.Round(2.5 * ((double) removablePackgeIDs.Count / ProductInfo.ItemsPerProductInfoRequest) * ((double) ProductInfo.ProductInfoLimitingDelaySeconds / 60));
+			int removableScanTimeEstimateMinutes = (int) Math.Round(2.5 * ((double) removeablePackages.Count / ProductInfo.ItemsPerProductInfoRequest) * ((double) ProductInfo.ProductInfoLimitingDelaySeconds / 60));
 
 			return FormatBotResponse(bot, String.Format(Strings.RemovalWaitMessage, removableScanTimeEstimateMinutes, String.Format("!cancelremove {0}", bot.BotName)));
 		}

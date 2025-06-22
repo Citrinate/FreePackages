@@ -484,7 +484,7 @@ namespace FreePackages {
 			BotCache.AddPackages(packages);
 		}
 
-		internal async Task ScanRemovables(HashSet<uint> removablePackageIDs, StatusReporter statusReporter) {
+		internal async Task ScanRemovables(Dictionary<uint, string> removeablePackages, StatusReporter statusReporter) {
 			if (RemovalCancellation != null) {
 				statusReporter.Report(Bot, Strings.RemovalScanAlreadyRunning);
 
@@ -497,7 +497,7 @@ namespace FreePackages {
 				try {
 					await IsReady().ConfigureAwait(false);
 
-					var productInfos = await ProductInfo.GetProductInfo(packageIDs: removablePackageIDs, cancellationToken: RemovalCancellation.Token).ConfigureAwait(false);
+					var productInfos = await ProductInfo.GetProductInfo(packageIDs: removeablePackages.Keys.ToHashSet(), cancellationToken: RemovalCancellation.Token).ConfigureAwait(false);
 					if (productInfos == null) {
 						statusReporter.Report(Bot, Strings.ProductInfoFetchFailed);
 
@@ -526,10 +526,10 @@ namespace FreePackages {
 							// Single app package, can remove the app directly, which uses an API with a more generous rate limit
 							FilterableApp app = package.PackageContents.First();
 							PackagesToRemove.Add(new Package(EPackageType.RemoveApp, app.ID));
-							previewResponses.Add(String.Format("app/{0} ({1})", app.ID, app.Name));
+							previewResponses.Add(String.Format("app/{0} ({1})", app.ID, removeablePackages[package.ID]));
 						} else {
 							PackagesToRemove.Add(new Package(EPackageType.RemoveSub, package.ID));
-							previewResponses.Add(String.Format("sub/{0} ({1})", package.ID, String.Join(" + ", package.PackageContents.Select(static app => app.Name))));
+							previewResponses.Add(String.Format("sub/{0} ({1})", package.ID, removeablePackages[package.ID]));
 						}
 					}
 
