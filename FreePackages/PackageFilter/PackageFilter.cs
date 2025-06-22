@@ -236,7 +236,7 @@ namespace FreePackages {
 				}
 			}
 
-			if (package.PackageContents.Any(app => !OwnedAppIDs.Contains(app.ID) && !IsRedeemableApp(app, package.PackageContentIDs, ignoreAlreadyOwned: true))) {
+			if (package.PackageContents.Any(app => !IsRedeemableApp(app, package.PackageContentIDs, ignoreAlreadyOwned: true))) {
 				// At least one of the unowned apps in this package isn't redeemable
 				return false;
 			}
