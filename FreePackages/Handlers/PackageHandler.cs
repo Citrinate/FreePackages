@@ -531,7 +531,7 @@ namespace FreePackages {
 
 					PackagesToRemove.Clear();
 					List<string> previewResponses = [];
-					foreach (FilterablePackage package in packages.Where(package => PackageFilter.IsRedeemablePackage(package) && !PackageFilter.IsWantedPackage(package, ignoreAgeFilters: true))) {
+					foreach (FilterablePackage package in packages.Where(package => !PackageFilter.IsWantedPackage(package, ignoreAgeFilters: true))) {
 						if (excludePlayed) {
 							if (package.PackageContents.Any(app => ownedGames!.ContainsKey(app.ID) && ownedGames![app.ID].playtime_forever > 0)) {
 								continue;
