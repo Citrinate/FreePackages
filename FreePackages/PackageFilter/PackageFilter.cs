@@ -46,7 +46,7 @@ namespace FreePackages {
 			UserData = userData;
 		}
 
-		internal bool IsRedeemableApp(FilterableApp app, HashSet<uint>? includedAppIDs = null) {
+		internal bool IsRedeemableApp(FilterableApp app, HashSet<uint>? includedAppIDs = null, bool ignoreAlreadyOwned = false) {
 			if (OwnedAppIDs == null) {
 				throw new InvalidOperationException(nameof(OwnedAppIDs));
 			}
@@ -61,7 +61,7 @@ namespace FreePackages {
 			// App isn't region locked but with package that is: https://steamdb.info/app/2147450
 			// Free games, but that can only be obtained from bundles with non-free games: https://steamdb.info/app/2119270/ https://steamdb.info/bundle/30994/
 
-			if (OwnedAppIDs.Contains(app.ID)) {
+			if (!ignoreAlreadyOwned && OwnedAppIDs.Contains(app.ID)) {
 				// Already own this app
 				return false;
 			}
@@ -187,7 +187,7 @@ namespace FreePackages {
 			return false;
 		}
 
-		internal bool IsRedeemablePackage(FilterablePackage package) {			
+		internal bool IsRedeemablePackage(FilterablePackage package, bool ignoreAlreadyOwned = false) {			
 			if (UserData == null) {
 				throw new InvalidOperationException(nameof(UserData));
 			}
@@ -200,12 +200,12 @@ namespace FreePackages {
 				throw new InvalidOperationException(nameof(Country));
 			}
 
-			if (UserData.OwnedPackages.Contains(package.ID)) {
+			if (!ignoreAlreadyOwned && UserData.OwnedPackages.Contains(package.ID)) {
 				// Already own this package
 				return false;
 			}
 
-			if (package.PackageContents.All(x => OwnedAppIDs.Contains(x.ID))) {
+			if (!ignoreAlreadyOwned && package.PackageContents.All(x => OwnedAppIDs.Contains(x.ID))) {
 				// Already own all of the apps in this package
 				return false;
 			}
@@ -236,7 +236,7 @@ namespace FreePackages {
 				}
 			}
 
-			if (package.PackageContents.Any(app => !OwnedAppIDs.Contains(app.ID) && !IsRedeemableApp(app, package.PackageContentIDs))) {
+			if (package.PackageContents.Any(app => !OwnedAppIDs.Contains(app.ID) && !IsRedeemableApp(app, package.PackageContentIDs, ignoreAlreadyOwned: true))) {
 				// At least one of the unowned apps in this package isn't redeemable
 				return false;
 			}
