@@ -461,8 +461,8 @@ While the plugin can be used passively, you can also manually import free packag
 Command | Access | Description
 --- | --- | ---
 `queuestatus [Bots]`|`Master`|Prints the status of the given bot's packages queue
-`queuelicense [Bots] <Licenses>`|`Master`|Adds given `licenses`, explained [here](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Commands#addlicense-licenses), to the given bot's packages queue.  Playtests cannot be added to the package queue using this command
-`queuelicense^ [Bots] <Licenses>`|`Master`|Adds given `licenses`, explained [here](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Commands#addlicense-licenses), to the given bot's packages queue using that bot's package filters
+`queuelicense [Bots] <Licenses>`|`Master`|Adds given `licenses`, explained [here](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Commands#licenses), to the given bot's packages queue.  Playtests cannot be added to the package queue using this command
+`queuelicense^ [Bots] <Licenses>`|`Master`|Adds given `licenses`, explained [here](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Commands#licenses), to the given bot's packages queue using that bot's package filters
 `clearfreepackagesqueue [Bots]`|`Master`|Removes everything from the given bot's packages queue
 
 ### Removal Commands
@@ -473,7 +473,7 @@ Command | Access | Description
 `removefreepackages^ [Bot]`|`Master`|Like `removefreepackages`, but will also exclude for removal any games that have been played by the given bot
 `cancelremove [Bots]`|`Master`|Cancels any package removals
 `confirmremove [Bots]`|`Master`|After `removefreepackages` is used, begins the process of removing unwanted free packages
-`dontremove [Bots] <Licenses>`|`Master`|After `removefreepackages` and before `confirmremove` is used, removes given `licenses` (explained [here](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Commands#addlicense-licenses)) from the list of packages about to be removed
+`dontremove [Bots] <Licenses>`|`Master`|After `removefreepackages` and before `confirmremove` is used, removes given `licenses` (explained [here](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Commands#licenses)) from the list of packages about to be removed
 
 ### Other Commands
 
