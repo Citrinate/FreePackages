@@ -307,4 +307,9 @@ To remove items from the list above before continuing, use: {4}</value>
     <value>Pausing package removals until {0}</value>
     <comment>{0} will be replaced by a time</comment>
   </data>
+  <data name="PlaytimeFetchFailed" xml:space="preserve">
+    <value>Failed to get playtime information</value>
+    <comment>
+</comment>
+  </data>
 </root>

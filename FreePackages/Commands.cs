@@ -46,6 +46,9 @@ namespace FreePackages {
 						case "REMOVEFREEPACKAGES":
 							return await ResponseRemoveFreePackages(bot, access, new StatusReporter(bot, steamID)).ConfigureAwait(false);
 
+						case "REMOVEFREEPACKAGES^":
+							return await ResponseRemoveFreePackages(bot, access, new StatusReporter(bot, steamID), excludePlayed : true).ConfigureAwait(false);
+
 						default:
 							return null;
 					};
@@ -80,6 +83,9 @@ namespace FreePackages {
 
 						case "REMOVEFREEPACKAGES":
 							return await ResponseRemoveFreePackages(access, steamID, args[1], new StatusReporter(bot, steamID)).ConfigureAwait(false);
+
+						case "REMOVEFREEPACKAGES^":
+							return await ResponseRemoveFreePackages(access, steamID, args[1], new StatusReporter(bot, steamID), excludePlayed: true).ConfigureAwait(false);
 
 						default:
 							return null;
@@ -375,7 +381,7 @@ namespace FreePackages {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static async Task<string?> ResponseRemoveFreePackages(Bot bot, EAccess access, StatusReporter statusReporter) {
+		private static async Task<string?> ResponseRemoveFreePackages(Bot bot, EAccess access, StatusReporter statusReporter, bool excludePlayed = false) {
 			if (access < EAccess.Master) {
 				return null;
 			}
@@ -420,7 +426,7 @@ namespace FreePackages {
 
 			Utilities.InBackground(
 				async() => {
-					await PackageHandler.Handlers[bot.BotName].ScanRemovables(removeablePackages, statusReporter).ConfigureAwait(false);
+					await PackageHandler.Handlers[bot.BotName].ScanRemovables(removeablePackages, excludePlayed, statusReporter).ConfigureAwait(false);
 				}
 			);
 
@@ -429,7 +435,7 @@ namespace FreePackages {
 			return FormatBotResponse(bot, String.Format(Strings.RemovalWaitMessage, removableScanTimeEstimateMinutes, String.Format("!cancelremove {0}", bot.BotName)));
 		}
 
-		private static async Task<string?> ResponseRemoveFreePackages(EAccess access, ulong steamID, string botName, StatusReporter statusReporter) {
+		private static async Task<string?> ResponseRemoveFreePackages(EAccess access, ulong steamID, string botName, StatusReporter statusReporter, bool excludePlayed = false) {
 			if (String.IsNullOrEmpty(botName)) {
 				throw new ArgumentNullException(nameof(botName));
 			}
@@ -440,7 +446,7 @@ namespace FreePackages {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)) : null;
 			}
 
-			return await ResponseRemoveFreePackages(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), statusReporter).ConfigureAwait(false);
+			return await ResponseRemoveFreePackages(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), statusReporter, excludePlayed).ConfigureAwait(false);
 		}
 
 		internal static string FormatStaticResponse(string response) => ArchiSteamFarm.Steam.Interaction.Commands.FormatStaticResponse(response);

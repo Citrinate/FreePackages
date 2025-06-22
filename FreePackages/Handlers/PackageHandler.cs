@@ -484,7 +484,7 @@ namespace FreePackages {
 			BotCache.AddPackages(packages);
 		}
 
-		internal async Task ScanRemovables(Dictionary<uint, string> removeablePackages, StatusReporter statusReporter) {
+		internal async Task ScanRemovables(Dictionary<uint, string> removeablePackages, bool excludePlayed, StatusReporter statusReporter) {
 			if (RemovalCancellation != null) {
 				statusReporter.Report(Bot, Strings.RemovalScanAlreadyRunning);
 
@@ -496,6 +496,16 @@ namespace FreePackages {
 				await ProcessChangesSemaphore.WaitAsync(RemovalCancellation.Token).ConfigureAwait(false);
 				try {
 					await IsReady().ConfigureAwait(false);
+
+					Dictionary<uint, SteamKit2.Internal.CPlayer_GetOwnedGames_Response.Game>? ownedGames = null;
+					if (excludePlayed) {
+						ownedGames = await SteamHandler.Handlers[Bot.BotName].GetOwnedGames(Bot.SteamID).ConfigureAwait(false);
+						if (ownedGames == null) {
+							statusReporter.Report(Bot, Strings.PlaytimeFetchFailed);
+
+							return;
+						}
+					}
 
 					var productInfos = await ProductInfo.GetProductInfo(packageIDs: removeablePackages.Keys.ToHashSet(), cancellationToken: RemovalCancellation.Token).ConfigureAwait(false);
 					if (productInfos == null) {
@@ -522,6 +532,12 @@ namespace FreePackages {
 					PackagesToRemove.Clear();
 					List<string> previewResponses = [];
 					foreach (FilterablePackage package in packages.Where(package => !PackageFilter.IsWantedPackage(package, ignoreAgeFilters: true))) {
+						if (excludePlayed) {
+							if (package.PackageContents.Any(app => ownedGames!.ContainsKey(app.ID) && ownedGames![app.ID].playtime_forever > 0)) {
+								continue;
+							}
+						}
+
 						if (package.PackageContents.Count == 1) {
 							// Single app package, can remove the app directly, which uses an API with a more generous rate limit
 							FilterableApp app = package.PackageContents.First();
