@@ -120,14 +120,14 @@ namespace FreePackages {
 		internal void AddPackageContents(IEnumerable<KeyValue> kvs) => AddPackageContents(kvs.Select(kv => (kv["appid"].AsUnsignedInteger(), kv)));
 		internal void AddPackageContents(IEnumerable<(uint id, KeyValue kv)> packageContents) {
 			PackageContents = packageContents.Select(packageContent => new FilterableApp(packageContent.id, packageContent.kv)).ToList();
-			PackageContentParentIDs = PackageContents.Where(app => app.ParentID != null).Select(app => app.ParentID!.Value).ToHashSet<uint>();
+			PackageContentParentIDs = PackageContents.Where(app => app.ParentInfoRequired && app.ParentID != null).Select(app => app.ParentID!.Value).ToHashSet<uint>();
 		}
 
 		internal void AddPackageContentParents(IEnumerable<SteamApps.PICSProductInfoCallback.PICSProductInfo> productInfos) => AddPackageContentParents(productInfos.Select(productInfo => (productInfo.ID, productInfo.KeyValues)));
 		internal void AddPackageContentParents(IEnumerable<KeyValue> kvs) => AddPackageContentParents(kvs.Select(kv => (kv["appid"].AsUnsignedInteger(), kv)));
 		internal void AddPackageContentParents(IEnumerable<(uint id, KeyValue kv)> parents) {
 			PackageContents.ForEach(app => {
-				if (app.ParentID != null) {
+				if (app.ParentInfoRequired && app.ParentID != null) {
 					try {
 						var parent = parents.First(parent => parent.id == app.ParentID);
 						app.AddParent(parent.id, parent.kv);

@@ -9,6 +9,7 @@ namespace FreePackages {
 	internal sealed class FilterableApp {
 		internal FilterableApp? Parent = null;
 		internal uint? ParentID = null;
+		internal bool ParentInfoRequired = false; // Whether or not the product info of the parent is needed to apply filters
 
 		internal uint ID;
 		internal EAppType Type;
@@ -64,8 +65,7 @@ namespace FreePackages {
 				Category.Add(29);
 			}
 
-			// I only want the parents for playtests and demos (because they share a store page with their parents and so should inherit some of their parents properties)
-			if (Type == EAppType.Beta || Type == EAppType.Demo) {
+			{
 				uint parentID = 0;
 				if (Type == EAppType.Beta) {
 					// This is generally less reliable than ["common"]["parent"] (Ex: https://steamdb.info/app/2420490/ on Oct 17 2023 has "parent" and is redeemable, but doesn't have "betaforappid")
@@ -77,6 +77,11 @@ namespace FreePackages {
 
 				if (parentID > 0) {
 					ParentID = parentID;
+				}
+
+				// I only want product info for parents of playtests and demos (because they share a store page with their parents and so should inherit some of their parents properties)
+				if (Type == EAppType.Beta || Type == EAppType.Demo) {
+					ParentInfoRequired = true;
 				}
 			}
 		}
@@ -103,7 +108,7 @@ namespace FreePackages {
 			});
 
 			// Get the parents of the free apps
-			HashSet<uint> parentIDs = apps.Where(app => app.ParentID != null).Select(app => app.ParentID!.Value).ToHashSet();
+			HashSet<uint> parentIDs = apps.Where(app => app.ParentInfoRequired && app.ParentID != null).Select(app => app.ParentID!.Value).ToHashSet();
 			var parentProductInfos = (await ProductInfo.GetProductInfo(appIDs: parentIDs).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);
 			if (parentProductInfos == null) {
 				ASF.ArchiLogger.LogNullError(parentProductInfos);
@@ -113,7 +118,7 @@ namespace FreePackages {
 
 			if (parentProductInfos.Count() > 0) {
 				apps.ForEach(app => {
-					if (app.ParentID != null) {
+					if (app.ParentInfoRequired && app.ParentID != null) {
 						app.AddParent(parentProductInfos.FirstOrDefault(parent => parent.ID == app.ParentID));
 					}
 				});
@@ -125,7 +130,7 @@ namespace FreePackages {
 		internal void AddParent(SteamApps.PICSProductInfoCallback.PICSProductInfo? productInfo) => AddParent(productInfo?.ID, productInfo?.KeyValues);
 		internal void AddParent(KeyValue? kv) => AddParent(kv?["appid"].AsUnsignedInteger(), kv);
 		internal void AddParent(uint? id, KeyValue? kv) {
-			if (id == null || kv == null) {
+			if (!ParentInfoRequired || id == null || kv == null) {
 				return;
 			}
 

@@ -497,10 +497,10 @@ namespace FreePackages {
 				try {
 					await IsReady().ConfigureAwait(false);
 
-					Dictionary<uint, SteamKit2.Internal.CPlayer_GetOwnedGames_Response.Game>? ownedGames = null;
+					Dictionary<uint, SteamKit2.Internal.CPlayer_GetOwnedGames_Response.Game>? ownedGameDetails = null;
 					if (excludePlayed) {
-						ownedGames = await SteamHandler.Handlers[Bot.BotName].GetOwnedGames(Bot.SteamID).ConfigureAwait(false);
-						if (ownedGames == null) {
+						ownedGameDetails = await SteamHandler.Handlers[Bot.BotName].GetOwnedGames(Bot.SteamID).ConfigureAwait(false);
+						if (ownedGameDetails == null) {
 							statusReporter.Report(Bot, Strings.PlaytimeFetchFailed);
 
 							return;
@@ -543,7 +543,10 @@ namespace FreePackages {
 						}
 
 						if (excludePlayed) {
-							if (package.PackageContents.Any(app => ownedGames!.ContainsKey(app.ID) && ownedGames![app.ID].playtime_forever > 0)) {
+							if (package.PackageContents.Any(app => {
+								return (ownedGameDetails!.ContainsKey(app.ID) && ownedGameDetails![app.ID].playtime_forever > 0)
+									|| (app.Type != EAppType.Demo && app.ParentID != null && ownedGameDetails!.ContainsKey(app.ParentID.Value) && ownedGameDetails![app.ParentID.Value].playtime_forever > 0);
+							})) {
 								continue;
 							}
 						}
