@@ -484,7 +484,7 @@ namespace FreePackages {
 			BotCache.AddPackages(packages);
 		}
 
-		internal async Task ScanRemovables(Dictionary<uint, string> removeablePackages, bool excludePlayed, StatusReporter statusReporter) {
+		internal async Task ScanRemovables(Dictionary<uint, string> removeablePackages, bool excludePlayed, bool removeAll, StatusReporter statusReporter) {
 			if (RemovalCancellation != null) {
 				statusReporter.Report(Bot, Strings.RemovalScanAlreadyRunning);
 
@@ -514,7 +514,7 @@ namespace FreePackages {
 						return;
 					}
 
-					List<FilterablePackage>? packages = await FilterablePackage.GetFilterables(productInfos, cancellationToken: RemovalCancellation.Token).ConfigureAwait(false);
+					List<FilterablePackage>? packages = await FilterablePackage.GetFilterables(productInfos, cancellationToken: RemovalCancellation.Token, onNonFreePackage: x => !removeAll).ConfigureAwait(false);
 					if (packages == null) {
 						statusReporter.Report(Bot, Strings.ProductInfoFetchFailed);
 
@@ -531,7 +531,17 @@ namespace FreePackages {
 
 					PackagesToRemove.Clear();
 					List<string> previewResponses = [];
-					foreach (FilterablePackage package in packages.Where(package => PackageFilter.IsRedeemablePackage(package, ignoreAlreadyOwned: true) && !PackageFilter.IsWantedPackage(package, ignoreAgeFilters: true))) {
+					foreach (FilterablePackage package in packages) {
+						if (!removeAll) {
+							if (!PackageFilter.IsRedeemablePackage(package, ignoreAlreadyOwned: true)) {
+								continue;
+							}
+
+							if (PackageFilter.IsWantedPackage(package, ignoreAgeFilters: true)) {
+								continue;
+							}
+						}
+
 						if (excludePlayed) {
 							if (package.PackageContents.Any(app => ownedGames!.ContainsKey(app.ID) && ownedGames![app.ID].playtime_forever > 0)) {
 								continue;
