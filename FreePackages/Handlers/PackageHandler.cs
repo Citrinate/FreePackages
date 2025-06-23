@@ -531,6 +531,7 @@ namespace FreePackages {
 
 					PackagesToRemove.Clear();
 					List<string> previewResponses = [];
+					var ownedPackageIDs = Bot.OwnedPackages.Keys.ToHashSet();			
 					foreach (FilterablePackage package in packages) {
 						if (!removeAll) {
 							if (!PackageFilter.IsRedeemablePackage(package, ignoreAlreadyOwned: true)) {
@@ -551,15 +552,23 @@ namespace FreePackages {
 							}
 						}
 
+						// Attempt to remove the app directly, which uses an API with a more generous rate limit
 						if (package.PackageContents.Count == 1) {
-							// Single app package, can remove the app directly, which uses an API with a more generous rate limit
 							FilterableApp app = package.PackageContents.First();
-							PackagesToRemove.Add(new Package(EPackageType.RemoveApp, app.ID));
-							previewResponses.Add(String.Format("app/{0} ({1})", app.ID, removeablePackages[package.ID]));
-						} else {
-							PackagesToRemove.Add(new Package(EPackageType.RemoveSub, package.ID));
-							previewResponses.Add(String.Format("sub/{0} ({1})", package.ID, removeablePackages[package.ID]));
+
+							// Apparently the API for removing apps doesn't care which package is removed? (Haven't tested this) https://github.com/JustArchiNET/ArchiSteamFarm/issues/3434#issuecomment-2954303590
+							// Only remove by app if this is the only package that can be removed
+							int ownedPackagesWithApp = ASF.GlobalDatabase!.PackagesDataReadOnly.Where(x => ownedPackageIDs.Contains(x.Key) && x.Value.AppIDs != null && x.Value.AppIDs.Contains(app.ID)).Count();
+							if (ownedPackagesWithApp <= 1) {
+								PackagesToRemove.Add(new Package(EPackageType.RemoveApp, app.ID));
+								previewResponses.Add(String.Format("app/{0} ({1})", app.ID, removeablePackages[package.ID]));
+
+								continue;
+							}
 						}
+						
+						PackagesToRemove.Add(new Package(EPackageType.RemoveSub, package.ID));
+						previewResponses.Add(String.Format("sub/{0} ({1})", package.ID, removeablePackages[package.ID]));
 					}
 
 					if (PackagesToRemove.Count == 0) {
