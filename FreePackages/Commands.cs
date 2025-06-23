@@ -49,10 +49,10 @@ namespace FreePackages {
 						case "REMOVEFREEPACKAGES^":
 							return await ResponseRemoveFreePackages(bot, access, new StatusReporter(bot, steamID), excludePlayed: true).ConfigureAwait(false);
 
-						case "REMOVEFREEPACKAGES@":
+						case "REMOVEALLFREEPACKAGES":
 							return await ResponseRemoveFreePackages(bot, access, new StatusReporter(bot, steamID), removeAll: true).ConfigureAwait(false);
 
-						case "REMOVEFREEPACKAGES%":
+						case "REMOVEALLFREEPACKAGES^":
 							return await ResponseRemoveFreePackages(bot, access, new StatusReporter(bot, steamID), removeAll: true, excludePlayed: true).ConfigureAwait(false);
 
 						default:
@@ -93,10 +93,10 @@ namespace FreePackages {
 						case "REMOVEFREEPACKAGES^":
 							return await ResponseRemoveFreePackages(access, steamID, args[1], new StatusReporter(bot, steamID), excludePlayed: true).ConfigureAwait(false);
 
-						case "REMOVEFREEPACKAGES@":
+						case "REMOVEALLFREEPACKAGES":
 							return await ResponseRemoveFreePackages(access, steamID, args[1], new StatusReporter(bot, steamID), removeAll: true).ConfigureAwait(false);
 
-						case "REMOVEFREEPACKAGES%":
+						case "REMOVEALLFREEPACKAGES^":
 							return await ResponseRemoveFreePackages(access, steamID, args[1], new StatusReporter(bot, steamID), removeAll: true, excludePlayed: true).ConfigureAwait(false);
 
 						default:
