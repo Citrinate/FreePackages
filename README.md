@@ -474,8 +474,8 @@ Command | Access | Description
 `removeallfreepackages [Bot]`|`Master`|Removes **all** packages from the given bot's account that have a "Remove" button on the [licenses page](https://store.steampowered.com/account/licenses/).  After this command is used, you'll be presented with a list of packages to review, edit, and then confirm the removal of
 `removeallfreepackages^ [Bot]`|`Master`|Like `removeallfreepackages`, but will exclude for removal anything that has been played by the given bot
 `cancelremove [Bots]`|`Master`|Cancels any package removals
-`confirmremove [Bots]`|`Master`|After `removefreepackages` is used, begins the process of removing unwanted free packages
-`dontremove [Bots] <Licenses>`|`Master`|After `removefreepackages` and before `confirmremove` is used, removes given `licenses` (explained [here](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Commands#licenses)) from the list of packages about to be removed
+`confirmremove [Bots]`|`Master`|Begins the process of removing unwanted free packages
+`dontremove [Bots] <Licenses>`|`Master`|Removes given `licenses` (explained [here](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Commands#licenses)) from the list of packages about to be removed
 
 ### Other Commands
 
