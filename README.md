@@ -1,6 +1,6 @@
 # Free Packages Plugin for ArchiSteamFarm
 
-[![Check out my other ArchiSteamFarm plugins](https://img.shields.io/badge/Check%20out%20my%20other%20ArchiSteamFarm%20plugins-blue?logo=github)](https://github.com/stars/Citrinate/lists/archisteamfarm-plugins) [![Help with translations](https://img.shields.io/badge/Help%20with%20translations-purple?logo=crowdin)](https://github.com/Citrinate/FreePackages/tree/main/FreePackages/Localization) ![GitHub all releases](https://img.shields.io/github/downloads/Citrinate/FreePackages/total?logo=github&label=Downloads)
+[![Check out my other ArchiSteamFarm plugins](https://img.shields.io/badge/Check%20out%20my%20other%20ArchiSteamFarm%20plugins-blue?logo=github)](https://github.com/stars/Citrinate/lists/archisteamfarm-plugins) [![Help with translations](https://img.shields.io/badge/Help%20with%20translations-purple?logo=crowdin)](/FreePackages/Localization/) ![GitHub all releases](https://img.shields.io/github/downloads/Citrinate/FreePackages/total?logo=github&label=Downloads)
 
 ## Introduction
 
@@ -82,6 +82,9 @@ By default, the plugin will attempt to activate all free non-demo and non-playte
   "PlaytestMode": 0,
 }],
 ```
+
+> [!NOTE]
+> Packages already queued for activation are not affected by changes made to `FreePackagesFilters`.  If your queue is filled with unwanted packages, then you can use the [`clearfreepackagesqueue`](#activation-commands) command to remove them.
 
 All filter options are explained below:
 
@@ -452,7 +455,7 @@ You can define as many filters as you'd like, and packages that pass any one of 
 
 ### Importing packages
 
-While the plugin can be used passively, you can also manually import free packages from [SteamDB](https://steamdb.info/freepackages/) using [the importer userscript](https://github.com/Citrinate/FreePackages/tree/main/FreePackagesImporter), or through the commands and [IPC interface](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/IPC) endpoints below.
+While the plugin can be used passively, you can also manually import free packages from [SteamDB](https://steamdb.info/freepackages/) using [the importer userscript](/FreePackagesImporter/), or through the commands and [IPC interface](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/IPC) endpoints below.
 
 ---
 
