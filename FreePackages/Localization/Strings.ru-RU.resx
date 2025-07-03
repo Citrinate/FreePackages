@@ -142,19 +142,19 @@
     <comment>{0} will be replaced by a number</comment>
   </data>
   <data name="DiscoveredAppsAdded" xml:space="preserve">
-    <value>{0} добавлено в очередь обнаруженных приложений</value>
+    <value>Добавлено в очередь обнаруженных приложений: {0}</value>
     <comment>{0} will be replaced by an appID</comment>
   </data>
   <data name="DiscoveredPackagesAdded" xml:space="preserve">
-    <value>{0} добавлено в очередь обнаруженных пакетов</value>
+    <value>Добавлено в очередь обнаруженных пакетов: {0}</value>
     <comment>{0} will be replaced by a subID</comment>
   </data>
   <data name="AppsQueued" xml:space="preserve">
-    <value>{0} добавлено в очередь бесплатных пакетов</value>
+    <value>Добавлено в очередь бесплатных пакетов: {0}</value>
     <comment>{0} will be replaced by an appID</comment>
   </data>
   <data name="PackagesQueued" xml:space="preserve">
-    <value>{0} добавлено в очередь бесплатных пакетов</value>
+    <value>Добавлено в очередь бесплатных пакетов: {0}</value>
     <comment>{0} will be replaced by a subID</comment>
   </data>
   <data name="ActivationPaused" xml:space="preserve">
@@ -260,15 +260,15 @@
     <comment>{0} will be replaced by a number</comment>
   </data>
   <data name="RemovalWaitMessage" xml:space="preserve">
-    <value>Поиск бесплатных пакетов для удаления, сканирование займёт минут примерно: {0}. Можно отменить в любой момент с помощью: {1}</value>
+    <value>Поиск бесплатных пакетов для удаления, сканирование займёт минут примерно: {0}. Можно отменить в любой момент командой: {1}</value>
     <comment>{0} will be replaced by a number, {1} will be replaced with a command</comment>
   </data>
   <data name="RemovablePackagesFound" xml:space="preserve">
     <value>Найдено пакетов для удаления - {0}: 
 {1} 
-Для отмены, используйте: {2}
+Для отмены, используйте команду: {2}
 Для продолжения удаления, используйте: {3}
-Для удаления элементов из вышеприведённого списка, прежде чем продолжить, используйте: {4}</value>
+Для удаления элементов из вышестоящего списка, прежде чем продолжить, используйте команду: {4}</value>
     <comment>{0} will be replaced by a number, {1} will be replaced by a list, {2} will be replaced with a command, {3} will be replaced with a command, {4} will be replaced with a command</comment>
   </data>
   <data name="RemovingNoUnwatedPackages" xml:space="preserve">
@@ -277,7 +277,7 @@
 </comment>
   </data>
   <data name="RemovalScanCancelled" xml:space="preserve">
-    <value>Сканирование нежелательных бесплатных пакетов отменено.</value>
+    <value>Отменено сканирование нежелательных бесплатных пакетов.</value>
     <comment>
 </comment>
   </data>
@@ -308,7 +308,7 @@
     <comment>{0} will be replaced by a time</comment>
   </data>
   <data name="PlaytimeFetchFailed" xml:space="preserve">
-    <value>Не удалось получить информацию о времени игры</value>
+    <value>Не удалось получить информацию о наигранном времени</value>
     <comment>
 </comment>
   </data>
