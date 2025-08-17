@@ -6,7 +6,7 @@
 
 This plugin finds free packages on Steam and adds them to your account.
 
-This plugin works by listening for [changes](https://steamdb.info/faq/#changenumber) to Steam's [PICS](https://steamdb.info/faq/#pics).  The plugin can discover new packages as they're released, but is limited due to PICS not showing all old changes.  As a result, the plugin can only discover packages that have changed recently, usually in the last ~12 hours.
+This plugin works by listening for [changes](https://steamdb.info/faq/#changenumber) to Steam's [PICS](https://steamdb.info/faq/#pics).  The plugin can discover new packages as they're released, but is limited due to PICS not showing all old changes.  As a result, the plugin can only discover packages that have changed recently, usually in the last ~12 hours.  To ensure that some of the more popular free packages aren't missed, the plugin also monitors certain free games subreddits (using [ASFinfo](https://github.com/C4illin/ASFinfo)).
 
 ## Installation
 
