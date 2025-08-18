@@ -17,6 +17,45 @@ This plugin works by listening for [changes](https://steamdb.info/faq/#changenum
 > [!NOTE]
 > This plugin is only tested to work with ASF-generic.  It may or may not work with other ASF variants, but feel free to report any issues you may encounter.
 
+## Quick Start Guide
+
+All configuration is added to your existing `BotName.json` files found in the `config` folder inside your ASF folder.  Add the following lines to `BotName.json` to enable package redemption for that specific bot:
+
+```json
+"EnableFreePackages": true,
+"PauseFreePackagesWhilePlaying": true,
+```
+
+The plugin will redeem everything except for demos and playtests by default.  Filters may be used to add custom restrictions.  If you don't want all free packages, here's a generally useful filter you can add to `BotName.json` to tell the plugin to only redeem: 
+
+  - Limited-time only free games, and games that increase the games counter on your profile
+  - Games with trading cards
+  - Free DLC for your already owned games
+
+```json
+"FreePackagesFilters": [{
+  "NoCostOnly": true,
+},{
+  "Categories": [29],
+},{
+  "Types": ["DLC"],
+  "IgnoredTypes": ["Game", "Application"],
+}],
+```
+
+If you'd like to redeem absolutely everything, adding this filter to `BotName.json` tells the plugin to include demos and playtests (note: only 1 bot can be configured to join playtests):
+
+```json
+"FreePackagesFilters": [{
+  "IgnoredTypes": [],
+  "PlaytestMode": 3,
+}],
+```
+
+After you're done editing your config files, (re)start ASF and use the `!qsa` command to see what the plugin is doing for your bots.
+
+Read on for detailed usage information.
+
 ## Usage
 
 ### Enabling the plugin
