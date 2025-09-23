@@ -511,7 +511,7 @@ Command | Access | Description
 
 Command | Access | Description
 --- | --- | ---
-`removefreepackages [Bot]`|`Master`|Removes any free packages from the given bot's account that don't pass any of the given bot's package filters, and which can currently be re-activated for free, and that have a "Remove" button on the [licenses page](https://store.steampowered.com/account/licenses/).  After this command is used, you'll be presented with a list of packages to review, edit, and then confirm the removal of
+`removefreepackages [Bot]`|`Master`|Removes any free packages from the given bot's account that are unwanted by the bot's [package filters](#enabling-package-filters), and that have a "Remove" button on the [licenses page](https://store.steampowered.com/account/licenses/).  This won't remove any packages that used were free, but currently aren't.  After this command is used, you'll be presented with a list of packages to review, edit, and then confirm the removal of
 `removefreepackages^ [Bot]`|`Master`|Like `removefreepackages`, but will also exclude for removal anything that has been played by the given bot
 `removeallfreepackages [Bot]`|`Master`|Removes all packages from the given bot's account that have a "Remove" button on the [licenses page](https://store.steampowered.com/account/licenses/).  After this command is used, you'll be presented with a list of packages to review, edit, and then confirm the removal of
 `removeallfreepackages^ [Bot]`|`Master`|Like `removeallfreepackages`, but will exclude for removal anything that has been played by the given bot

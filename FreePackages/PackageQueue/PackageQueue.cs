@@ -99,7 +99,7 @@ namespace FreePackages {
 		private async Task<EResult> ClaimFreeApp(uint appID) {
 			// One final check before claiming to make sure we still don't own this app
 			if (PackageFilter.OwnsApp(appID)) {
-				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), EResult.AlreadyOwned));
+				// Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), EResult.AlreadyOwned));
 
 				return EResult.AlreadyOwned;
 			}
