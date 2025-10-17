@@ -8,7 +8,6 @@ using ArchiSteamFarm.Helpers.Json;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Integration;
 using ArchiSteamFarm.Web.Responses;
-using FreePackages.Localization;
 using SteamKit2;
 
 namespace FreePackages {
