@@ -1,0 +1,12 @@
+{
+	"logged_in":false,
+	"steamid":"",
+	"accountid":0,
+	"account_name":"",
+	"is_support":false,
+	"is_limited":false,
+	"is_partner_member":false,
+	"is_valve_email":false,
+	"country_code":"",
+	"excluded_content_descriptors":[]
+}

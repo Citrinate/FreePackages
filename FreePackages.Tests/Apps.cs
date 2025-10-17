@@ -15,13 +15,13 @@ public class Apps {
 	[TestInitialize]
 	public void InitializePackageFilter () {
 		PackageFilter = new PackageFilter(new BotCache(), new List<FilterConfig>());
-		PackageFilter.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<Steam.UserData>());
+		PackageFilter.UpdateUserDetails(File.ReadAllText("userdata_empty.json").ToJsonObject<Steam.UserData>(), File.ReadAllText("userinfo_empty.json").ToJsonObject<Steam.UserInfo>());
 		PackageFilter.Country = "FOO";
 	}
 
 	[TestCleanup]
 	public void CleanupPackageFilter() {
-		PackageFilter.UpdateUserData(File.ReadAllText("userdata_empty.json").ToJsonObject<Steam.UserData>());
+		PackageFilter.UpdateUserDetails(File.ReadAllText("userdata_empty.json").ToJsonObject<Steam.UserData>(), File.ReadAllText("userinfo_empty.json").ToJsonObject<Steam.UserInfo>());
 		PackageFilter.Country = "FOO";
 	}
 
@@ -53,7 +53,7 @@ public class Apps {
 		var app = new FilterableApp(KeyValue.LoadAsText("app_with_required_app.txt"));
 		var userData = File.ReadAllText("userdata_empty.json").ToJsonObject<Steam.UserData>();
 		userData.OwnedApps.Add(1086940);
-		PackageFilter.UpdateUserData(userData);
+		PackageFilter.UpdateUserDetails(userData, File.ReadAllText("userinfo_empty.json").ToJsonObject<Steam.UserInfo>());
 
 		Assert.IsTrue(app.MustOwnAppToPurchase > 0);
 		Assert.IsTrue(PackageFilter.IsRedeemableApp(app));

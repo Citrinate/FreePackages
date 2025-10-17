@@ -69,14 +69,6 @@ namespace FreePackages {
 			}
 		}
 
-		internal static void OnAccountInfo(Bot bot, SteamUser.AccountInfoCallback callback) {
-			if (!Handlers.ContainsKey(bot.BotName)) {
-				return;
-			}
-
-			Handlers[bot.BotName].PackageFilter.UpdateAccountInfo(callback);
-		}
-
 		internal static void OnLicenseList(Bot bot, SteamApps.LicenseListCallback callback) {
 			if (!Handlers.ContainsKey(bot.BotName)) {
 				return;
@@ -109,12 +101,20 @@ namespace FreePackages {
 			Steam.UserData? userData = await WebRequest.GetUserData(Bot).ConfigureAwait(false);
 			if (userData == null) {
 				UserDataRefreshTimer.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(15));
-				Bot.ArchiLogger.LogGenericError(String.Format(ArchiSteamFarm.Localization.Strings.ErrorObjectIsNull, userData));
+				Bot.ArchiLogger.LogGenericError(String.Format(ArchiSteamFarm.Localization.Strings.ErrorObjectIsNull, nameof(userData)));
 
 				return;
 			}
 
-			PackageFilter.UpdateUserData(userData);
+			Steam.UserInfo? userInfo = await WebRequest.GetUserInfo(Bot).ConfigureAwait(false);
+			if (userInfo == null) {
+				UserDataRefreshTimer.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(15));
+				Bot.ArchiLogger.LogGenericError(String.Format(ArchiSteamFarm.Localization.Strings.ErrorObjectIsNull, nameof(userInfo)));
+
+				return;
+			}
+
+			PackageFilter.UpdateUserDetails(userData, userInfo);
 
 			UserDataRefreshTimer.Change(TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(15));
 		}

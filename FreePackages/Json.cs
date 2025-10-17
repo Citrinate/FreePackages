@@ -85,6 +85,52 @@ namespace FreePackages {
 			internal Tag() {}
 		}
 
+		internal sealed class UserInfo {
+			[JsonInclude]
+			[JsonPropertyName("logged_in")]
+			public bool LoggedIn;
+
+			[JsonInclude]
+			[JsonPropertyName("steamid")]
+			public string SteamID = "";
+
+			[JsonInclude]
+			[JsonPropertyName("accountid")]
+			public int AccountID;
+
+			[JsonInclude]
+			[JsonPropertyName("account_name")]
+			public string AccountName = "";
+
+			[JsonInclude]
+			[JsonPropertyName("is_support")]
+			public bool IsSupport;
+
+			[JsonInclude]
+			[JsonPropertyName("is_limited")]
+			public bool IsLimited;
+
+			[JsonInclude]
+			[JsonPropertyName("is_partner_member")]
+			public bool IsPartnerMember;
+
+			[JsonInclude]
+			[JsonPropertyName("is_valve_email")]
+			public bool IsValveEmail;
+
+			[JsonInclude]
+			[JsonPropertyName("country_code")]
+			[JsonRequired]
+			public string CountryCode = "";
+
+			[JsonInclude]
+			[JsonPropertyName("excluded_content_descriptors")]
+			public HashSet<uint> ExcludedContentDescriptors = new();
+
+			[JsonConstructor]
+			internal UserInfo() {}
+		}
+
 		// https://stackoverflow.com/questions/12221950/how-to-deserialize-object-that-can-be-an-array-or-a-dictionary-with-newtonsoft
 		public class EmptyArrayOrDictionaryConverter : JsonConverter<Dictionary<uint, uint>> {
 			public override Dictionary<uint, uint> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {

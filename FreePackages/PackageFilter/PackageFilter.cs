@@ -26,14 +26,11 @@ namespace FreePackages {
 			FilterConfigs = filterConfigs;
 		}
 
-		internal void UpdateAccountInfo(SteamUser.AccountInfoCallback callback) {
-			Country = callback.Country;
-		}
-		
-		internal void UpdateUserData(Steam.UserData userData) {
+		internal void UpdateUserDetails(Steam.UserData userData, Steam.UserInfo userInfo) {
 			ImportedIgnoredAppIDs = userData.IgnoredApps.Where(x => x.Value == 0).Select(x => x.Key).ToHashSet();
 			ImportedIgnoredTags = userData.ExcludedTags.Select(x => x.TagID).ToHashSet();
 			ImportedIgnoredContentDescriptors = userData.ExcludedContentDescriptorIDs;
+			Country = userInfo.CountryCode;
 
 			// Get all of the apps that are in each of the owned packages, and merge with explicitly owned apps
 			var ownedAppIDs = userData.OwnedApps;

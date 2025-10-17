@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AngleSharp.Dom;
+using ArchiSteamFarm.Helpers.Json;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Integration;
 using ArchiSteamFarm.Web.Responses;
+using FreePackages.Localization;
 using SteamKit2;
 
 namespace FreePackages {
@@ -46,6 +49,30 @@ namespace FreePackages {
 			HtmlDocumentResponse? accountLicensesResponse = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request).ConfigureAwait(false);
 
 			return accountLicensesResponse?.Content;
+		}
+
+		internal static async Task<Steam.UserInfo?> GetUserInfo(Bot bot) {
+			Uri request = new(ArchiWebHandler.SteamStoreURL, "");
+			HtmlDocumentResponse? storeResponse = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request).ConfigureAwait(false);
+
+			if (storeResponse == null || storeResponse.Content == null) {
+				return null;
+			}
+
+			try {
+				Regex pageObjRegex = new Regex("data-userinfo=\"({[\\s\\S]*?})\"", RegexOptions.CultureInvariant);
+				Match match = pageObjRegex.Match(storeResponse.Content.Source.Text);
+
+				if (!match.Success) {
+					throw new Exception(String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(match)));
+				}
+
+				return match.Groups[1].Value.Replace("&quot;", "\"").ToJsonObject<Steam.UserInfo>();
+			} catch (Exception e) {
+				bot.ArchiLogger.LogGenericException(e);
+
+				return null;
+			}
 		}
 	}
 }

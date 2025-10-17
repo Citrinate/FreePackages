@@ -128,7 +128,6 @@ namespace FreePackages {
 		}
 
 		public Task OnBotSteamCallbacksInit(Bot bot, CallbackManager callbackManager) {
-			callbackManager.Subscribe<SteamUser.AccountInfoCallback>(callback => OnAccountInfo(bot, callback));
 			callbackManager.Subscribe<SteamApps.LicenseListCallback>(callback => OnLicenseList(bot, callback));
 
 			return Task.CompletedTask;
@@ -136,10 +135,6 @@ namespace FreePackages {
 
 		public Task<IReadOnlyCollection<ClientMsgHandler>?> OnBotSteamHandlersInit(Bot bot) {
 			return Task.FromResult<IReadOnlyCollection<ClientMsgHandler>?>(new List<ClientMsgHandler> { SteamHandler.AddHandler(bot) });
-		}
-
-		private static void OnAccountInfo(Bot bot, SteamUser.AccountInfoCallback callback) {
-			PackageHandler.OnAccountInfo(bot, callback);
 		}
 
 		private static void OnLicenseList (Bot bot, SteamApps.LicenseListCallback callback) {
