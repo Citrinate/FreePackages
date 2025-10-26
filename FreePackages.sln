@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FreePackages", "FreePackage
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArchiSteamFarm", "ArchiSteamFarm\ArchiSteamFarm\ArchiSteamFarm.csproj", "{CF84911C-2C4C-4195-8AF3-ABBB6D3DE9AA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreePackages.Tests", "FreePackages.Tests\FreePackages.Tests.csproj", "{5A9E1E50-7E5A-442F-83E0-928998450E73}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{CF84911C-2C4C-4195-8AF3-ABBB6D3DE9AA}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{CF84911C-2C4C-4195-8AF3-ABBB6D3DE9AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF84911C-2C4C-4195-8AF3-ABBB6D3DE9AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A9E1E50-7E5A-442F-83E0-928998450E73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A9E1E50-7E5A-442F-83E0-928998450E73}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A9E1E50-7E5A-442F-83E0-928998450E73}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A9E1E50-7E5A-442F-83E0-928998450E73}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
