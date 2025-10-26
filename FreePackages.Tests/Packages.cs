@@ -12,29 +12,59 @@ namespace FreePackages.Tests;
 public sealed class Packages : IDisposable {
 	private BotCache? BotCache;
 	private PackageFilter? PackageFilter;
+	private Steam.UserData? UserData;
+	private Steam.UserInfo? UserInfo;
 
 	[TestInitialize]
 	public async Task InitializePackageFilter () {
 		Dispose();
 
+		if (UserData == null) {
+			FileStream fileStream = File.Open("userdata_empty.json", FileMode.Open);
+
+			await using (fileStream.ConfigureAwait(false)) {
+				UserData = await fileStream.ToJsonObject<Steam.UserData>().ConfigureAwait(false);
+			}
+
+			if (UserData == null) {
+				throw new InvalidOperationException(nameof(UserData));
+			}
+		}
+
+		if (UserInfo == null) {
+			FileStream fileStream = File.Open("userinfo_empty.json", FileMode.Open);
+
+			await using (fileStream.ConfigureAwait(false)) {
+				UserInfo = await fileStream.ToJsonObject<Steam.UserInfo>().ConfigureAwait(false);
+			}
+
+			if (UserInfo == null) {
+				throw new InvalidOperationException(nameof(UserInfo));
+			}
+		}
+
 		BotCache = new BotCache();
 		PackageFilter = new PackageFilter(BotCache, []);
 
-		(Steam.UserData userData, Steam.UserInfo userInfo) = await GetEmptyDetails().ConfigureAwait(false);
-
-		PackageFilter.UpdateUserDetails(userData, userInfo);
+		PackageFilter.UpdateUserDetails(UserData, UserInfo);
 		PackageFilter.Country = "FOO";
 	}
 
 	[TestCleanup]
-	public async Task CleanupPackageFilter() {
+	public void CleanupPackageFilter() {
+		if (UserData == null) {
+			throw new InvalidOperationException(nameof(UserData));
+		}
+
+		if (UserInfo == null) {
+			throw new InvalidOperationException(nameof(UserInfo));
+		}
+
 		if (PackageFilter == null) {
 			throw new InvalidOperationException(nameof(PackageFilter));
 		}
 
-		(Steam.UserData userData, Steam.UserInfo userInfo) = await GetEmptyDetails().ConfigureAwait(false);
-
-		PackageFilter.UpdateUserDetails(userData, userInfo);
+		PackageFilter.UpdateUserDetails(UserData, UserInfo);
 		PackageFilter.Country = "FOO";
 	}
 
@@ -122,20 +152,4 @@ public sealed class Packages : IDisposable {
     }
 
 	public void Dispose() => BotCache?.Dispose();
-
-	private static async Task<(Steam.UserData UserData, Steam.UserInfo UserInfo)> GetEmptyDetails() {
-		Steam.UserData? userData = (await File.ReadAllTextAsync("userdata_empty.json").ConfigureAwait(false)).ToJsonObject<Steam.UserData>();
-
-		if (userData == null) {
-			throw new InvalidOperationException(nameof(userData));
-		}
-
-		Steam.UserInfo? userInfo = (await File.ReadAllTextAsync("userinfo_empty.json").ConfigureAwait(false)).ToJsonObject<Steam.UserInfo>();
-
-		if (userInfo == null) {
-			throw new InvalidOperationException(nameof(userData));
-		}
-
-		return (userData, userInfo);
-	}
 }
