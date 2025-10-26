@@ -1,0 +1,47 @@
+<Project>
+	<Import Project="ArchiSteamFarm/Directory.Build.props" />
+
+	<PropertyGroup>
+		<PluginName>FreePackages</PluginName>
+		<Version>1.6.1.1</Version>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<ApplicationIcon />
+		<Authors>Citrinate</Authors>
+		<Company>$(Authors)</Company>
+		<Copyright>Copyright © $([System.DateTime]::UtcNow.Year) $(Company)</Copyright>
+		<Description>$(PluginName) description.</Description>
+		<PackageIcon />
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/$(Company)/$(PluginName)</PackageProjectUrl>
+		<PackageReleaseNotes>$(PackageProjectUrl)/releases</PackageReleaseNotes>
+		<RepositoryUrl>$(PackageProjectUrl).git</RepositoryUrl>
+	</PropertyGroup>
+
+	<!-- TODO: Fix warnings in the code, then we can treat warnings as error -->
+	<PropertyGroup>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+	</PropertyGroup>
+
+	<!-- Reset ASF signing settings, as we'll use our own logic -->
+	<PropertyGroup>
+		<AssemblyOriginatorKeyFile />
+		<PublicSign>false</PublicSign>
+		<SignAssembly>false</SignAssembly>
+	</PropertyGroup>
+
+	<!-- Enable public signing, if provided with public key -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' AND EXISTS('resources/$(PluginName).snk.pub')">
+		<AssemblyOriginatorKeyFile>../resources/$(PluginName).snk.pub</AssemblyOriginatorKeyFile>
+		<PublicSign>true</PublicSign>
+		<SignAssembly>true</SignAssembly>
+	</PropertyGroup>
+
+	<!-- Private SNK signing, if provided with secret -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' AND EXISTS('resources/$(PluginName).snk')">
+		<AssemblyOriginatorKeyFile>../resources/$(PluginName).snk</AssemblyOriginatorKeyFile>
+		<PublicSign>false</PublicSign>
+		<SignAssembly>true</SignAssembly>
+	</PropertyGroup>
+</Project>
