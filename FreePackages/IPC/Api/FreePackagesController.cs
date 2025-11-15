@@ -227,13 +227,11 @@ namespace FreePackages.IPC {
 			ownedAppIDs.Sort();
 
 			if (showDetails) {
-				Dictionary<uint, string>? nameList;
 				Dictionary<uint, CPlayer_GetOwnedGames_Response.Game>? detailsList;
 				try {
-					nameList = await WebRequest.GetAppList(bot).ConfigureAwait(false);
 					detailsList = await SteamHandler.Handlers[bot.BotName].GetOwnedGames(bot.SteamID).ConfigureAwait(false);
 
-					if (nameList == null || detailsList == null) {
+					if (detailsList == null) {
 						return BadRequest(new GenericResponse(false, Strings.AppListFetchFailed));
 					}
 				}
@@ -244,13 +242,6 @@ namespace FreePackages.IPC {
 				return Ok(new GenericResponse<Dictionary<uint, CPlayer_GetOwnedGames_Response.Game?>>(true, ownedAppIDs.ToDictionary(appID => appID, appID => {
 					if (detailsList.TryGetValue(appID, out CPlayer_GetOwnedGames_Response.Game? game)) {
 						return game;
-					}
-
-					if (nameList.TryGetValue(appID, out string? name)) {
-						return new CPlayer_GetOwnedGames_Response.Game {
-							appid = (int) appID,
-							name = name
-						};
 					}
 
 					return null;
