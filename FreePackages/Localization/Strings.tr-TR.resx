@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Microsoft ResX Schema
+
+    Version 2.0
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
+    associated with the data types.
+
+    Example:
+
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+
+    There are any number of "resheader" rows that contain simple
+    name/value pairs.
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion through the TypeConverter architecture.
+    Classes that don't support this are serialized and stored with the
+    mimetype set.
+
+    The mimetype is used for serialized objects, and tells the
+    ResXResourceReader how to depersist the object. This is currently not
+    extensible. For a given mimetype the value must be set accordingly:
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
+    read any of the formats listed below.
+
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BadgeDataFetchFailed" xml:space="preserve">
+    <value>Ücretsiz paketlerin rozet verileri alınamadı</value>
+  </data>
+  <data name="BadgeDataParsingFailed" xml:space="preserve">
+    <value>Ücretsiz paketlerin rozet verileri çözümlenemedi</value>
+  </data>
+  <data name="PlaytestConfigLimitTriggered" xml:space="preserve">
+    <value>PlaytestMode 0 (Yok) olarak değiştirildi, bu filtreyi yalnızca 1 bot kullanabilir</value>
+  </data>
+  <data name="QueueEmpty" xml:space="preserve">
+    <value>Kuyruk boş</value>
+  </data>
+  <data name="PackagesRemoved" xml:space="preserve">
+    <value>{0} ücretsiz paket kaldırıldı.</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="DiscoveredAppsRemoved" xml:space="preserve">
+    <value>{0} keşfedilen uygulama kaldırıldı.</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="DiscoveredPackagesRemoved" xml:space="preserve">
+    <value>{0} keşfedilen paket kaldırıldı.</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="DiscoveredAppsAdded" xml:space="preserve">
+    <value>{0} keşfedilen uygulamalar kuyruğuna eklendi</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="DiscoveredPackagesAdded" xml:space="preserve">
+    <value>{0} keşfedilen paketler kuyruğuna eklendi</value>
+    <comment>{0} will be replaced by a subID</comment>
+  </data>
+  <data name="AppsQueued" xml:space="preserve">
+    <value>{0} ücretsiz paket kuyruğuna eklendi</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="PackagesQueued" xml:space="preserve">
+    <value>{0} ücretsiz paket kuyruğuna eklendi</value>
+    <comment>{0} will be replaced by a subID</comment>
+  </data>
+  <data name="ActivationPaused" xml:space="preserve">
+    <value>Ücretsiz paket etkinleştirmeleri {0} tarihine kadar duraklatıldı</value>
+    <comment>{0} will be replaced by a time</comment>
+  </data>
+  <data name="RateLimitExceeded" xml:space="preserve">
+    <value>Ücretsiz paket hız limiti aşıldı</value>
+  </data>
+  <data name="ReplacedWith" xml:space="preserve">
+    <value>{0} ile değiştirildi</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="Unknown" xml:space="preserve">
+    <value>Bilinmiyor</value>
+  </data>
+  <data name="Invalid" xml:space="preserve">
+    <value>Geçersiz</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>Başarısız</value>
+  </data>
+  <data name="Waitlisted" xml:space="preserve">
+    <value>Beklemeye alındı</value>
+  </data>
+  <data name="QueueStatus" xml:space="preserve">
+    <value>{0} ücretsiz paket kuyrukta. {1}/{2} etkinleştirme kullanıldı.</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number, {2} will be replaced by a number</comment>
+  </data>
+  <data name="QueuePausedWhileIngame" xml:space="preserve">
+    <value>Etkinleştirmeler, hesap oyun oynarken duraklatıldı.</value>
+  </data>
+  <data name="QueueLimitedUntil" xml:space="preserve">
+    <value>Etkinleştirmeler {0} tarihinde yeniden başlayacak.</value>
+    <comment>{0} will be replaced by a time</comment>
+  </data>
+  <data name="QueueDiscoveryStatus" xml:space="preserve">
+    <value>{0} uygulama ve {1} paket keşfedildi ancak henüz işlenmedi.</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="PICSRestart" xml:space="preserve">
+    <value>PICS yeniden başlatıldı, değişiklik numarası {0}'den {1}'e atlanıyor</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="MissedApps" xml:space="preserve">
+    <value>PICS yeniden başlatması nedeniyle bazı ücretsiz uygulamalar kaçırılmış olabilir</value>
+  </data>
+  <data name="RecoveredApps" xml:space="preserve">
+    <value>{0} uygulama değişikliği, değişiklik numarası {1}'de kurtarıldı</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="MissedPackages" xml:space="preserve">
+    <value>PICS yeniden başlatması nedeniyle bazı ücretsiz paketler kaçırılmış olabilir</value>
+  </data>
+  <data name="RecoveredPackages" xml:space="preserve">
+    <value>{0} paket değişikliği, değişiklik numarası {1}'de kurtarıldı</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="NoPackagesFound" xml:space="preserve">
+    <value>Paket bulunamadı</value>
+  </data>
+  <data name="NoAppsFound" xml:space="preserve">
+    <value>Uygulama bulunamadı</value>
+  </data>
+  <data name="AppListFetchFailed" xml:space="preserve">
+    <value>Uygulama listesi alınamadı</value>
+  </data>
+  <data name="PluginNotEnabled" xml:space="preserve">
+    <value>Ücretsiz Paketler eklentisi etkin değil</value>
+  </data>
+  <data name="ASFInfoParseFailed" xml:space="preserve">
+    <value>ASFInfo'dan gelen veriler çözümlenemedi</value>
+  </data>
+  <data name="RemovingPackages" xml:space="preserve">
+    <value>{0} paket kaldırılıyor.</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="LicensePageFetchFail" xml:space="preserve">
+    <value>Lisanslar sayfası alınamadı</value>
+    <comment></comment>
+  </data>
+  <data name="LicensePageEmpty" xml:space="preserve">
+    <value>Kaldırılabilir paket bulunamadı</value>
+    <comment></comment>
+  </data>
+  <data name="RemovingNoPackages" xml:space="preserve">
+    <value>Kaldırılacak ücretsiz paket bulunamadı</value>
+    <comment></comment>
+  </data>
+  <data name="ProductInfoFetchFailed" xml:space="preserve">
+    <value>Ürün bilgileri alınamadı</value>
+    <comment></comment>
+  </data>
+  <data name="RemovalQueueEmpty" xml:space="preserve">
+    <value>Kaldırılan paket yok</value>
+  </data>
+  <data name="RemovalsCancelled" xml:space="preserve">
+    <value>{0} kaldırma işlemi iptal edildi.</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="RemovalWaitMessage" xml:space="preserve">
+    <value>Kaldırılacak ücretsiz paketler aranıyor, bu tarama ~{0} dakika sürecek. Herhangi bir zamanda şu komutla iptal edin: {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced with a command</comment>
+  </data>
+  <data name="RemovablePackagesFound" xml:space="preserve">
+    <value>Kaldırılacak {0} paket bulundu:
+{1}
+İptal etmek için: {2}
+Kaldırmaya devam etmek için: {3}
+Devam etmeden önce listedeki öğeleri kaldırmak için: {4}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a list, {2} will be replaced with a command, {3} will be replaced with a command, {4} will be replaced with a command</comment>
+  </data>
+  <data name="RemovingNoUnwatedPackages" xml:space="preserve">
+    <value>Kaldırılacak istenmeyen ücretsiz paket bulunamadı</value>
+    <comment></comment>
+  </data>
+  <data name="RemovalScanCancelled" xml:space="preserve">
+    <value>İstenmeyen ücretsiz paketler için tarama iptal edildi.</value>
+    <comment></comment>
+  </data>
+  <data name="RemovalScanAlreadyRunning" xml:space="preserve">
+    <value>Zaten istenmeyen ücretsiz paketler taranıyor</value>
+    <comment></comment>
+  </data>
+  <data name="RemovalPackageNotFound" xml:space="preserve">
+    <value>{0} taranan paketler listesinde yoktu</value>
+    <comment>{0} will be replaced by a packageID</comment>
+  </data>
+  <data name="RemovalPackageCancelled" xml:space="preserve">
+    <value>{0} kaldırıldı</value>
+    <comment>{0} will be replaced by a packageID</comment>
+  </data>
+  <data name="RemovalScanCanceling" xml:space="preserve">
+    <value>İstenmeyen ücretsiz paketler için tarama iptal ediliyor...</value>
+    <comment></comment>
+  </data>
+  <data name="RemovalScanNeeded" xml:space="preserve">
+    <value>Önce şu komutla ücretsiz paketleri taramanız gerekiyor: {0}</value>
+    <comment>{0} will be replaced by a command</comment>
+  </data>
+  <data name="RemovalsPaused" xml:space="preserve">
+    <value>Paket kaldırma işlemleri {0} tarihine kadar duraklatıldı</value>
+    <comment>{0} will be replaced by a time</comment>
+  </data>
+  <data name="PlaytimeFetchFailed" xml:space="preserve">
+    <value>Oynama süresi bilgisi alınamadı</value>
+    <comment></comment>
+  </data>
+</root>
