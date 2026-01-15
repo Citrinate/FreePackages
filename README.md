@@ -332,7 +332,7 @@ All filter options are explained below:
 
 #### MinReviewScore
 
-`uint` type with default value of `0`.  Packages must contain an app with a `ReviewScore` greater than or equal to this or they will not be added to your account.  You can leave this at `0` to allow for all values.  A `ReviewScore` may range from 1 to 9 and is not the same as the percentage of positive reviews.  Refer to the list below for more information.  This filter is not applied to demos or playtests as they can't normally be reviewed.
+`uint` type with default value of `0`.  Packages must contain an app with a `ReviewScore` greater than or equal to this or they will not be added to your account.  You can leave this at `0` to allow for all values.  A `ReviewScore` may range from 1 to 9 and is not the same as the percentage of positive reviews; it includes reviews in all languages, and its value may differ slightly from what you see on the Steam storefront.  Refer to the list below for more information.  This filter is not applied to demos or playtests as they can't normally be reviewed.
 
 <details>
   <summary>List of Review Scores</summary>
