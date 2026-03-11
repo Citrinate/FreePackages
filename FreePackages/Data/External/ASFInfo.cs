@@ -47,43 +47,49 @@ namespace FreePackages {
 			HashSet<uint> packageIDs = new();
 			uint itemCount = 0;
 
-			using (StreamReader sr = new StreamReader(response.Content)) {
-				while (sr.Peek() >= 0) {
-					itemCount++;
-					string? line = sr.ReadLine();
+			try {
+				using (StreamReader sr = new StreamReader(response.Content)) {
+					while (sr.Peek() >= 0) {
+						itemCount++;
+						string? line = sr.ReadLine();
 
-					if (line == null) {
-						ASF.ArchiLogger.LogNullError(line);
+						if (line == null) {
+							ASF.ArchiLogger.LogNullError(line);
 
-						return;
-					}
+							return;
+						}
 
-					if (itemCount <= FreePackages.GlobalCache.LastASFInfoItemCount) {
-						continue;
-					}
+						if (itemCount <= FreePackages.GlobalCache.LastASFInfoItemCount) {
+							continue;
+						}
 
-					Match item = SourceLine.Match(line);
+						Match item = SourceLine.Match(line);
 
-					if (!item.Success) {
-						ASF.ArchiLogger.LogGenericError(String.Format("{0}: {1}", Strings.ASFInfoParseFailed, line));
+						if (!item.Success) {
+							ASF.ArchiLogger.LogGenericError(String.Format("{0}: {1}", Strings.ASFInfoParseFailed, line));
 
-						return;
-					}
+							return;
+						}
 
-					if (!uint.TryParse(item.Groups["id"].Value, out uint id)) {
-						ASF.ArchiLogger.LogGenericError(String.Format("{0}: {1}", Strings.ASFInfoParseFailed, line));
+						if (!uint.TryParse(item.Groups["id"].Value, out uint id)) {
+							ASF.ArchiLogger.LogGenericError(String.Format("{0}: {1}", Strings.ASFInfoParseFailed, line));
 
-						return;
-					}
+							return;
+						}
 
-					if (item.Groups["type"].Value == "a") {
-						// App
-						appIDs.Add(id);
-					} else if (item.Groups["type"].Value == "s") {
-						// Sub
-						packageIDs.Add(id);
+						if (item.Groups["type"].Value == "a") {
+							// App
+							appIDs.Add(id);
+						} else if (item.Groups["type"].Value == "s") {
+							// Sub
+							packageIDs.Add(id);
+						}
 					}
 				}
+			} catch (Exception e) {
+				ASF.ArchiLogger.LogGenericException(e);
+
+				return;
 			}
 			
 			if (appIDs.Count == 0 && packageIDs.Count == 0) {
