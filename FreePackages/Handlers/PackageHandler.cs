@@ -577,13 +577,13 @@ namespace FreePackages {
 						return;
 					}
 
-					statusReporter.Report(Bot, String.Format(Strings.RemovablePackagesFound, 
+					statusReporter.Report(Bot, String.Format(Strings.RemovablePackagesFound, new object?[] {
 						PackagesToRemove.Count, 
 						String.Join(PackagesToRemove.Count > 100 ? ", " : Environment.NewLine, previewResponses),
 						String.Format("!cancelremove {0}", Bot.BotName),
 						String.Format("!confirmremove {0}", Bot.BotName),
 						String.Format("!dontremove {0} <Licenses>", Bot.BotName)
-					));
+					}));
 				} finally {
 					ProcessChangesSemaphore.Release();
 				}
