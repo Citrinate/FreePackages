@@ -10,12 +10,12 @@ This plugin works by listening for [changes](https://steamdb.info/faq/#changenum
 
 ## Installation
 
-- Download the .zip file from the [latest release](https://github.com/Citrinate/FreePackages/releases/latest)
-- Locate the `plugins` folder inside your ASF folder.  Create a new folder here and unpack the downloaded .zip file to that folder.
-- (Re)start ASF, you should get a message indicating that the plugin loaded successfully.
+- Download the .zip file of the [latest release](https://github.com/Citrinate/FreePackages/releases/latest)
+- Locate the `plugins` folder inside your ASF folder.  Create a new folder here (e.g., `FreePackages`) and unpack the downloaded .zip file to that folder.
+- (Re)start ASF. You should see a message indicating that the plugin loaded successfully.
 
 > [!NOTE]
-> This plugin is only tested to work with ASF-generic.  It may or may not work with other ASF variants, but feel free to report any issues you may encounter.
+> This plugin is only tested to work with ASF-generic.  It may or may not work with other ASF variants.  Nonetheless, feel free to report any issues you may encounter on other variants.
 
 ## Quick Start Guide
 
@@ -26,9 +26,9 @@ All configuration is added to your existing `BotName.json` files found in the `c
 "PauseFreePackagesWhilePlaying": true,
 ```
 
-The plugin will redeem everything except for demos and playtests by default.  Filters may be used to add custom restrictions.  If you don't want all free packages, here's a generally useful filter you can add to `BotName.json` to tell the plugin to only redeem: 
+By default, the plugin will redeem everything except for demos and playtests.  Filters may be used to add custom restrictions.  If you don't want all free packages, here's a generally useful filter you can add to `BotName.json` to tell the plugin to only redeem: 
 
-  - Limited-time only free games, and games that increase the games counter on your profile
+  - Limited-time only free games, and games that increase the games counter on your profile (`+1`)
   - Games with trading cards
   - Free DLC for your already owned games
 
@@ -77,7 +77,7 @@ Under certain conditions, activating a free package while playing a game on Stea
 ```
 
 > [!NOTE]
-> This applies when your account is playing a game outside of ASF, and does not apply when ASF is idling a game.  Your library being locked through Family Sharing will also prevent package activation.  You likely don't want to enable this if you run idle games 24/7, or your library is otherwise almost always in use, or you only run ASF rarely.
+> This applies when your account is playing a game outside of ASF, and does not apply when ASF is idling a game.  Your library being locked through Family Sharing will also prevent package activation.  You likely don't want to enable this if you run idle games 24/7, or your library is otherwise almost always in use, or you only rarely run ASF.
 
 ---
 
