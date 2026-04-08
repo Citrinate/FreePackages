@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -43,6 +44,9 @@ namespace FreePackages {
 		[JsonInclude]
 		[JsonDisallowNull]
 		internal ConcurrentHashSet<uint> IgnoredApps { get; private set; } = new();
+
+		private HashSet<uint> SeenPackageIDActivations = new();
+		private readonly object LockObject = new();
 
 		[JsonConstructor]
 		internal BotCache() { }
@@ -143,14 +147,23 @@ namespace FreePackages {
 			return Packages.FirstOrDefault(x => x.StartTime == null && types.Contains(x.Type));
 		}
 
-		internal void AddActivation(DateTime activation, uint count = 1) {
+		internal void AddActivation(DateTime activation, uint count = 1, ReadOnlyCollection<uint>? packageIDs = null) {
 			var activationsToPrune = Activations.Where(x => x < DateTime.Now.AddMinutes(-1 * ActivationQueue.ActivationPeriodMinutes)).ToList();
 			if (activationsToPrune.Count > 0) {
 				activationsToPrune.ForEach(x => Activations.Remove(x));
 			}
 
-			for (int i = 0; i < count; i++) {
-				Activations.Add(activation.AddSeconds(-1 * i));
+			lock(LockObject) {
+				int numUnseenPackageActivations = packageIDs?.Where(packageID => !SeenPackageIDActivations.Contains(packageID)).Count() ?? 0;
+				if (packageIDs == null || numUnseenPackageActivations > 0) {
+					if (packageIDs != null) {
+						SeenPackageIDActivations.UnionWith(packageIDs);
+					}
+
+					for (int i = 0; i < Math.Max(count, numUnseenPackageActivations); i++) {
+						Activations.Add(activation.AddSeconds(-1 * i));
+					}
+				}
 			}
 
 			Utilities.InBackground(Save);
@@ -232,12 +245,17 @@ namespace FreePackages {
 			SeenPackages.UnionWith(newLicenses.Select(license => license.PackageID));
 
 			// Keep track of how many free licenses we activated to enforce the free packages limit
+			// This is to catch packages that were activated, but didn't return a success status, or were activated outside of the plugin
+			/* NOTE: The below code will not capture all recent activations.  If Steam removes a demo from your account, but you add it back, 
+			 then the package will re-appear with the original TimeCreated value. Activations like these are instead logged when steam reports a
+			 successful activation.
+			 */
 			// TODO: Do other PaymentMethod values also count against the free package limit?
 			foreach(SteamApps.LicenseListCallback.License license in newLicenses) {
 				if (license.PaymentMethod == EPaymentMethod.Complimentary &&
 					license.TimeCreated.ToLocalTime() > DateTime.Now.AddMinutes(-1 * ActivationQueue.ActivationPeriodMinutes)
 				) {
-					AddActivation(license.TimeCreated.ToLocalTime());
+					AddActivation(license.TimeCreated.ToLocalTime(), packageIDs: [ license.PackageID ]);
 				}
 			}
 

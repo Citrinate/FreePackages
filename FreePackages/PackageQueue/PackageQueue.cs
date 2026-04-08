@@ -99,7 +99,7 @@ namespace FreePackages {
 		private async Task<EResult> ClaimFreeApp(uint appID) {
 			// One final check before claiming to make sure we still don't own this app
 			if (PackageFilter.OwnsApp(appID)) {
-				// Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), EResult.AlreadyOwned));
+				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("app/{0}", appID), EResult.AlreadyOwned));
 
 				return EResult.AlreadyOwned;
 			}
@@ -128,6 +128,10 @@ namespace FreePackages {
 			if (response.GrantedApps.Count > 0 || response.GrantedPackages.Count > 0) {
 				// When only GrantedPackages is empty we probably tried to activate an app we already own.  I don't think it's possible for only GrantedApps to be empty
 				Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicenseWithItems, String.Format("app/{0}", appID), response.Result, String.Join(", ", response.GrantedApps.Select(x => $"app/{x}").Union(response.GrantedPackages.Select(x => $"sub/{x}")))));
+
+				if (response.GrantedPackages.Count > 0) {
+					BotCache.AddActivation(DateTime.Now, packageIDs: response.GrantedPackages);
+				}
 
 				return EResult.OK;
 			}
@@ -175,6 +179,8 @@ namespace FreePackages {
 			if (result != EResult.OK) {
 				return EResult.Invalid;
 			}
+
+			BotCache.AddActivation(DateTime.Now, packageIDs: [ subID ]);
 
 			return EResult.OK;
 		}
