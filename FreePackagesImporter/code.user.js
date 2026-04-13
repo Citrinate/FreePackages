@@ -3,7 +3,7 @@
 // @namespace   https://github.com/Citrinate
 // @author      Citrinate
 // @description Transfer packages from SteamDB's free packages tool to the ASF Free Packages plugin
-// @version     1.0.4
+// @version     1.0.5
 // @match       *://steamdb.info/freepackages/*
 // @connect     localhost
 // @connect     127.0.0.1
@@ -57,25 +57,38 @@
 
 	// Get displayed packages
 	var freePackages = null;
-	const packageRegex = new RegExp("Package ([0-9]+)");
+	{
+		const packageRegex = new RegExp("sub\/([0-9]+)\/");
 
-	function UpdatePackages() {
-		let newFreePackages = [];
-		let packages = document.querySelectorAll(".package");
-		for (let i = 0; i < packages.length; i++) {
-			let matches = packages[i].innerText.match(packageRegex);
-			if (matches) {
-				newFreePackages.push(parseInt(matches[1]));
+		function UpdatePackages() {
+			let newFreePackages = [];
+			let packages = document.querySelectorAll(".package");
+			for (let i = 0; i < packages.length; i++) {
+				let packageElement = packages[i];
+				if (!packageElement.checkVisibility()) {
+					continue;
+				}
+
+				let matches = packageElement.innerHTML.match(packageRegex);
+				if (matches) {
+					newFreePackages.push(parseInt(matches[1]));
+				}
 			}
+
+			freePackages = newFreePackages;
+			UpdateInterface();
 		}
 
-		freePackages = newFreePackages;
-		UpdateInterface();
+		var observer = new MutationObserver(() => {
+			const showMoreButton = document.querySelector('#freepackages a[href="#"]:last-child');
+			if (showMoreButton?.checkVisibility() && showMoreButton?.innerText.toLowerCase().includes("view all")) {
+				showMoreButton.click();
+			}
+			UpdatePackages();
+		});
+		observer.observe(document.getElementById("freepackages"), { childList: true, attributes: true });
+		UpdatePackages();
 	}
-
-	var observer = new MutationObserver(() => UpdatePackages());
-	observer.observe(document.getElementById("freepackages"), { childList: true });
-	UpdatePackages();
 
 	// Get bot list
 	var bots = null;
