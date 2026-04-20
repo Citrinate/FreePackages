@@ -35,7 +35,7 @@ namespace FreePackages {
 						case "CONFIRMREMOVE" or "CONFIRMREMOVAL":
 							return ResponseConfirmRemove(bot, access);
 
-						case "CLEARFREEPACKAGESQUEUE":
+						case "CLEARQUEUE" or "CLEARFREEPACKAGESQUEUE":
 							return ResponseClearQueue(bot, access);
 
 						case "QSA":
@@ -66,7 +66,7 @@ namespace FreePackages {
 						case "CONFIRMREMOVE" or "CONFIRMREMOVAL":
 							return ResponseConfirmRemove(access, steamID, args[1]);
 
-						case "CLEARFREEPACKAGESQUEUE":
+						case "CLEARQUEUE" or "CLEARFREEPACKAGESQUEUE":
 							return ResponseClearQueue(access, steamID, args[1]);
 
 						case "DONTREMOVE" when args.Length > 2:
