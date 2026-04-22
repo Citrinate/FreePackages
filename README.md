@@ -122,9 +122,6 @@ By default, the plugin will attempt to activate all free non-demo and non-playte
 }],
 ```
 
-> [!NOTE]
-> Packages already queued for activation are not affected by changes made to `FreePackagesFilters`.  If your queue is filled with unwanted packages, then you can use the [`clearqueue`](#activation-commands) command to remove them.
-
 All filter options are explained below:
 
 ---

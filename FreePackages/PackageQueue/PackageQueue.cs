@@ -44,7 +44,7 @@ namespace FreePackages {
 			}
 
 			{
-				DateTime? waitUntil = BeforeProcessing();
+				DateTime? waitUntil = await BeforeProcessing(package).ConfigureAwait(false);
 				if (waitUntil != null) {
 					UpdateTimer(waitUntil.Value);
 
@@ -68,7 +68,7 @@ namespace FreePackages {
 
 		protected abstract Package? GetNextPackage();
 
-		protected abstract DateTime? BeforeProcessing();
+		protected abstract Task<DateTime?> BeforeProcessing(Package package);
 
 		protected abstract DateTime? HandleResult(Package package, EResult result);
 

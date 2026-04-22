@@ -9,6 +9,7 @@ namespace FreePackages {
 	internal sealed class PackageFilter {
 		private readonly BotCache BotCache;
 		internal readonly List<FilterConfig> FilterConfigs;
+		internal readonly int Hash;
 		private HashSet<uint>? OwnedAppIDs = null;
 		private Steam.UserData? UserData = null;
 		private HashSet<uint> ImportedIgnoredAppIDs = new();
@@ -24,6 +25,7 @@ namespace FreePackages {
 
 			BotCache = botCache;
 			FilterConfigs = filterConfigs;
+			Hash = DeterministicHasher.Hash(FilterConfigs);
 		}
 
 		internal void UpdateUserDetails(Steam.UserData userData, Steam.UserInfo userInfo) {

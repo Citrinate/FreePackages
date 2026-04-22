@@ -29,7 +29,7 @@ namespace FreePackages {
 			Bot = bot;
 			BotCache = botCache;
 			PackageFilter = new PackageFilter(botCache, filterConfigs);
-			ActivationQueue = new ActivationQueue(bot, botCache, packageLimit, pauseWhilePlaying);
+			ActivationQueue = new ActivationQueue(bot, botCache, packageLimit, pauseWhilePlaying, PackageFilter);
 			RemovalQueue = new RemovalQueue(bot, botCache);
 			UserDataRefreshTimer = new Timer(async e => await FetchUserData().ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
 		}
@@ -267,7 +267,7 @@ namespace FreePackages {
 					return;
 				}
 
-				BotCache.AddPackage(new Package(EPackageType.App, app.ID));
+				BotCache.AddPackage(new Package(EPackageType.App, app.ID, filterHash: PackageFilter.Hash));
 			} finally {
 				BotCache.RemoveChange(appID: app.ID);
 			}
@@ -291,7 +291,7 @@ namespace FreePackages {
 					return;
 				}
 
-				if (BotCache.AddPackage(new Package(EPackageType.Sub, package.ID, package.StartTime))) {
+				if (BotCache.AddPackage(new Package(EPackageType.Sub, package.ID, package.StartTime, filterHash: PackageFilter.Hash))) {
 					// Remove duplicates.  
 					// Whenever we're trying to activate an app and also an package for that app, get rid of the app.
 					// This is because the error messages for activating packages are more descriptive and useful.
@@ -324,7 +324,7 @@ namespace FreePackages {
 					return;
 				}
 
-				BotCache.AddPackage(new Package(EPackageType.Playtest, app.Parent.ID));
+				BotCache.AddPackage(new Package(EPackageType.Playtest, app.Parent.ID, filterHash: PackageFilter.Hash));
 			} finally {
 				BotCache.RemoveChange(appID: app.ID);
 			}

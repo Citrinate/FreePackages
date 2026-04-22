@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ArchiSteamFarm.Steam;
 using FreePackages.Localization;
 using SteamKit2;
@@ -14,7 +15,7 @@ namespace FreePackages {
 
 		protected override Package? GetNextPackage() => BotCache.GetNextPackage([EPackageType.RemoveApp]) ?? BotCache.GetNextPackage([EPackageType.RemoveSub]);
 
-		protected override DateTime? BeforeProcessing() => null;
+		protected override Task<DateTime?> BeforeProcessing(Package package) => Task.FromResult<DateTime?>(null);
 
 		protected override DateTime? HandleResult(Package package, EResult result) {
 			if (result == EResult.RateLimitExceeded) {
