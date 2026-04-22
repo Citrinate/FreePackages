@@ -7,7 +7,7 @@ using FreePackages.Localization;
 using SteamKit2;
 
 namespace FreePackages {
-	internal sealed class RemovalQueue(Bot bot, BotCache botCache) : PackageQueue(bot, botCache) {
+	internal sealed class RemovalQueue(Bot bot, BotCache botCache, bool pauseWhilePlaying) : PackageQueue(bot, botCache, pauseWhilePlaying) {
 		private const int DelayBetweenRemovalsSeconds = 1;
 		private const int RateLimitedCooldownMinutes = 10;
 		internal static readonly HashSet<EPackageType> RemovalTypes = [EPackageType.RemoveSub, EPackageType.RemoveApp];

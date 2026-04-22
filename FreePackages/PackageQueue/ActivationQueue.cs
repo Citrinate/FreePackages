@@ -12,13 +12,11 @@ namespace FreePackages {
 		internal readonly uint ActivationsPerPeriod = 25;
 		internal const uint MaxActivationsPerPeriod = 30; // Steam's imposed limit
 		internal const uint ActivationPeriodMinutes = 90; // Steam's imposed limit
-		internal bool PauseWhilePlaying = false;
 		internal readonly PackageFilter PackageFilter;
 		internal static readonly HashSet<EPackageType> ActivationTypes = [EPackageType.App, EPackageType.Sub, EPackageType.Playtest];
 		internal int ActivationsRemaining => BotCache.Packages.Where(x => ActivationTypes.Contains(x.Type)).Count();
 
-		internal ActivationQueue(Bot bot, BotCache botCache, uint? packageLimit, bool pauseWhilePlaying, PackageFilter packageFilter) : base(bot, botCache) {
-			PauseWhilePlaying = pauseWhilePlaying;
+		internal ActivationQueue(Bot bot, BotCache botCache, bool pauseWhilePlaying, uint? packageLimit, PackageFilter packageFilter) : base(bot, botCache, pauseWhilePlaying) {
 			PackageFilter = packageFilter;
 
 			if (packageLimit != null) {
@@ -35,11 +33,6 @@ namespace FreePackages {
 				Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.ActivationPaused, String.Format("{0:T}", resumeTime)));
 
 				return resumeTime;
-			}
-
-			// Don't activate anything while the user is playing a game (does not apply to ASF card farming)
-			if (PauseWhilePlaying && !Bot.IsPlayingPossible) {
-				return DateTime.Now.AddMinutes(1);
 			}
 
 			// User has changed their filters, re-scan packages queued under the old filter to see if they're still wanted

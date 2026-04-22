@@ -11,12 +11,14 @@ namespace FreePackages {
 	internal abstract class PackageQueue : IDisposable {
 		protected readonly Bot Bot;
 		protected readonly BotCache BotCache;
+		internal readonly bool PauseWhilePlaying = false;
 		private PackageFilter PackageFilter => PackageHandler.Handlers[Bot.BotName].PackageFilter;
 		private Timer Timer;
 
-		internal PackageQueue(Bot bot, BotCache botCache) {
+		internal PackageQueue(Bot bot, BotCache botCache, bool pauseWhilePlaying) {
 			Bot = bot;
 			BotCache = botCache;
+			PauseWhilePlaying = pauseWhilePlaying;
 			Timer = new Timer(async e => await ProcessQueue().ConfigureAwait(false), null, 0, Timeout.Infinite);
 		}
 
@@ -30,6 +32,13 @@ namespace FreePackages {
 
 		private async Task ProcessQueue() {
 			if (!Bot.IsConnectedAndLoggedOn || !PackageFilter.Ready) {
+				UpdateTimer(DateTime.Now.AddMinutes(1));
+
+				return;
+			}
+
+			// Don't activate anything while the user is playing a game (does not apply to ASF card farming)
+			if (PauseWhilePlaying && !Bot.IsPlayingPossible) {
 				UpdateTimer(DateTime.Now.AddMinutes(1));
 
 				return;

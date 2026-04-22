@@ -29,8 +29,8 @@ namespace FreePackages {
 			Bot = bot;
 			BotCache = botCache;
 			PackageFilter = new PackageFilter(botCache, filterConfigs);
-			ActivationQueue = new ActivationQueue(bot, botCache, packageLimit, pauseWhilePlaying, PackageFilter);
-			RemovalQueue = new RemovalQueue(bot, botCache);
+			ActivationQueue = new ActivationQueue(bot, botCache, pauseWhilePlaying, packageLimit, PackageFilter);
+			RemovalQueue = new RemovalQueue(bot, botCache, pauseWhilePlaying);
 			UserDataRefreshTimer = new Timer(async e => await FetchUserData().ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
 		}
 
