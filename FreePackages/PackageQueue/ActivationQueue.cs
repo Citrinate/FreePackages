@@ -49,7 +49,7 @@ namespace FreePackages {
 
 				// Recheck all apps not queued with the current filter
 				if (appsToRescan.Count > 0) {
-					List<FilterableApp>? filterableApps = await FilterableApp.GetFilterables(productInfos).ConfigureAwait(false);
+					List<FilterableApp>? filterableApps = await FilterableApp.GetFilterables(productInfos, onNonFreeApp: x => false).ConfigureAwait(false);
 					if (filterableApps == null) {
 						Bot.ArchiLogger.LogGenericError(Strings.ProductInfoFetchFailed);
 						return DateTime.Now.AddMinutes(1);
@@ -84,7 +84,7 @@ namespace FreePackages {
 
 				// Recheck all subs not queued with the current filter
 				if (subsToRescan.Count > 0) {
-					List<FilterablePackage>? filterablePackages = await FilterablePackage.GetFilterables(productInfos).ConfigureAwait(false);
+					List<FilterablePackage>? filterablePackages = await FilterablePackage.GetFilterables(productInfos, onNonFreePackage: x => false).ConfigureAwait(false);
 					if (filterablePackages == null) {
 						Bot.ArchiLogger.LogGenericError(Strings.ProductInfoFetchFailed);
 
