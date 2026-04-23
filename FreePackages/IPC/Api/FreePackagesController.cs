@@ -105,10 +105,11 @@ namespace FreePackages.IPC {
 		}
 
 		[HttpGet("{botName:required}/RequestFreeAppLicense")]
+		[HttpPost("{botName:required}/RequestFreeAppLicense")]
 		[EndpointSummary("Request a free license for given appids")]
 		[ProducesResponseType(typeof(GenericResponse<SteamApps.FreeLicenseCallback>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
-		public async Task<ActionResult<GenericResponse>> RequestFreeAppLicense(string botName, string appIDs) {
+		public async Task<ActionResult<GenericResponse>> RequestFreeAppLicense(string botName, [FromQuery] string appIDs) {
 			if (string.IsNullOrEmpty(botName)) {
 				throw new ArgumentNullException(nameof(botName));
 			}
@@ -148,10 +149,11 @@ namespace FreePackages.IPC {
 		}
 
 		[HttpGet("{botName:required}/RequestFreeSubLicense")]
+		[HttpPost("{botName:required}/RequestFreeSubLicense")]
 		[EndpointSummary("Request a free license for given subid")]
 		[ProducesResponseType(typeof(GenericResponse<FreeSubResponse>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
-		public async Task<ActionResult<GenericResponse>> RequestFreeSubLicense(string botName, uint subID) {
+		public async Task<ActionResult<GenericResponse>> RequestFreeSubLicense(string botName, [FromQuery] uint subID) {
 			if (string.IsNullOrEmpty(botName)) {
 				throw new ArgumentNullException(nameof(botName));
 			}

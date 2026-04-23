@@ -544,7 +544,7 @@ API | Method | Parameters | Description
 `/Api/FreePackages/{botName}/GetOwnedPackages`|`GET`| |Retrieves all packages owned by the given bot
 `/Api/FreePackages/{botNames}/GetProductInfo`|`GET`|`appIDs`, `packageIDs`|Request product information for a list of apps or packages [^1]
 `/Api/FreePackages/{botNames}/QueueLicenses`|`POST`|`appIDs`, `packageIDs`, `useFilter`|Adds the given appIDs and packageIDs to the given bot's package queue
-`/Api/FreePackages/{botName}/RequestFreeAppLicense`|`GET`|`appIDs`|Request a free license for given appIDs
-`/Api/FreePackages/{botName}/RequestFreeSubLicense`|`GET`|`subID`|Request a free license for given subID
+`/Api/FreePackages/{botName}/RequestFreeAppLicense`|`POST`|`appIDs`|Request a free license for given appIDs
+`/Api/FreePackages/{botName}/RequestFreeSubLicense`|`POST`|`subID`|Request a free license for given subID
 
 [^1]: Responses are not dependent on the account used to make these requests.  You may provide multiple `botNames`, and the first available bot will be used to make the request.
