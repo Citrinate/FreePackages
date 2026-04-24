@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -147,7 +146,7 @@ namespace FreePackages {
 			return Packages.FirstOrDefault(x => x.StartTime == null && types.Contains(x.Type));
 		}
 
-		internal void AddActivation(DateTime activation, uint count = 1, ReadOnlyCollection<uint>? packageIDs = null) {
+		internal void AddActivation(DateTime activation, uint count = 1, IReadOnlyCollection<uint>? packageIDs = null) {
 			var activationsToPrune = Activations.Where(x => x < DateTime.Now.AddMinutes(-1 * ActivationQueue.ActivationPeriodMinutes)).ToList();
 			if (activationsToPrune.Count > 0) {
 				activationsToPrune.ForEach(x => Activations.Remove(x));
