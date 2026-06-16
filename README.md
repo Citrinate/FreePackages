@@ -81,6 +81,16 @@ Under certain conditions, activating a free package while playing a game on Stea
 
 ---
 
+### Pausing package activations while farming cards
+
+When adding a new game to your account while ASF is farming cards, ASF will stop farming and re-evaluate what it wants to do next.  If you want to avoid these stops and restarts, then you can prevent the plugin from activating packages while ASF is farming cards by adding `PauseFreePackagesWhileFarming` to your individual bot's config file.
+
+```json
+"PauseFreePackagesWhileFarming": true,
+```
+
+---
+
 ### Changing the package limit
 
 A maximum of 30 packages can be activated per 1.5 hours.  By default, this plugin will use at most 25 of those activations and will resume where it left off if it's ever interrupted.  You can control this limit by adding `FreePackagesLimit` to your individual bot's config files of `uint` type:

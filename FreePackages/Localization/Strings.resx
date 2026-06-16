@@ -317,4 +317,9 @@ To remove items from the list above before continuing, use: {4}</value>
     <comment>
 </comment>
   </data>
+  <data name="QueuePausedWhileFarming" xml:space="preserve">
+    <value>Activations are now paused as the bot is farming cards.</value>
+    <comment>
+</comment>
+  </data>
 </root>

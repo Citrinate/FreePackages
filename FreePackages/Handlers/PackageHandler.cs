@@ -25,12 +25,12 @@ namespace FreePackages {
 		private static SemaphoreSlim AddHandlerSemaphore = new SemaphoreSlim(1, 1);
 		private static SemaphoreSlim ProcessChangesSemaphore = new SemaphoreSlim(1, 1);
 
-		private PackageHandler(Bot bot, BotCache botCache, List<FilterConfig> filterConfigs, uint? packageLimit, bool pauseWhilePlaying) {
+		private PackageHandler(Bot bot, BotCache botCache, List<FilterConfig> filterConfigs, uint? packageLimit, bool pauseWhilePlaying, bool pauseWhileFarming) {
 			Bot = bot;
 			BotCache = botCache;
 			PackageFilter = new PackageFilter(botCache, filterConfigs);
-			ActivationQueue = new ActivationQueue(bot, botCache, pauseWhilePlaying, packageLimit, PackageFilter);
-			RemovalQueue = new RemovalQueue(bot, botCache, pauseWhilePlaying);
+			ActivationQueue = new ActivationQueue(bot, botCache, pauseWhilePlaying, pauseWhileFarming, packageLimit, PackageFilter);
+			RemovalQueue = new RemovalQueue(bot, botCache, pauseWhilePlaying, pauseWhileFarming);
 			UserDataRefreshTimer = new Timer(async e => await FetchUserData().ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
 		}
 
@@ -39,7 +39,7 @@ namespace FreePackages {
 			UserDataRefreshTimer.Dispose();
 		}
 
-		internal static async Task AddHandler(Bot bot, List<FilterConfig> filterConfigs, uint? packageLimit, bool pauseWhilePlaying) {
+		internal static async Task AddHandler(Bot bot, List<FilterConfig> filterConfigs, uint? packageLimit, bool pauseWhilePlaying, bool pauseWhileFarming) {
 			if (Handlers.ContainsKey(bot.BotName)) {
 				Handlers[bot.BotName].Dispose();
 				Handlers.TryRemove(bot.BotName, out PackageHandler? _);
@@ -63,7 +63,7 @@ namespace FreePackages {
 					botCache = new(cacheFilePath);
 				}
 
-				Handlers.TryAdd(bot.BotName, new PackageHandler(bot, botCache, filterConfigs, packageLimit, pauseWhilePlaying));
+				Handlers.TryAdd(bot.BotName, new PackageHandler(bot, botCache, filterConfigs, packageLimit, pauseWhilePlaying, pauseWhileFarming));
 			} finally {
 				AddHandlerSemaphore.Release();
 			}
@@ -394,9 +394,14 @@ namespace FreePackages {
 			int activationsPastPeriod = Math.Min(BotCache.NumActivationsPastPeriod(), (int)ActivationQueue.MaxActivationsPerPeriod);
 			responses.Add(String.Format(Strings.QueueStatus, ActivationQueue.ActivationsRemaining, activationsPastPeriod, ActivationQueue.ActivationsPerPeriod));
 
-			// activations are paused
+			// activations are paused due to account in use
 			if (ActivationQueue.PauseWhilePlaying && !Bot.IsPlayingPossible) {
 				responses.Add(Strings.QueuePausedWhileIngame);
+			}
+
+			// activations are paused due to farming
+			if (ActivationQueue.PauseWhileFarming && Bot.CardsFarmer.NowFarming) {
+				responses.Add(Strings.QueuePausedWhileFarming);
 			}
 
 			// activations will resume when
