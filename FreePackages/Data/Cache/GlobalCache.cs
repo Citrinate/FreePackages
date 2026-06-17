@@ -13,11 +13,7 @@ namespace FreePackages {
 		[JsonInclude]
 		internal uint LastChangeNumber { get; private set; }
 
-		[JsonInclude]
-		internal uint LastASFInfoItemCount { get; private set; }
-		
 		public bool ShouldSerializeLastChangeNumber() => LastChangeNumber > 0;
-		public bool ShouldSerializeLastASFInfoItemCount() => LastASFInfoItemCount > 0;
 
 		[JsonConstructor]
 		internal GlobalCache() {
@@ -59,12 +55,6 @@ namespace FreePackages {
 
 		internal void UpdateChangeNumber(uint currentChangeNumber) {
 			LastChangeNumber = currentChangeNumber;
-
-			Utilities.InBackground(Save);
-		}
-		
-		internal void UpdateASFInfoItemCount(uint currentASFInfoItemCount) {
-			LastASFInfoItemCount = currentASFInfoItemCount;
 
 			Utilities.InBackground(Save);
 		}

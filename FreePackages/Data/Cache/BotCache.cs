@@ -44,6 +44,9 @@ namespace FreePackages {
 		[JsonDisallowNull]
 		internal ConcurrentHashSet<uint> IgnoredApps { get; private set; } = new();
 
+		[JsonInclude]
+		internal uint LastASFInfoItemCount { get; private set; }
+
 		private HashSet<uint> SeenPackageIDActivations = new();
 		private readonly object LockObject = new();
 
@@ -263,6 +266,12 @@ namespace FreePackages {
 
 		internal void IgnoreApp(uint appID) {
 			IgnoredApps.Add(appID);
+
+			Utilities.InBackground(Save);
+		}
+
+		internal void UpdateASFInfoItemCount(uint currentASFInfoItemCount) {
+			LastASFInfoItemCount = currentASFInfoItemCount;
 
 			Utilities.InBackground(Save);
 		}
