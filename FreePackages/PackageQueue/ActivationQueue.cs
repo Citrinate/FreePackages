@@ -16,7 +16,7 @@ namespace FreePackages {
 		internal static readonly HashSet<EPackageType> ActivationTypes = [EPackageType.App, EPackageType.Sub, EPackageType.Playtest];
 		internal int ActivationsRemaining => BotCache.Packages.Where(x => ActivationTypes.Contains(x.Type)).Count();
 
-		internal ActivationQueue(Bot bot, BotCache botCache, bool pauseWhilePlaying, uint? packageLimit, PackageFilter packageFilter) : base(bot, botCache, pauseWhilePlaying) {
+		internal ActivationQueue(Bot bot, BotCache botCache, bool pauseWhilePlaying, bool pauseWhileFarming, uint? packageLimit, PackageFilter packageFilter) : base(bot, botCache, pauseWhilePlaying, pauseWhileFarming) {
 			PackageFilter = packageFilter;
 
 			if (packageLimit != null) {

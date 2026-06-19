@@ -12,13 +12,15 @@ namespace FreePackages {
 		protected readonly Bot Bot;
 		protected readonly BotCache BotCache;
 		internal readonly bool PauseWhilePlaying = false;
+		internal readonly bool PauseWhileFarming = false;
 		private PackageFilter PackageFilter => PackageHandler.Handlers[Bot.BotName].PackageFilter;
 		private Timer Timer;
 
-		internal PackageQueue(Bot bot, BotCache botCache, bool pauseWhilePlaying) {
+		internal PackageQueue(Bot bot, BotCache botCache, bool pauseWhilePlaying, bool pauseWhileFarming) {
 			Bot = bot;
 			BotCache = botCache;
 			PauseWhilePlaying = pauseWhilePlaying;
+			PauseWhileFarming = pauseWhileFarming;
 			Timer = new Timer(async e => await ProcessQueue().ConfigureAwait(false), null, 0, Timeout.Infinite);
 		}
 
@@ -39,6 +41,13 @@ namespace FreePackages {
 
 			// Don't activate anything while the user is playing a game (does not apply to ASF card farming)
 			if (PauseWhilePlaying && !Bot.IsPlayingPossible) {
+				UpdateTimer(DateTime.Now.AddMinutes(1));
+
+				return;
+			}
+
+			// Don't activate anything while ASF is farming cards
+			if (PauseWhileFarming && Bot.CardsFarmer.NowFarming) {				
 				UpdateTimer(DateTime.Now.AddMinutes(1));
 
 				return;

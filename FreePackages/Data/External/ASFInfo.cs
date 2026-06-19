@@ -27,62 +27,52 @@ namespace FreePackages {
 
 		private static async Task DoUpdate() {
 			ArgumentNullException.ThrowIfNull(ASF.WebBrowser);
-			ArgumentNullException.ThrowIfNull(FreePackages.GlobalCache);
 
 			StreamResponse? response = await ASF.WebBrowser.UrlGetToStream(Source).ConfigureAwait(false);
 
 			if (response == null) {
-				ASF.ArchiLogger.LogNullError(response);
+				ASF.ArchiLogger.LogNullError(nameof(response));
 
 				return;
 			}
 
 			if (response.Content == null) {
-				ASF.ArchiLogger.LogNullError(response.Content);
+				ASF.ArchiLogger.LogNullError(nameof(response.Content));
 
 				return;
 			}
 
-			HashSet<uint> appIDs = new();
-			HashSet<uint> packageIDs = new();
-			uint itemCount = 0;
+			List<(EPackageType Type, uint Id)> items = new();
 
 			try {
-				using (StreamReader sr = new StreamReader(response.Content)) {
+				using (StreamReader sr = new(response.Content)) {
 					while (sr.Peek() >= 0) {
-						itemCount++;
 						string? line = sr.ReadLine();
-
+						
 						if (line == null) {
-							ASF.ArchiLogger.LogNullError(line);
+							ASF.ArchiLogger.LogNullError(nameof(line));
 
-							return;
-						}
-
-						if (itemCount <= FreePackages.GlobalCache.LastASFInfoItemCount) {
 							continue;
 						}
 
-						Match item = SourceLine.Match(line);
+						Match match = SourceLine.Match(line);
 
-						if (!item.Success) {
-							ASF.ArchiLogger.LogGenericError(String.Format("{0}: {1}", Strings.ASFInfoParseFailed, line));
-
+						if (!match.Success) {
+							ASF.ArchiLogger.LogGenericError(string.Format("{0}: {1}", Strings.ASFInfoParseFailed, line));
+							
 							return;
 						}
 
-						if (!uint.TryParse(item.Groups["id"].Value, out uint id)) {
-							ASF.ArchiLogger.LogGenericError(String.Format("{0}: {1}", Strings.ASFInfoParseFailed, line));
-
+						if (!uint.TryParse(match.Groups["id"].Value, out uint id)) {
+							ASF.ArchiLogger.LogGenericError(string.Format("{0}: {1}", Strings.ASFInfoParseFailed, line));
+							
 							return;
 						}
 
-						if (item.Groups["type"].Value == "a") {
-							// App
-							appIDs.Add(id);
-						} else if (item.Groups["type"].Value == "s") {
-							// Sub
-							packageIDs.Add(id);
+						if (match.Groups["type"].Value == "a") {
+							items.Add((EPackageType.App, id));
+						} else if (match.Groups["type"].Value == "s") {
+							items.Add((EPackageType.Sub, id));
 						}
 					}
 				}
@@ -92,13 +82,32 @@ namespace FreePackages {
 				return;
 			}
 			
-			if (appIDs.Count == 0 && packageIDs.Count == 0) {
+			if (items.Count == 0) {
 				return;
 			}
 
-			PackageHandler.Handlers.Values.ToList().ForEach(x => x.BotCache.AddChanges(appIDs, packageIDs));
-			FreePackages.GlobalCache.UpdateASFInfoItemCount(itemCount);
-			Utilities.InBackground(async() => await PackageHandler.HandleChanges().ConfigureAwait(false));
+			bool anyChangesAdded = false;
+
+			foreach (PackageHandler handler in PackageHandler.Handlers.Values) {
+				uint lastCount = handler.BotCache.LastASFInfoItemCount;
+				if (lastCount >= items.Count) {
+					continue;
+				}
+
+				HashSet<uint> appIDs = items.Skip((int) lastCount).Where(x => x.Type == EPackageType.App).Select(x => x.Id).ToHashSet();
+				HashSet<uint> packageIDs = items.Skip((int) lastCount).Where(x => x.Type == EPackageType.Sub).Select(x => x.Id).ToHashSet();
+				if (appIDs.Count == 0 && packageIDs.Count == 0) {
+					continue;
+				}
+
+				handler.BotCache.AddChanges(appIDs, packageIDs);
+				handler.BotCache.UpdateASFInfoItemCount((uint) items.Count);
+				anyChangesAdded = true;
+			}
+
+			if (anyChangesAdded) {
+				Utilities.InBackground(async () => await PackageHandler.HandleChanges().ConfigureAwait(false));
+			}
 		}
 	}
 }
