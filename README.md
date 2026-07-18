@@ -21,10 +21,17 @@ This plugin works by listening for [changes](https://steamdb.info/faq/#changenum
 
 All configuration is added to your existing `BotName.json` files found in the `config` folder inside your ASF folder.  Add the following lines to `BotName.json` to enable package redemption for that specific bot:
 
-```json
+```javascript
 "EnableFreePackages": true,
 "PauseFreePackagesWhilePlaying": true,
 ```
+
+> [!IMPORTANT]
+> When adding new lines to your config files manually:
+> * Ensure the new lines are placed before the closing brace `}` at the end of the file
+> * Verify that the line above the new lines ends in a comma `,`
+> 
+> If your config file is not formatted correctly, ASF will produce JSON errors on startup and your bot will not run.
 
 By default, the plugin will redeem everything except for demos and playtests.  Filters may be used to add custom restrictions.  If you don't want all free packages, here's a generally useful filter you can add to `BotName.json` to tell the plugin to only redeem: 
 
