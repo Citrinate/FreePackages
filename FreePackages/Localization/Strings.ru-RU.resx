@@ -300,7 +300,7 @@
 </comment>
   </data>
   <data name="RemovalScanNeeded" xml:space="preserve">
-    <value>Сначала необходимо просканировать нежелательные бесплатные пакеты с помощью команды: {0}</value>
+    <value>Сначала надо просканировать нежелательные бесплатные пакеты командой: {0}</value>
     <comment>{0} will be replaced by a command</comment>
   </data>
   <data name="RemovalsPaused" xml:space="preserve">
@@ -309,6 +309,16 @@
   </data>
   <data name="PlaytimeFetchFailed" xml:space="preserve">
     <value>Не удалось получить информацию о наигранном времени</value>
+    <comment>
+</comment>
+  </data>
+  <data name="Unwanted" xml:space="preserve">
+    <value>Нежелательно</value>
+    <comment>
+</comment>
+  </data>
+  <data name="QueuePausedWhileFarming" xml:space="preserve">
+    <value>Активации приостановлены - бот фармит карточки.</value>
     <comment>
 </comment>
   </data>
