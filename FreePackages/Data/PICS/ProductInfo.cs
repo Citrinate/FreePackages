@@ -55,18 +55,26 @@ namespace FreePackages {
 		private async static Task<List<SteamApps.PICSProductInfoCallback>?> FetchProductInfo(IEnumerable<uint>? appIDs = null, IEnumerable<uint>? packageIDs = null) {
 			await ProductInfoSemaphore.WaitAsync().ConfigureAwait(false);
 			try {
-				Bot? bot = Bot.BotsReadOnly?.Values.FirstOrDefault(static bot => bot.IsConnectedAndLoggedOn);
-				if (bot == null) {
-					return null;
-				}
-
 				var apps = appIDs == null ? Enumerable.Empty<SteamApps.PICSRequest>() : appIDs.Select(x => new SteamApps.PICSRequest(x));
 				var packages = packageIDs == null ? Enumerable.Empty<SteamApps.PICSRequest>() : packageIDs.Select(x => new SteamApps.PICSRequest(x, ASF.GlobalDatabase?.PackageAccessTokensReadOnly.GetValueOrDefault(x, (ulong) 0) ?? 0));
-				var response = await bot.SteamApps.PICSGetProductInfo(apps, packages).ToLongRunningTask().ConfigureAwait(false);
 
-				return response.Results?.ToList();
-			} catch (Exception e) {
-				ASF.ArchiLogger.LogGenericWarningException(e);
+				// Try each connected bot in turn: a single failing/disconnecting bot must not
+				// discard the whole batch. The rate-limiting delay still applies once per pass.
+				foreach (Bot bot in Bot.BotsReadOnly?.Values.Where(static bot => bot.IsConnectedAndLoggedOn).ToList() ?? new List<Bot>()) {
+					try {
+						var response = await bot.SteamApps.PICSGetProductInfo(apps, packages).ToLongRunningTask().ConfigureAwait(false);
+
+						var results = response.Results?.ToList();
+
+						if (results != null) {
+							return results;
+						}
+					} catch (Exception e) {
+						ASF.ArchiLogger.LogGenericWarningException(e);
+
+						// Fall through to the next connected bot
+					}
+				}
 
 				return null;
 			} finally {

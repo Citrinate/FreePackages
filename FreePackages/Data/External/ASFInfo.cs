@@ -31,13 +31,14 @@ namespace FreePackages {
 			StreamResponse? response = await ASF.WebBrowser.UrlGetToStream(Source).ConfigureAwait(false);
 
 			if (response == null) {
-				ASF.ArchiLogger.LogNullError(nameof(response));
+				ASF.ArchiLogger.LogGenericError($"ASFinfo update failed: source response was null ({Source})");
 
 				return;
 			}
 
 			if (response.Content == null) {
-				ASF.ArchiLogger.LogNullError(nameof(response.Content));
+				int statusCode = (int) response.StatusCode;
+				ASF.ArchiLogger.LogGenericError($"ASFinfo update failed: source content was null (HTTP {statusCode}, {Source})");
 
 				return;
 			}
@@ -59,14 +60,16 @@ namespace FreePackages {
 
 						if (!match.Success) {
 							ASF.ArchiLogger.LogGenericError(string.Format("{0}: {1}", Strings.ASFInfoParseFailed, line));
-							
-							return;
+
+							// Skip the unparsable line rather than aborting the whole update;
+							// a single bad line (header, comment, blank) must not discard the rest.
+							continue;
 						}
 
 						if (!uint.TryParse(match.Groups["id"].Value, out uint id)) {
 							ASF.ArchiLogger.LogGenericError(string.Format("{0}: {1}", Strings.ASFInfoParseFailed, line));
-							
-							return;
+
+							continue;
 						}
 
 						if (match.Groups["type"].Value == "a") {
@@ -90,6 +93,16 @@ namespace FreePackages {
 
 			foreach (PackageHandler handler in PackageHandler.Handlers.Values) {
 				uint lastCount = handler.BotCache.LastASFInfoItemCount;
+				// If the source list shrank below our last seen position (e.g. the gist
+				// was trimmed), the incremental Skip(lastCount) would skip everything
+				// forever. Reset to 0 and re-scan from the start — re-adding already
+				// seen IDs is safe: duplicates are filtered by owned-checks and RemoveChange.
+				if (lastCount > items.Count) {
+					ASF.ArchiLogger.LogGenericInfo("ASFinfo source shrank; re-scanning from start");
+					lastCount = 0;
+					handler.BotCache.UpdateASFInfoItemCount(0);
+				}
+
 				if (lastCount >= items.Count) {
 					continue;
 				}

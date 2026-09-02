@@ -14,6 +14,9 @@ namespace FreePackages {
 		internal const uint ActivationPeriodMinutes = 90; // Steam's imposed limit
 		internal readonly PackageFilter PackageFilter;
 		internal static readonly HashSet<EPackageType> ActivationTypes = [EPackageType.App, EPackageType.Sub, EPackageType.Playtest];
+		// App/Sub only — used while a PlaytestCatalog fetch is running so playtest claims are
+		// held (the persisted playtest queue is stale) but apps/subs keep activating.
+		internal static readonly HashSet<EPackageType> NonPlaytestActivationTypes = [EPackageType.App, EPackageType.Sub];
 		internal int ActivationsRemaining => BotCache.Packages.Where(x => ActivationTypes.Contains(x.Type)).Count();
 
 		internal ActivationQueue(Bot bot, BotCache botCache, bool pauseWhilePlaying, bool pauseWhileFarming, uint? packageLimit, PackageFilter packageFilter) : base(bot, botCache, pauseWhilePlaying, pauseWhileFarming) {
@@ -24,7 +27,11 @@ namespace FreePackages {
 			}
 		}
 
-		protected override Package? GetNextPackage() => BotCache.GetNextPackage(ActivationTypes);
+		// While a PlaytestCatalog fetch is running (PackageHandler.PlaytestsPausedGlobally) the
+		// persisted playtest queue is stale and would fire 401s, so skip playtests and only
+		// claim apps/subs. Once the fetch finishes the flag clears and the next tick (forced
+		// by ResumePlaytestActivations' nudge) picks playtests back up.
+		protected override Package? GetNextPackage() => BotCache.GetNextPackage(PackageHandler.PlaytestsPausedGlobally ? NonPlaytestActivationTypes : ActivationTypes);
 
 		protected override async Task<DateTime?> BeforeProcessing(Package package) {
 			// Rate limit reached

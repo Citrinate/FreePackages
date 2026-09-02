@@ -223,39 +223,16 @@ namespace FreePackages {
 			// https://github.com/JustArchiNET/ArchiSteamFarm/blob/d972c93072dd8d2bf0f2cecda3561dc3ba77a9ed/ArchiSteamFarm/Steam/Interaction/Commands.cs#L626C3-L626C34
 			StringBuilder response = new();
 
-			string[] entries = licenses.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-
-			foreach (string entry in entries) {
-				uint gameID;
-				string type;
-
-				int index = entry.IndexOf('/', StringComparison.Ordinal);
-
-				if ((index > 0) && (entry.Length > index + 1)) {
-					if (!uint.TryParse(entry[(index + 1)..], out gameID) || (gameID == 0)) {
-						response.AppendLine(FormatBotResponse(bot, string.Format(CultureInfo.CurrentCulture, ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(gameID))));
-
-						continue;
-					}
-
-					type = entry[..index];
-				} else if (uint.TryParse(entry, out gameID) && (gameID > 0)) {
-					type = "SUB";
-				} else {
-					response.AppendLine(FormatBotResponse(bot, string.Format(CultureInfo.CurrentCulture, ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(gameID))));
+			foreach (ParsedLicenseEntry entry in ParseLicenseEntries(licenses)) {
+				if (entry.IsError) {
+					response.AppendLine(FormatBotResponse(bot, string.Format(CultureInfo.CurrentCulture, ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, "gameID")));
 
 					continue;
 				}
 
-				EPackageType packageType;
-				type = type.ToUpperInvariant();
-				if (type == "A" || type == "APP") {
-					packageType = EPackageType.RemoveApp;
-				} else {
-					packageType = EPackageType.RemoveSub;
-				}
+				EPackageType packageType = (entry.Type == "A" || entry.Type == "APP") ? EPackageType.RemoveApp : EPackageType.RemoveSub;
 
-				response.AppendLine(FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].ModifyRemovables(packageType, gameID)));
+				response.AppendLine(FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].ModifyRemovables(packageType, entry.GameID)));
 			}
 
 			return response.Length > 0 ? response.ToString() : null;
@@ -331,39 +308,16 @@ namespace FreePackages {
 			// https://github.com/JustArchiNET/ArchiSteamFarm/blob/d972c93072dd8d2bf0f2cecda3561dc3ba77a9ed/ArchiSteamFarm/Steam/Interaction/Commands.cs#L626C3-L626C34
 			StringBuilder response = new();
 
-			string[] entries = licenses.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-
-			foreach (string entry in entries) {
-				uint gameID;
-				string type;
-
-				int index = entry.IndexOf('/', StringComparison.Ordinal);
-
-				if ((index > 0) && (entry.Length > index + 1)) {
-					if (!uint.TryParse(entry[(index + 1)..], out gameID) || (gameID == 0)) {
-						response.AppendLine(FormatBotResponse(bot, string.Format(CultureInfo.CurrentCulture, ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(gameID))));
-
-						continue;
-					}
-
-					type = entry[..index];
-				} else if (uint.TryParse(entry, out gameID) && (gameID > 0)) {
-					type = "SUB";
-				} else {
-					response.AppendLine(FormatBotResponse(bot, string.Format(CultureInfo.CurrentCulture, ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(gameID))));
+			foreach (ParsedLicenseEntry entry in ParseLicenseEntries(licenses)) {
+				if (entry.IsError) {
+					response.AppendLine(FormatBotResponse(bot, string.Format(CultureInfo.CurrentCulture, ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, "gameID")));
 
 					continue;
 				}
 
-				EPackageType packageType;
-				type = type.ToUpperInvariant();
-				if (type == "A" || type == "APP") {
-					packageType = EPackageType.App;
-				} else {
-					packageType = EPackageType.Sub;
-				}
+				EPackageType packageType = (entry.Type == "A" || entry.Type == "APP") ? EPackageType.App : EPackageType.Sub;
 
-				response.AppendLine(FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].AddPackage(packageType, gameID, useFilter)));
+				response.AppendLine(FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].AddPackage(packageType, entry.GameID, useFilter)));
 			}
 
 			if (previousMethodName == nameof(Response)) {
@@ -459,6 +413,59 @@ namespace FreePackages {
 			}
 
 			return await ResponseRemoveFreePackages(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), statusReporter, excludePlayed, removeAll).ConfigureAwait(false);
+		}
+
+		// Parses a comma-separated license list (e.g. "app/123, sub/456, 789") into typed
+		// entries, shared by ResponseDontRemove and ResponseQueueLicense. `Type` is the
+		// upper-cased prefix ("A"/"APP" or "SUB" — "SUB" is the default when no prefix is
+		// given); `IsError` marks an entry that failed to parse so the caller can emit the
+		// same localized error for each bad entry, preserving order and count.
+		private static List<ParsedLicenseEntry> ParseLicenseEntries(string licenses) {
+			List<ParsedLicenseEntry> entries = new();
+
+			string[] raw = licenses.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+			foreach (string entry in raw) {
+				uint gameID;
+				string type;
+
+				int index = entry.IndexOf('/', StringComparison.Ordinal);
+
+				if ((index > 0) && (entry.Length > index + 1)) {
+					if (!uint.TryParse(entry[(index + 1)..], out gameID) || (gameID == 0)) {
+						entries.Add(ParsedLicenseEntry.AsError());
+
+						continue;
+					}
+
+					type = entry[..index];
+				} else if (uint.TryParse(entry, out gameID) && (gameID > 0)) {
+					type = "SUB";
+				} else {
+					entries.Add(ParsedLicenseEntry.AsError());
+
+					continue;
+				}
+
+				entries.Add(ParsedLicenseEntry.AsOk(type.ToUpperInvariant(), gameID));
+			}
+
+			return entries;
+		}
+
+		private readonly struct ParsedLicenseEntry {
+			internal string Type { get; }
+			internal uint GameID { get; }
+			internal bool IsError { get; }
+
+			private ParsedLicenseEntry(string type, uint gameID, bool isError) {
+				Type = type;
+				GameID = gameID;
+				IsError = isError;
+			}
+
+			internal static ParsedLicenseEntry AsOk(string type, uint gameID) => new(type, gameID, false);
+			internal static ParsedLicenseEntry AsError() => new("", 0, true);
 		}
 
 		internal static string FormatStaticResponse(string response) => ArchiSteamFarm.Steam.Interaction.Commands.FormatStaticResponse(response);

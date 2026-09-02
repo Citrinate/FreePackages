@@ -34,6 +34,7 @@ namespace FreePackages {
 
 			CardApps.Update();
 			ASFInfo.Update();
+			PlaytestCatalog.Update();
 		}
 
 		public async Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
@@ -131,7 +132,9 @@ namespace FreePackages {
 		}
 
 		public Task OnBotDisconnected(Bot bot, EResult reason) {
-			return Task.FromResult(0);
+			PackageHandler.OnBotDisconnected(bot);
+
+			return Task.CompletedTask;
 		}
 	}
 }

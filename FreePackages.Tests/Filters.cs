@@ -447,4 +447,129 @@ public class Filters {
 		Assert.IsTrue(PackageFilter.IsAppWantedByFilter(app, defaultFilter));
 		Assert.IsFalse(PackageFilter.IsAppIgnoredByFilter(app, defaultFilter));
 	}
+
+	// IsRedeemableApp / IsRedeemablePackage are the ownership + country + must-own gates that run
+	// before a package/app is queued for activation. These tests build focused userdata/userinfo
+	// (country and owned sets) without touching the ASF runtime.
+	// Future work: ActivationQueue.HandleResult needs a live Bot/ASF runtime and is not covered here.
+
+	private static string BuildUserDataJson(IEnumerable<uint>? ownedApps = null, IEnumerable<uint>? ownedPackages = null) {
+		string apps = ownedApps != null ? string.Join(",", ownedApps) : "";
+		string packages = ownedPackages != null ? string.Join(",", ownedPackages) : "";
+
+		return $"{{\"rgOwnedPackages\":[{packages}],\"rgOwnedApps\":[{apps}],\"rgIgnoredApps\":{{}},\"rgExcludedTags\":[],\"rgExcludedContentDescriptorIDs\":[],\"rgWishlist\":[],\"rgFollowedApps\":[]}}";
+	}
+
+	private void SetUserDetails(string country, IEnumerable<uint>? ownedApps = null, IEnumerable<uint>? ownedPackages = null) {
+		PackageFilter.UpdateUserDetails(BuildUserDataJson(ownedApps, ownedPackages).ToJsonObject<Steam.UserData>(), new Steam.UserInfo { CountryCode = country });
+	}
+
+	[TestMethod]
+	public void CanRedeemAppByRestrictedCountry() {
+		// app_with_restricted_countries: common/restricted_countries = "CN,DE"
+		var app = new FilterableApp(KeyValue.LoadAsText("app_with_restricted_countries.txt"));
+
+		SetUserDetails("US");
+		Assert.IsTrue(PackageFilter.IsRedeemableApp(app));
+
+		SetUserDetails("DE");
+		Assert.IsFalse(PackageFilter.IsRedeemableApp(app));
+
+		SetUserDetails("CN");
+		Assert.IsFalse(PackageFilter.IsRedeemableApp(app));
+
+		// Country list match is case-insensitive
+		SetUserDetails("de");
+		Assert.IsFalse(PackageFilter.IsRedeemableApp(app));
+	}
+
+	[TestMethod]
+	public void CanRedeemAppByPurchaseRestrictedCountry() {
+		// app_with_purchase_restricted_countries (Mabinogi): allowpurchasefromrestrictedcountries=1,
+		// purchaserestrictedcountries="US CA MX NZ AU" -> redeemable only inside that list
+		var app = new FilterableApp(KeyValue.LoadAsText("app_with_purchase_restricted_countries.txt"));
+
+		SetUserDetails("US");
+		Assert.IsTrue(PackageFilter.IsRedeemableApp(app));
+
+		SetUserDetails("DE");
+		Assert.IsFalse(PackageFilter.IsRedeemableApp(app));
+	}
+
+	[TestMethod]
+	public void CanRedeemAppByAlreadyOwned() {
+		var app = new FilterableApp(KeyValue.LoadAsText("app_with_restricted_countries.txt"));
+
+		// Owned by the bot -> not redeemable
+		SetUserDetails("US", ownedApps: new uint[] { 1245610 });
+		Assert.IsFalse(PackageFilter.IsRedeemableApp(app));
+
+		// ignoreAlreadyOwned bypasses the ownership gate
+		Assert.IsTrue(PackageFilter.IsRedeemableApp(app, ignoreAlreadyOwned: true));
+	}
+
+	[TestMethod]
+	public void CanRedeemAppByMustOwn() {
+		// app_with_required_app: mustownapptopurchase=1086940
+		var app = new FilterableApp(KeyValue.LoadAsText("app_with_required_app.txt"));
+
+		// Missing the required app -> not redeemable
+		SetUserDetails("US");
+		Assert.IsFalse(PackageFilter.IsRedeemableApp(app));
+
+		// Owning the required app -> redeemable
+		SetUserDetails("US", ownedApps: new uint[] { 1086940 });
+		Assert.IsTrue(PackageFilter.IsRedeemableApp(app));
+
+		// includedAppIDs also satisfies the must-own gate without owning it
+		SetUserDetails("US");
+		Assert.IsTrue(PackageFilter.IsRedeemableApp(app, includedAppIDs: new HashSet<uint> { 1086940 }));
+	}
+
+	[TestMethod]
+	public void CanRedeemPackageByRestrictedCountry() {
+		// package 178: restrictedcountries="DE", onlyallowrestrictedcountries=1
+		var package = new FilterablePackage(KeyValue.LoadAsText("package_with_restricted_countries.txt"));
+		// PackageContents must be populated, or IsRedeemablePackage short-circuits on
+		// "already own all apps" (PackageContents.All over an empty set is vacuously true).
+		package.AddPackageContents(new List<KeyValue>() { KeyValue.LoadAsText("package_with_single_app_app_1.txt") });
+
+		// DE is in the restricted list and only-allowed -> redeemable
+		SetUserDetails("DE");
+		Assert.IsTrue(PackageFilter.IsRedeemablePackage(package));
+
+		// US is not allowed -> not redeemable
+		SetUserDetails("US");
+		Assert.IsFalse(PackageFilter.IsRedeemablePackage(package));
+	}
+
+	[TestMethod]
+	public void CanRedeemPackageByPurchaseRestrictedCountry() {
+		// package 1890: purchaserestrictedcountries="US CA MX PR", allowpurchasefromrestrictedcountries=1
+		var package = new FilterablePackage(KeyValue.LoadAsText("package_with_purchase_restricted_countries.txt"));
+		package.AddPackageContents(new List<KeyValue>() { KeyValue.LoadAsText("package_with_single_app_app_1.txt") });
+
+		// US in the purchase list -> redeemable
+		SetUserDetails("US");
+		Assert.IsTrue(PackageFilter.IsRedeemablePackage(package));
+
+		// DE outside the purchase list -> not redeemable
+		SetUserDetails("DE");
+		Assert.IsFalse(PackageFilter.IsRedeemablePackage(package));
+	}
+
+	[TestMethod]
+	public void CanRedeemPackageByAlreadyOwned() {
+		// package 44911: NoCost, no hard country restriction (purchase-restricted to RU only,
+		// allowpurchasefromrestrictedcountries=0) -> redeemable from US
+		var package = new FilterablePackage(KeyValue.LoadAsText("package_which_is_no_cost.txt"));
+		package.AddPackageContents(new List<KeyValue>() { KeyValue.LoadAsText("package_with_single_app_app_1.txt") });
+
+		// Owning the package -> not redeemable
+		SetUserDetails("US", ownedPackages: new uint[] { 44911 });
+		Assert.IsFalse(PackageFilter.IsRedeemablePackage(package));
+
+		// ignoreAlreadyOwned bypasses the ownership gate
+		Assert.IsTrue(PackageFilter.IsRedeemablePackage(package, ignoreAlreadyOwned: true));
+	}
 }

@@ -207,7 +207,11 @@ namespace FreePackages {
 			Steam.PlaytestAccessResponse? response = await WebRequest.RequestPlaytestAccess(Bot, appID).ConfigureAwait(false);
 
 			if (response == null) {
-				// Playtest does not exist currently
+				// Playtest does not exist currently. The catalog said it was live, so this
+				// is a stale-catalog race (dev just hid the signup). Record it so we don't
+				// re-request within this membership epoch; it gets pruned only if it leaves
+				// the live set, and re-requested only if it re-enters.
+				BotCache.AddRequestedPlaytest(appID);
 				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", appID), Strings.Invalid));
 
 				return EResult.Invalid;
@@ -215,6 +219,7 @@ namespace FreePackages {
 
 			if (response.Success != 1) {
 				// Not sure if/when this happens
+				BotCache.AddRequestedPlaytest(appID);
 				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", appID), Strings.Failed));
 
 				return EResult.Invalid;
@@ -226,12 +231,16 @@ namespace FreePackages {
 
 				// This won't show up in our owned apps until we're accepted, save it so we don't attempt to join the playtest again
 				BotCache.AddWaitlistedPlaytest(appID);
+				BotCache.AddRequestedPlaytest(appID);
 
 				return EResult.OK;
 			}
 
 			// Access to unlimited playtest granted
 			Bot.ArchiLogger.LogGenericInfo(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", appID), EResult.OK));
+
+			// Record so the catalog-proactive path doesn't re-enqueue while it stays live.
+			BotCache.AddRequestedPlaytest(appID);
 
 			return EResult.OK;
 		}
@@ -300,5 +309,9 @@ namespace FreePackages {
 
 		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int)(then - DateTime.Now).TotalMilliseconds);
 		private void UpdateTimer(DateTime then) => Timer?.Change(GetMillisecondsFromNow(then), Timeout.Infinite);
+
+		// Fire the queue tick immediately (used by ResumePlaytestActivations so activation queues
+		// resume right after a fetch instead of waiting up to their scheduled delay).
+		internal void Nudge() => Timer?.Change(0, Timeout.Infinite);
 	}
 }
