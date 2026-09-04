@@ -106,14 +106,12 @@ jobs:
           echo "next_version=${next}" >> "$GITHUB_OUTPUT"
 
       - name: Create ${{ env.PLUGIN_NAME }} GitHub release
-        uses: ncipollo/release-action@v1.13.0
-        with:
-          artifacts: out/${{ env.PLUGIN_NAME }}.zip
-          artifactContentType: application/zip
-          name: ${{ env.PLUGIN_NAME }} ${{ steps.version.outputs.next_version }}
-          tag: ${{ steps.version.outputs.next_version }}
-          bodyFile: .github/RELEASE_TEMPLATE.md
-          token: ${{ secrets.GITHUB_TOKEN }}
-          makeLatest: false
-          prerelease: true
-          draft: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.version.outputs.next_version }}" \
+            out/${{ env.PLUGIN_NAME }}.zip \
+            --title "${{ env.PLUGIN_NAME }} ${{ steps.version.outputs.next_version }}" \
+            --notes-file .github/RELEASE_TEMPLATE.md \
+            --prerelease \
+            --latest=false
