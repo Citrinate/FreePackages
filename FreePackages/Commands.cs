@@ -501,6 +501,52 @@ namespace FreePackages {
 					bot.ArchiLogger.LogGenericInfo(String.Format("FreePackages marker '{0}': 0 occurrences", marker));
 				}
 			}
+
+			// Pagination/lazy-loading markers
+			string[] paginationMarkers = [
+				"page",
+				"next",
+				"showmore",
+				"loadmore",
+				"load_more",
+				"lazyload",
+				"paging",
+				"pagination",
+				"start=",
+				"page=",
+				"g_rgLicenses",
+				"Showing"
+			];
+
+			foreach (string marker in paginationMarkers) {
+				int count = 0;
+				int firstIndex = -1;
+				int index = licensesPageSource.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+
+				while ((index >= 0) && (count < 1000)) {
+					count++;
+					if (firstIndex == -1) {
+						firstIndex = index;
+					}
+
+					index = licensesPageSource.IndexOf(marker, index + marker.Length, StringComparison.OrdinalIgnoreCase);
+				}
+
+				bot.ArchiLogger.LogGenericInfo(String.Format("FreePackages pagination marker '{0}': {1} occurrence(s)", marker, count));
+
+				if (firstIndex >= 0) {
+					int start = Math.Max(0, firstIndex - 80);
+					int length = Math.Min(200, licensesPageSource.Length - start);
+					string context = licensesPageSource.Substring(start, length).Replace('\r', ' ').Replace('\n', ' ');
+
+					bot.ArchiLogger.LogGenericInfo(String.Format("FreePackages pagination marker '{0}' context: {1}", marker, context));
+				}
+			}
+
+			// Tail of the page, where pagination controls usually live
+			int tailStart = Math.Max(0, licensesPageSource.Length - 2000);
+			string tail = licensesPageSource.Substring(tailStart).Replace('\r', ' ').Replace('\n', ' ');
+			bot.ArchiLogger.LogGenericInfo(String.Format("FreePackages licenses page tail: {0}", tail));
 		}
 
 		internal static string FormatStaticResponse(string response) => ArchiSteamFarm.Steam.Interaction.Commands.FormatStaticResponse(response);
