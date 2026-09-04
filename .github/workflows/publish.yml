@@ -4,11 +4,6 @@ on:
   push:
   pull_request:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version tag for the release (e.g., 1.7.0.1)'
-        required: true
-        type: string
 
 env:
   PLUGIN_NAME: "FreePackages"
@@ -85,13 +80,38 @@ jobs:
         with:
           subject-path: 'out/${{ env.PLUGIN_NAME }}.zip'
 
+      - name: Determine release version
+        id: version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
+            echo "next_version=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          tags="$(gh api "repos/${{ github.repository }}/releases?per_page=100" --jq '.[].tag_name' 2>/dev/null || true)"
+          latest="$(printf '%s\n' "$tags" | grep -E '^[vV]?[0-9]+(\.[0-9]+)+$' | sed -E 's/^[vV]//' | sort -V | tail -n1)"
+
+          if [[ -z "$latest" ]]; then
+            next="v1.0.0"
+          else
+            IFS='.' read -r -a parts <<< "$latest"
+            last=$(( ${#parts[@]} - 1 ))
+            parts[$last]=$(( 10#${parts[$last]} + 1 ))
+            next="v$(IFS='.'; echo "${parts[*]}")"
+          fi
+
+          echo "Using next version: ${next}"
+          echo "next_version=${next}" >> "$GITHUB_OUTPUT"
+
       - name: Create ${{ env.PLUGIN_NAME }} GitHub release
         uses: ncipollo/release-action@v1.13.0
         with:
           artifacts: out/${{ env.PLUGIN_NAME }}.zip
           artifactContentType: application/zip
-          name: ${{ env.PLUGIN_NAME }} V${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || github.ref_name }}
-          tag: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || github.ref_name }}
+          name: ${{ env.PLUGIN_NAME }} ${{ steps.version.outputs.next_version }}
+          tag: ${{ steps.version.outputs.next_version }}
           bodyFile: .github/RELEASE_TEMPLATE.md
           token: ${{ secrets.GITHUB_TOKEN }}
           makeLatest: false
