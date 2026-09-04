@@ -49,7 +49,7 @@ namespace FreePackages {
 			BetaTesterPackage = kv["extended"]["betatesterpackage"].AsBoolean();
 		}
 
-		internal static async Task<List<FilterablePackage>?> GetFilterables(List<SteamApps.PICSProductInfoCallback> productInfos, Func<FilterablePackage, bool>? onNonFreePackage = null, CancellationToken? cancellationToken = null) {
+		internal static async Task<List<FilterablePackage>?> GetFilterables(List<SteamApps.PICSProductInfoCallback> productInfos, Func<FilterablePackage, bool>? onNonFreePackage = null, CancellationToken? cancellationToken = null, Action<int, int>? progressCallback = null) {
 			var packageProductInfos = productInfos.SelectMany(static result => result.Packages.Values);
 			if (packageProductInfos.Count() == 0) {
 				return [];
@@ -72,7 +72,7 @@ namespace FreePackages {
 
 			// Get the apps contained in each package
 			HashSet<uint> packageContentsIDs = packages.SelectMany(package => package.PackageContentIDs).ToHashSet();
-			var packageContentProductInfos = (await ProductInfo.GetProductInfo(appIDs: packageContentsIDs, cancellationToken: cancellationToken).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);
+			var packageContentProductInfos = (await ProductInfo.GetProductInfo(appIDs: packageContentsIDs, cancellationToken: cancellationToken, progressCallback: progressCallback).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);
 			if (packageContentProductInfos == null) {
 				ASF.ArchiLogger.LogNullError(packageContentProductInfos);
 
@@ -98,7 +98,7 @@ namespace FreePackages {
 
 			// Get the parents for the apps in each package
 			HashSet<uint> parentIDs = packages.SelectMany(package => package.PackageContentParentIDs).ToHashSet();
-			var parentProductInfos = (await ProductInfo.GetProductInfo(appIDs: parentIDs, cancellationToken: cancellationToken).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);
+			var parentProductInfos = (await ProductInfo.GetProductInfo(appIDs: parentIDs, cancellationToken: cancellationToken, progressCallback: progressCallback).ConfigureAwait(false))?.SelectMany(static result => result.Apps.Values);
 			if (parentProductInfos == null) {
 				ASF.ArchiLogger.LogNullError(parentProductInfos);
 

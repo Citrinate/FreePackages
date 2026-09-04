@@ -409,6 +409,7 @@ namespace FreePackages {
 			Dictionary<uint, string> removeablePackages = new();
 			string? licensesPageRelativeUrl = null;
 			int numPagesFetched = 0;
+			int totalLicenses = 0;
 
 			while (true) {
 				IDocument? accountLicensesPage = await WebRequest.GetAccountLicenses(bot, licensesPageRelativeUrl).ConfigureAwait(false);
@@ -425,9 +426,18 @@ namespace FreePackages {
 				numPagesFetched++;
 				string licensesPageSource = accountLicensesPage.Source.Text;
 
+				if ((totalLicenses == 0) && (numPagesFetched == 1)) {
+					totalLicenses = GetTotalLicensesCount(licensesPageSource);
+				}
+
 				string? parsingError = ParseRemovablePackages(bot, licensesPageSource, removeablePackages);
 				if (parsingError != null) {
 					return parsingError;
+				}
+
+				int totalPages = totalLicenses > 0 ? (int) Math.Ceiling(totalLicenses / 100.0) : 0;
+				if ((numPagesFetched % 10 == 0) || (totalPages > 0 && numPagesFetched == totalPages)) {
+					bot.ArchiLogger.LogGenericInfo(String.Format("FreePackages licenses page: fetched {0}/{1} pages, {2} removable packages found so far", numPagesFetched, totalPages > 0 ? totalPages.ToString() : "?", removeablePackages.Count));
 				}
 
 				string? nextPageRelativeUrl = GetNextLicensesPageRelativeUrl(licensesPageSource);
@@ -502,6 +512,13 @@ namespace FreePackages {
 
 		private static readonly Regex NextPageClassBeforeHrefRegex = new("<a\\s+[^>]*class=\"license_paginator_next\"[^>]*href=\"(?<href>[^\"]+)\"", RegexOptions.CultureInvariant);
 		private static readonly Regex NextPageHrefBeforeClassRegex = new("<a\\s+[^>]*href=\"(?<href>[^\"]+)\"[^>]*class=\"license_paginator_next\"", RegexOptions.CultureInvariant);
+		private static readonly Regex TotalLicensesRegex = new("Showing licenses \\d+-\\d+ of (?<total>\\d+)", RegexOptions.CultureInvariant);
+
+		private static int GetTotalLicensesCount(string licensesPageSource) {
+			Match match = TotalLicensesRegex.Match(licensesPageSource);
+
+			return match.Success && int.TryParse(match.Groups["total"].Value, out int total) ? total : 0;
+		}
 
 		private static string? GetNextLicensesPageRelativeUrl(string licensesPageSource) {
 			Match nextPageMatch = NextPageClassBeforeHrefRegex.Match(licensesPageSource);
