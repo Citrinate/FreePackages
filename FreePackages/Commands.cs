@@ -411,8 +411,13 @@ namespace FreePackages {
 				return FormatBotResponse(bot, Strings.LicensePageFetchFail);
 			}
 
+			string licensesPageSource = accountLicensesPage.Source.Text;
+			LogLicensesPageDiagnostics(bot, licensesPageSource);
+
 			Regex removablePackageIDsRegex = new Regex("RemoveFreeLicense\\(\\s*(?<subID>[0-9]+),\\s*'(?<encodedName>[A-Za-z0-9+/=]*)'", RegexOptions.CultureInvariant); // matches the parameters of: RemoveFreeLicense( 45946, 'UmV2ZXJzaW9uOiBUaGUgRXNjYXBl' );
-			MatchCollection removablePackageMatches = removablePackageIDsRegex.Matches(accountLicensesPage.Source.Text);
+			MatchCollection removablePackageMatches = removablePackageIDsRegex.Matches(licensesPageSource);
+			bot.ArchiLogger.LogGenericInfo(String.Format("FreePackages licenses page: {0} chars, {1} RemoveFreeLicense(...) regex matches", licensesPageSource.Length, removablePackageMatches.Count));
+
 			if (removablePackageMatches.Count == 0) {
 				return FormatBotResponse(bot, Strings.LicensePageEmpty);
 			}
@@ -459,6 +464,43 @@ namespace FreePackages {
 			}
 
 			return await ResponseRemoveFreePackages(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), statusReporter, excludePlayed, removeAll).ConfigureAwait(false);
+		}
+
+		private static void LogLicensesPageDiagnostics(Bot bot, string licensesPageSource) {
+			string[] markers = [
+				"RemoveFreeLicense",
+				"free_license_remove_link",
+				"removelicense",
+				"packageid",
+				"RemoveFreeLicense(",
+				"javascript:",
+				"account/licenses"
+			];
+
+			foreach (string marker in markers) {
+				int count = 0;
+				int firstIndex = -1;
+				int index = licensesPageSource.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+
+				while ((index >= 0) && (count < 1000)) {
+					count++;
+					if (firstIndex == -1) {
+						firstIndex = index;
+					}
+
+					index = licensesPageSource.IndexOf(marker, index + marker.Length, StringComparison.OrdinalIgnoreCase);
+				}
+
+				if (count > 0) {
+					int start = Math.Max(0, firstIndex - 120);
+					int length = Math.Min(240, licensesPageSource.Length - start);
+					string context = licensesPageSource.Substring(start, length).Replace('\r', ' ').Replace('\n', ' ');
+
+					bot.ArchiLogger.LogGenericInfo(String.Format("FreePackages marker '{0}': {1} occurrence(s), first context: {2}", marker, count, context));
+				} else {
+					bot.ArchiLogger.LogGenericInfo(String.Format("FreePackages marker '{0}': 0 occurrences", marker));
+				}
+			}
 		}
 
 		internal static string FormatStaticResponse(string response) => ArchiSteamFarm.Steam.Interaction.Commands.FormatStaticResponse(response);
