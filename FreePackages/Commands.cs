@@ -435,7 +435,7 @@ namespace FreePackages {
 					break;
 				}
 
-				string nextLicensesPageUrl = nextPageRelativeUrl.StartsWith('?') ? "/account/licenses/" + nextPageRelativeUrl : nextPageRelativeUrl;
+				string nextLicensesPageUrl = nextPageRelativeUrl.StartsWith("?", StringComparison.Ordinal) ? "/account/licenses/" + nextPageRelativeUrl : nextPageRelativeUrl;
 				if (nextLicensesPageUrl == licensesPageRelativeUrl) {
 					// Steam returned the same continuation token, stop to avoid an infinite loop
 					break;
@@ -500,26 +500,16 @@ namespace FreePackages {
 			return null;
 		}
 
+		private static readonly Regex NextPageClassBeforeHrefRegex = new("<a\\s+[^>]*class=\"license_paginator_next\"[^>]*href=\"(?<href>[^\"]+)\"", RegexOptions.CultureInvariant);
+		private static readonly Regex NextPageHrefBeforeClassRegex = new("<a\\s+[^>]*href=\"(?<href>[^\"]+)\"[^>]*class=\"license_paginator_next\"", RegexOptions.CultureInvariant);
+
 		private static string? GetNextLicensesPageRelativeUrl(string licensesPageSource) {
-			int paginatorIndex = licensesPageSource.IndexOf("license_paginator_next", StringComparison.Ordinal);
-			if (paginatorIndex < 0) {
-				return null;
+			Match nextPageMatch = NextPageClassBeforeHrefRegex.Match(licensesPageSource);
+			if (!nextPageMatch.Success) {
+				nextPageMatch = NextPageHrefBeforeClassRegex.Match(licensesPageSource);
 			}
 
-			int anchorStart = licensesPageSource.LastIndexOf("<a ", paginatorIndex, StringComparison.Ordinal);
-			if (anchorStart < 0) {
-				return null;
-			}
-
-			int anchorEnd = licensesPageSource.IndexOf('>', paginatorIndex);
-			if (anchorEnd < anchorStart) {
-				return null;
-			}
-
-			string anchor = licensesPageSource.Substring(anchorStart, anchorEnd - anchorStart + 1);
-			Match hrefMatch = Regex.Match(anchor, "href=\"(?<href>[^\"]+)\"", RegexOptions.CultureInvariant);
-
-			return hrefMatch.Success ? hrefMatch.Groups["href"].Value.Replace("&" + "amp;", "&") : null;
+			return nextPageMatch.Success ? nextPageMatch.Groups["href"].Value.Replace("&" + "amp;", "&") : null;
 		}
 
 		internal static string FormatStaticResponse(string response) => ArchiSteamFarm.Steam.Interaction.Commands.FormatStaticResponse(response);
