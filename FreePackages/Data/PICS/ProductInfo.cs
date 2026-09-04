@@ -13,13 +13,15 @@ namespace FreePackages {
 		internal const int ProductInfoLimitingDelaySeconds = 10;
 		internal const int ItemsPerProductInfoRequest = 255;
 
-		internal async static Task<List<SteamApps.PICSProductInfoCallback>?> GetProductInfo(HashSet<uint>? appIDs = null, HashSet<uint>? packageIDs = null, CancellationToken? cancellationToken = null) {
+		internal async static Task<List<SteamApps.PICSProductInfoCallback>?> GetProductInfo(HashSet<uint>? appIDs = null, HashSet<uint>? packageIDs = null, CancellationToken? cancellationToken = null, Action<int, int>? progressCallback = null) {
 			List<SteamApps.PICSProductInfoCallback> productInfo = new();
+			(HashSet<uint>?, HashSet<uint>?)[] batches = GetProductIDBatches(appIDs, packageIDs).ToArray();
 
-			foreach ((HashSet<uint>? batchedAppIDs, HashSet<uint>? batchedPackageIDs) in GetProductIDBatches(appIDs, packageIDs)) {
+			for (int i = 0; i < batches.Length; i++) {
 				cancellationToken?.ThrowIfCancellationRequested();
+				progressCallback?.Invoke(i + 1, batches.Length);
 
-				List<SteamApps.PICSProductInfoCallback>? partialProductInfo = await FetchProductInfo(batchedAppIDs, batchedPackageIDs).ConfigureAwait(false);
+				List<SteamApps.PICSProductInfoCallback>? partialProductInfo = await FetchProductInfo(batches[i].Item1, batches[i].Item2).ConfigureAwait(false);
 				if (partialProductInfo == null) {
 					return null;
 				}

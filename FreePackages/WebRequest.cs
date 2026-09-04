@@ -26,8 +26,8 @@ namespace FreePackages {
 			return playtestAccessResponse?.Content;
 		}
 
-		internal static async Task<IDocument?> GetAccountLicenses(Bot bot) {
-			Uri request = new(ArchiWebHandler.SteamStoreURL, "/account/licenses/");
+		internal static async Task<IDocument?> GetAccountLicenses(Bot bot, string? relativeUrl = null) {
+			Uri request = new(ArchiWebHandler.SteamStoreURL, String.IsNullOrEmpty(relativeUrl) ? "/account/licenses/" : relativeUrl);
 			HtmlDocumentResponse? accountLicensesResponse = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request).ConfigureAwait(false);
 
 			return accountLicensesResponse?.Content;
