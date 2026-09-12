@@ -533,6 +533,9 @@ Command | Access | Description
 `confirmremove [Bots]`|`Master`|Begins the process of removing unwanted free packages
 `dontremove [Bots] <Licenses>`|`Master`|Removes given `licenses` (explained [here](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Commands#licenses)) from the list of packages about to be removed
 
+> [!IMPORTANT]
+> Some of the packages displayed during the removal process may not actually be removable, and the plugin will produce `InvalidParam` or `DuplicateRequest` errors when attempting to remove them.  These kinds of packages will appear in your licenses page (where they will also produce an error when attempting to remove them), but do not appear in the Steam client.
+
 ### Other Commands
 
 Command | Access | Description
