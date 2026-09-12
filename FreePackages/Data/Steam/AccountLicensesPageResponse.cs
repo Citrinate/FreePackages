@@ -39,6 +39,12 @@ namespace FreePackages {
 						throw new FormatException(String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, "subID"));
 					}
 
+					if (!bot.OwnedPackages.ContainsKey(subID)) {
+						// The licenses page displays packages (mostly demos) that don't appear in in the Steam client and can't actually be removed.  Filter those out.
+						// https://github.com/Citrinate/FreePackages/issues/126
+						continue;
+					}
+
 					RemoveablePackages[subID] = name;
 				}
 			}

@@ -3,7 +3,7 @@
 
 	<PropertyGroup>
 		<PluginName>FreePackages</PluginName>
-		<Version>1.7.1.0</Version>
+		<Version>1.7.1.1</Version>
 	</PropertyGroup>
 
 	<PropertyGroup>
