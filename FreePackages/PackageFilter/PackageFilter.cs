@@ -326,6 +326,96 @@ namespace FreePackages {
 			return true;
 		}
 
+		// True when <paramref name="filter"/> accepts every playtest with no constraint
+		// beyond "is a playtest": PlaytestMode is All (both limited and unlimited) and no
+		// app-level field that could reject a playtest is set. The proactive catalog path
+		// (PackageHandler.OnPlaytestCatalogUpdated) enqueues every live playtest from a
+		// fetch that carries only BASE appIDs — no playtest_type, tags, review score,
+		// languages, etc. — so it can only be correct when the filter would accept any
+		// playtest regardless. Any finer filter (limited-only, a tag, an ignored app, a
+		// review floor, wishlist-only, an age cap, ...) falls back to the PICS path
+		// (HandlePlaytest), which resolves the full app metadata and applies the filter
+		// before enqueueing. Errs toward "constrained": a field that is set but happens to
+		// be irrelevant to playtests (e.g. MinReviewScore, which IsAppWantedByFilter skips
+		// for Beta apps) still suppresses proactive, rather than risk bypassing a future
+		// constraint. IgnoredTypes defaults to {"Demo"}, which never rejects a playtest, so
+		// the default is allowed; any other ignored type is treated as a constraint.
+		internal static bool IsUnconstrainedAllPlaytestsFilter(FilterConfig filter) {
+			ArgumentNullException.ThrowIfNull(filter);
+
+			if (filter.PlaytestMode != EPlaytestMode.All) {
+				return false;
+			}
+
+			if (filter.ImportStoreFilters) {
+				return false;
+			}
+
+			if (filter.Types.Count > 0) {
+				return false;
+			}
+
+			if (filter.Categories.Count > 0) {
+				return false;
+			}
+
+			if (filter.Tags.Count > 0) {
+				return false;
+			}
+
+			if (filter.IgnoredAppIDs.Count > 0) {
+				return false;
+			}
+
+			if (filter.IgnoredTags.Count > 0) {
+				return false;
+			}
+
+			if (filter.IgnoredCategories.Count > 0) {
+				return false;
+			}
+
+			if (filter.IgnoredContentDescriptors.Count > 0) {
+				return false;
+			}
+
+			if (filter.IgnoreFreeWeekends) {
+				return false;
+			}
+
+			if (filter.MinReviewScore > 0) {
+				return false;
+			}
+
+			if (filter.Languages.Count > 0) {
+				return false;
+			}
+
+			if (filter.NoCostOnly) {
+				return false;
+			}
+
+			if (filter.Systems.Count > 0) {
+				return false;
+			}
+
+			if (filter.WishlistOnly) {
+				return false;
+			}
+
+			if (filter.MaxDaysOld > 0) {
+				return false;
+			}
+
+			foreach (string ignoredType in filter.IgnoredTypes) {
+				if (!string.Equals(ignoredType, "Demo", StringComparison.OrdinalIgnoreCase)) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 		internal bool FilterOnlyAllowsPackages(FilterConfig filter) {
 			if (filter.NoCostOnly) {
 				// NoCost is a property value that only applies to packages, so ignore all non-packages

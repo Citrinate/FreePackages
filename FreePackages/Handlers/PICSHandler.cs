@@ -112,14 +112,21 @@ namespace FreePackages {
 		private async static Task<SteamApps.PICSChangesCallback?> FetchPICSChanges(uint changeNumber, bool sendAppChangeList = true, bool sendPackageChangeList = true) {
 			await PICSChangesSemaphore.WaitAsync().ConfigureAwait(false);
 			try {
-				Bot? refreshBot = GetRefreshBot();
-				if (refreshBot == null) {
-					return null;
-				}
+				// Try each connected bot in turn: a single failing/disconnecting bot must not
+				// discard the whole batch. The rate-limiting delay still applies once per pass.
+				foreach (Bot refreshBot in GetRefreshBots()) {
+					try {
+						SteamApps.PICSChangesCallback? result = await refreshBot.SteamApps.PICSGetChangesSince(changeNumber, sendAppChangeList, sendPackageChangeList).ToLongRunningTask().ConfigureAwait(false);
 
-				return await refreshBot.SteamApps.PICSGetChangesSince(changeNumber, sendAppChangeList, sendPackageChangeList).ToLongRunningTask().ConfigureAwait(false);
-			} catch (Exception e) {
-				ASF.ArchiLogger.LogGenericWarningException(e);
+						if (result != null) {
+							return result;
+						}
+					} catch (Exception e) {
+						ASF.ArchiLogger.LogGenericWarningException(e);
+
+						// Fall through to the next connected bot
+					}
+				}
 
 				return null;
 			} finally {
@@ -132,6 +139,6 @@ namespace FreePackages {
 			}
 		}
 
-		private static Bot? GetRefreshBot() => Bot.BotsReadOnly?.Values.FirstOrDefault(static bot => bot.IsConnectedAndLoggedOn);
+		private static List<Bot> GetRefreshBots() => Bot.BotsReadOnly?.Values.Where(static bot => bot.IsConnectedAndLoggedOn).ToList() ?? new List<Bot>();
 	}
 }

@@ -21,6 +21,13 @@ namespace FreePackages {
 		ConcurrentHashSet<Package> PackagesToRemove = new(new PackageComparer());
 		internal static ConcurrentDictionary<string, PackageHandler> Handlers = new();
 
+	// Set by PlaytestCatalog.DoUpdate for the duration of a fetch so every bot's
+	// ActivationQueue skips PLAYTEST claims only (apps/subs keep going) — the persisted
+	// playtest queue is stale until the live set is refreshed, and claiming from it
+	// produces the 401 Invalid storm we're fixing. Volatile: written on the catalog
+	// timer thread, read on each queue's timer thread.
+	internal static volatile bool PlaytestsPausedGlobally;
+
 		private readonly Timer UserDataRefreshTimer;
 		private static SemaphoreSlim AddHandlerSemaphore = new SemaphoreSlim(1, 1);
 		private static SemaphoreSlim ProcessChangesSemaphore = new SemaphoreSlim(1, 1);
@@ -37,6 +44,7 @@ namespace FreePackages {
 		public void Dispose() {
 			ActivationQueue.Dispose();
 			UserDataRefreshTimer.Dispose();
+			BotCache.Dispose();
 		}
 
 		internal static async Task AddHandler(Bot bot, List<FilterConfig> filterConfigs, uint? packageLimit, bool pauseWhilePlaying, bool pauseWhileFarming) {
@@ -87,6 +95,93 @@ namespace FreePackages {
 			Handlers[bot.BotName].RemovalQueue.Start();
 		}
 
+		internal static void OnBotDisconnected(Bot bot) {
+			if (!Handlers.TryGetValue(bot.BotName, out PackageHandler? handler)) {
+				return;
+			}
+
+			// Cancel any in-flight ScanRemovables for this bot so a disconnect doesn't
+			// leave it blocked on ProcessChangesSemaphore / product info fetches. The
+			// activation/removal queues self-pause via Bot.IsConnectedAndLoggedOn and
+			// resume on their own timers on reconnect — no need to touch them here.
+			handler.RemovalCancellation?.Cancel();
+		}
+
+		// Bracket a PlaytestCatalog fetch: while the flag is set, every ActivationQueue skips
+		// PLAYTEST packages only (see ActivationQueue.GetNextPackage) so the stale persisted
+		// playtest queue doesn't fire 401s before the live set is refreshed — apps/subs keep
+		// activating normally. Resume nudges each queue so it re-checks immediately.
+		// Removals are never paused — they're unrelated to the playtest storm.
+		internal static void PausePlaytestActivations() {
+			PlaytestsPausedGlobally = true;
+		}
+
+		internal static void ResumePlaytestActivations() {
+			PlaytestsPausedGlobally = false;
+
+			foreach (PackageHandler handler in Handlers.Values) {
+				handler.ActivationQueue.Nudge();
+			}
+		}
+
+		// Called by PlaytestCatalog after every successful, complete fetch. Prunes the
+		// suppression sets and stale playtest packages of every connected, ready bot
+		// against the new live set, then proactively enqueues live playtests for bots
+		// whose filter accepts every playtest. This catches playtests PICS never
+		// surfaced (the original discovery gap) without re-requesting ones already
+		// handled this epoch, and without bypassing the user's filters.
+		//
+		// The proactive path runs only for a bot that has an "unconstrained all
+		// playtests" filter (PackageFilter.IsUnconstrainedAllPlaytestsFilter: PlaytestMode
+		// is All and no other app-level constraint is set). The catalog carries only BASE
+		// appIDs — no playtest_type, tags, review score, languages, etc. — so the
+		// proactive path can't honor limited/unlimited or any other filter; it is only
+		// safe to enqueue every live playtest when the filter would accept any playtest
+		// regardless. Bots with any finer filter (limited-only, a tag, an ignored app, a
+		// review floor, wishlist-only, an age cap, ...) are left to the PICS path
+		// (HandlePlaytest), which resolves the full app metadata and applies the filter
+		// before enqueueing. Pruning still runs for every bot so a playtest that re-opens
+		// later is re-requestable.
+		internal static void OnPlaytestCatalogUpdated(HashSet<uint> liveSet) {
+			ArgumentNullException.ThrowIfNull(liveSet);
+
+			if (liveSet.Count == 0 || Handlers.Count == 0) {
+				return;
+			}
+
+			foreach (PackageHandler handler in Handlers.Values) {
+				if (!handler.Bot.IsConnectedAndLoggedOn || !handler.PackageFilter.Ready) {
+					// Offline / not-yet-ready bots are skipped; they'll be caught on the next
+					// cycle once they're connected and their filter is populated.
+					continue;
+				}
+
+				handler.BotCache.PrunePlaytests(liveSet);
+
+				// Drop now-closed playtests from the activation queue too, so the stale
+				// persisted entries (from before the gate existed, or from the PICS path) don't
+				// drain one-by-one as 401 Invalid. Live playtests stay queued and are claimed.
+				handler.BotCache.PrunePlaytestPackages(liveSet);
+
+				// Only a bot whose filter accepts every playtest can be driven proactively
+				// from the catalog; the catalog carries no metadata to honor any finer filter,
+				// so a bot with a constrained filter is left to the PICS path instead.
+				bool allowProactive = handler.PackageFilter.FilterConfigs.Any(PackageFilter.IsUnconstrainedAllPlaytestsFilter);
+				if (!allowProactive) {
+					continue;
+				}
+
+				int filterHash = handler.PackageFilter.Hash;
+				foreach (uint baseAppID in liveSet) {
+					if (handler.BotCache.RequestedPlaytests.Contains(baseAppID) || handler.BotCache.WaitlistedPlaytests.Contains(baseAppID)) {
+						continue;
+					}
+
+					handler.BotCache.AddPackage(new Package(EPackageType.Playtest, baseAppID, filterHash: filterHash));
+				}
+			}
+		}
+
 		private void UpdateUserData() {
 			UserDataRefreshTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(15));
 		}
@@ -134,12 +229,25 @@ namespace FreePackages {
 			Utilities.InBackground(async() => await HandleChanges().ConfigureAwait(false));
 		}
 
-		private async static Task<bool> IsReady(uint maxWaitTimeSeconds = 120) {
+		// Waits for every enabled bot's PackageFilter to be ready before processing a
+		// changelist. The return value is intentionally ignored by HandleChanges: a
+		// non-ready bot early-returns inside HandleFreeApp/HandleFreePackage (before its
+		// RemoveChange finally block), so its changes stay in ChangedApps/ChangedPackages
+		// and are retried on the next cycle. We therefore cap the wait at a short bound
+		// (default 15 s) rather than blocking the whole batch for one stuck bot, and log
+		// when we give up so the operator can see which bot is lagging.
+		private async static Task<bool> IsReady(uint maxWaitTimeSeconds = 15) {
 			DateTime timeoutTime = DateTime.Now.AddSeconds(maxWaitTimeSeconds);
 			do {
-				bool ready = Handlers.Values.Where(x => x.Bot.BotConfig.Enabled && !x.PackageFilter.Ready).Count() == 0;
-				if (ready) {
+				IReadOnlyCollection<PackageHandler> notReady = Handlers.Values.Where(x => x.Bot.BotConfig.Enabled && !x.PackageFilter.Ready).ToList();
+				if (notReady.Count == 0) {
 					return true;
+				}
+
+				if (maxWaitTimeSeconds > 0 && DateTime.Now >= timeoutTime) {
+					ASF.ArchiLogger.LogGenericWarning($"IsReady timed out after {maxWaitTimeSeconds}s; {notReady.Count}/{Handlers.Values.Count(x => x.Bot.BotConfig.Enabled)} bot(s) not ready: {String.Join(", ", notReady.Select(x => x.Bot.BotName))}. Proceeding anyway — their changes will be retried.");
+
+					return false;
 				}
 
 				await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
@@ -190,7 +298,7 @@ namespace FreePackages {
 				).ConfigureAwait(false);
 
 				if (apps == null) {
-					ASF.ArchiLogger.LogGenericError(Strings.ProductInfoFetchFailed);
+					ASF.ArchiLogger.LogGenericError($"{Strings.ProductInfoFetchFailed} (while extracting apps from {productInfos.Count} product info callback(s))");
 
 					return;
 				}
@@ -199,6 +307,9 @@ namespace FreePackages {
 					apps.ForEach(app => {
 						if (app.Type == EAppType.Beta) {
 							Handlers.Values.ToList().ForEach(x => x.HandlePlaytest(app));
+							// A Beta-app change may be the first sign a playtest just opened; wake the
+							// catalog (debounced) so the live set reflects it within a minute.
+							PlaytestCatalog.RequestRefresh();
 						} else {
 							Handlers.Values.ToList().ForEach(x => x.HandleFreeApp(app));
 						}
@@ -218,7 +329,7 @@ namespace FreePackages {
 				).ConfigureAwait(false);
 
 				if (packages == null) {
-					ASF.ArchiLogger.LogGenericError(Strings.ProductInfoFetchFailed);
+					ASF.ArchiLogger.LogGenericError($"{Strings.ProductInfoFetchFailed} (while extracting packages from {productInfos.Count} product info callback(s))");
 
 					return;
 				}
@@ -313,6 +424,15 @@ namespace FreePackages {
 
 			try {
 				if (app.Parent == null) {
+					return;
+				}
+
+				// Once the catalog has fetched at least once, gate strictly on the live
+				// set: a Beta-app PICS change for a playtest whose signup isn't currently
+				// open must not produce a POST. Before the first successful fetch the live
+				// set is empty, so we fall back to the original PICS-only behaviour rather
+				// than killing every playtest on a fresh start.
+				if (PlaytestCatalog.HasFetched && !PlaytestCatalog.IsLive(app.Parent.ID)) {
 					return;
 				}
 
