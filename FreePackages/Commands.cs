@@ -406,34 +406,58 @@ namespace FreePackages {
 				return FormatBotResponse(bot, Strings.PluginNotEnabled);
 			}
 
-			IDocument? accountLicensesPage = await WebRequest.GetAccountLicenses(bot);
-			if (accountLicensesPage == null) {
-				return FormatBotResponse(bot, Strings.LicensePageFetchFail);
-			}
-
-			Regex removablePackageIDsRegex = new Regex("RemoveFreeLicense\\(\\s*(?<subID>[0-9]+),\\s*'(?<encodedName>[A-Za-z0-9+/=]*)'", RegexOptions.CultureInvariant); // matches the parameters of: RemoveFreeLicense( 45946, 'UmV2ZXJzaW9uOiBUaGUgRXNjYXBl' );
-			MatchCollection removablePackageMatches = removablePackageIDsRegex.Matches(accountLicensesPage.Source.Text);
-			if (removablePackageMatches.Count == 0) {
-				return FormatBotResponse(bot, Strings.LicensePageEmpty);
-			}
-
 			Dictionary<uint, string> removeablePackages = new();
-			foreach (Match match in removablePackageMatches) {
-				string name;
-				try {
-					name = Encoding.UTF8.GetString(Convert.FromBase64String(match.Groups["encodedName"].Value));
-				} catch (Exception e) {
-					bot.ArchiLogger.LogGenericException(e);
+			string? licensesPageRelativeUrl = null;
+			int numPagesFetched = 0;
+			int totalLicenses = 0;
 
-					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, "encodedName"));
+			while (true) {
+				IDocument? accountLicensesPage = await WebRequest.GetAccountLicenses(bot, licensesPageRelativeUrl).ConfigureAwait(false);
+				if (accountLicensesPage == null) {
+					if (numPagesFetched == 0) {
+						return FormatBotResponse(bot, Strings.LicensePageFetchFail);
+					}
+
+					bot.ArchiLogger.LogGenericWarning(String.Format("FreePackages licenses page fetch failed after {0} page(s), continuing with {1} removable packages found", numPagesFetched, removeablePackages.Count));
+
+					break;
 				}
 
-				string subIDString = match.Groups["subID"].Value;
-				if (!uint.TryParse(subIDString, out uint subID)) {
-					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, "subID"));
+				numPagesFetched++;
+				string licensesPageSource = accountLicensesPage.Source.Text;
+
+				if ((totalLicenses == 0) && (numPagesFetched == 1)) {
+					totalLicenses = GetTotalLicensesCount(licensesPageSource);
 				}
 
-				removeablePackages[subID] = name;				
+				string? parsingError = ParseRemovablePackages(bot, licensesPageSource, removeablePackages);
+				if (parsingError != null) {
+					return parsingError;
+				}
+
+				int totalPages = totalLicenses > 0 ? (int) Math.Ceiling(totalLicenses / 100.0) : 0;
+				if ((numPagesFetched % 10 == 0) || (totalPages > 0 && numPagesFetched == totalPages)) {
+					bot.ArchiLogger.LogGenericInfo(String.Format("FreePackages licenses page: fetched {0}/{1} pages, {2} removable packages found so far", numPagesFetched, totalPages > 0 ? totalPages.ToString() : "?", removeablePackages.Count));
+				}
+
+				string? nextPageRelativeUrl = GetNextLicensesPageRelativeUrl(licensesPageSource);
+				if (nextPageRelativeUrl == null) {
+					break;
+				}
+
+				string nextLicensesPageUrl = nextPageRelativeUrl.StartsWith("?", StringComparison.Ordinal) ? "/account/licenses/" + nextPageRelativeUrl : nextPageRelativeUrl;
+				if (nextLicensesPageUrl == licensesPageRelativeUrl) {
+					// Steam returned the same continuation token, stop to avoid an infinite loop
+					break;
+				}
+
+				licensesPageRelativeUrl = nextLicensesPageUrl;
+			}
+
+			bot.ArchiLogger.LogGenericInfo(String.Format("FreePackages licenses page: {0} page(s), {1} removable packages found", numPagesFetched, removeablePackages.Count));
+
+			if (removeablePackages.Count == 0) {
+				return FormatBotResponse(bot, Strings.LicensePageEmpty);
 			}
 
 			Utilities.InBackground(
@@ -459,6 +483,50 @@ namespace FreePackages {
 			}
 
 			return await ResponseRemoveFreePackages(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), statusReporter, excludePlayed, removeAll).ConfigureAwait(false);
+		}
+
+		private static string? ParseRemovablePackages(Bot bot, string licensesPageSource, Dictionary<uint, string> removeablePackages) {
+			Regex removablePackageIDsRegex = new Regex("RemoveFreeLicense\\(\\s*(?<subID>[0-9]+),\\s*'(?<encodedName>[A-Za-z0-9+/=]*)'", RegexOptions.CultureInvariant); // matches the parameters of: RemoveFreeLicense( 45946, 'UmV2ZXJzaW9uOiBUaGUgRXNjYXBl' );
+			MatchCollection removablePackageMatches = removablePackageIDsRegex.Matches(licensesPageSource);
+
+			foreach (Match match in removablePackageMatches) {
+				string name;
+				try {
+					name = Encoding.UTF8.GetString(Convert.FromBase64String(match.Groups["encodedName"].Value));
+				} catch (Exception e) {
+					bot.ArchiLogger.LogGenericException(e);
+
+					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, "encodedName"));
+				}
+
+				string subIDString = match.Groups["subID"].Value;
+				if (!uint.TryParse(subIDString, out uint subID)) {
+					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, "subID"));
+				}
+
+				removeablePackages[subID] = name;
+			}
+
+			return null;
+		}
+
+		private static readonly Regex NextPageClassBeforeHrefRegex = new("<a\\s+[^>]*class=\"license_paginator_next\"[^>]*href=\"(?<href>[^\"]+)\"", RegexOptions.CultureInvariant);
+		private static readonly Regex NextPageHrefBeforeClassRegex = new("<a\\s+[^>]*href=\"(?<href>[^\"]+)\"[^>]*class=\"license_paginator_next\"", RegexOptions.CultureInvariant);
+		private static readonly Regex TotalLicensesRegex = new("Showing licenses \\d+-\\d+ of (?<total>\\d+)", RegexOptions.CultureInvariant);
+
+		private static int GetTotalLicensesCount(string licensesPageSource) {
+			Match match = TotalLicensesRegex.Match(licensesPageSource);
+
+			return match.Success && int.TryParse(match.Groups["total"].Value, out int total) ? total : 0;
+		}
+
+		private static string? GetNextLicensesPageRelativeUrl(string licensesPageSource) {
+			Match nextPageMatch = NextPageClassBeforeHrefRegex.Match(licensesPageSource);
+			if (!nextPageMatch.Success) {
+				nextPageMatch = NextPageHrefBeforeClassRegex.Match(licensesPageSource);
+			}
+
+			return nextPageMatch.Success ? nextPageMatch.Groups["href"].Value.Replace("&" + "amp;", "&") : null;
 		}
 
 		internal static string FormatStaticResponse(string response) => ArchiSteamFarm.Steam.Interaction.Commands.FormatStaticResponse(response);

@@ -512,14 +512,14 @@ namespace FreePackages {
 						}
 					}
 
-					var productInfos = await ProductInfo.GetProductInfo(packageIDs: removeablePackages.Keys.ToHashSet(), cancellationToken: RemovalCancellation.Token).ConfigureAwait(false);
+					var productInfos = await ProductInfo.GetProductInfo(packageIDs: removeablePackages.Keys.ToHashSet(), cancellationToken: RemovalCancellation.Token, progressCallback: (batch, totalBatches) => Bot.ArchiLogger.LogGenericInfo(String.Format("FreePackages removal scan: package product info batch {0}/{1}", batch, totalBatches))).ConfigureAwait(false);
 					if (productInfos == null) {
 						statusReporter.Report(Bot, Strings.ProductInfoFetchFailed);
 
 						return;
 					}
 
-					List<FilterablePackage>? packages = await FilterablePackage.GetFilterables(productInfos, cancellationToken: RemovalCancellation.Token, onNonFreePackage: x => !removeAll).ConfigureAwait(false);
+					List<FilterablePackage>? packages = await FilterablePackage.GetFilterables(productInfos, cancellationToken: RemovalCancellation.Token, onNonFreePackage: x => !removeAll, progressCallback: (batch, totalBatches) => Bot.ArchiLogger.LogGenericInfo(String.Format("FreePackages removal scan: app product info batch {0}/{1}", batch, totalBatches))).ConfigureAwait(false);
 					if (packages == null) {
 						statusReporter.Report(Bot, Strings.ProductInfoFetchFailed);
 
@@ -601,6 +601,10 @@ namespace FreePackages {
 		}
 
 		internal string ConfirmRemoval() {
+			if (RemovalCancellation != null) {
+				return Strings.RemovalScanInProgress;
+			}
+
 			if (PackagesToRemove.Count == 0) {
 				return String.Format(Strings.RemovalScanNeeded, String.Format("!removefreepackages {0}", Bot.BotName));
 			}
