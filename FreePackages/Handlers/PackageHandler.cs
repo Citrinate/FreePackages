@@ -489,7 +489,7 @@ namespace FreePackages {
 			BotCache.AddPackages(packages);
 		}
 
-		internal async Task ScanRemovables(Dictionary<uint, string> removeablePackages, bool excludePlayed, bool removeAll, StatusReporter statusReporter) {
+		internal async Task ScanRemovables(bool excludePlayed, bool removeAll, StatusReporter statusReporter) {
 			if (RemovalCancellation != null) {
 				statusReporter.Report(Bot, Strings.RemovalScanAlreadyRunning);
 
@@ -498,6 +498,69 @@ namespace FreePackages {
 			
 			RemovalCancellation = new CancellationTokenSource();
 			try {
+				Dictionary<uint, string> removeablePackages = new();
+				{
+					int licensesScanTimeEstimateMinutes = (int) Math.Round(1.25 * ((double) Bot.OwnedPackages.Count / AccountLicensesResponse.PackagesPerPage) * ((double) WebRequest.AccountLicensesRequestSpacingMilliseconds / 60000));
+
+					statusReporter.Report(Bot, String.Format(Strings.LicenseScanWaitMessage, licensesScanTimeEstimateMinutes, String.Format("!cancelremove {0}", Bot.BotName)));
+
+					AccountLicensesResponse? previousAccountLicensesPage = null;
+					int numPagesFetched = 0;
+					while (true) {
+						AccountLicensesResponse? accountLicensesPage = null;
+						for (int i = 0; i < 3; i++) {
+							RemovalCancellation.Token.ThrowIfCancellationRequested();
+							accountLicensesPage = await WebRequest.GetAccountLicenses(Bot, previousAccountLicensesPage).ConfigureAwait(false);
+							if (accountLicensesPage != null) {
+								break;
+							}
+						}
+
+						if (accountLicensesPage == null) {
+							if (numPagesFetched == 0 || removeablePackages.Count == 0) {
+								statusReporter.Report(Bot, Strings.LicensePageFetchFail);
+
+								return;
+							}
+							
+							statusReporter.Report(Bot, String.Format(Strings.LicenseScanPartialSuccess, numPagesFetched, removeablePackages.Count));
+
+							break;
+						}
+
+						numPagesFetched++;
+
+						foreach (var kvp in accountLicensesPage.RemoveablePackages) {
+							removeablePackages[kvp.Key] = kvp.Value;
+						}
+
+						Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.LicenseScanProgressReport, numPagesFetched, removeablePackages.Count));
+
+						if (!accountLicensesPage.HasNextPage) {
+							break;
+						}
+
+						if (accountLicensesPage.IsSamePage(previousAccountLicensesPage)) {
+							// Steam returned the same continuation token, stop to avoid an infinite loop
+							break;
+						}
+
+						previousAccountLicensesPage = accountLicensesPage;
+					}
+				}
+
+				if (removeablePackages.Count == 0) {
+					statusReporter.Report(Bot, Strings.LicensePageEmpty);
+
+					return;
+				}
+
+				RemovalCancellation.Token.ThrowIfCancellationRequested();
+
+				int removableScanTimeEstimateMinutes = (int) Math.Round(2.5 * ((double) removeablePackages.Count / ProductInfo.ItemsPerProductInfoRequest) * ((double) ProductInfo.ProductInfoLimitingDelaySeconds / 60));
+
+				statusReporter.Report(Bot, String.Format(Strings.RemovalWaitMessage, removableScanTimeEstimateMinutes, String.Format("!cancelremove {0}", Bot.BotName)));
+
 				await ProcessChangesSemaphore.WaitAsync(RemovalCancellation.Token).ConfigureAwait(false);
 				try {
 					await IsReady().ConfigureAwait(false);
@@ -512,14 +575,14 @@ namespace FreePackages {
 						}
 					}
 
-					var productInfos = await ProductInfo.GetProductInfo(packageIDs: removeablePackages.Keys.ToHashSet(), cancellationToken: RemovalCancellation.Token, progressCallback: (batch, totalBatches) => Bot.ArchiLogger.LogGenericInfo(String.Format("FreePackages removal scan: package product info batch {0}/{1}", batch, totalBatches))).ConfigureAwait(false);
+					var productInfos = await ProductInfo.GetProductInfo(packageIDs: removeablePackages.Keys.ToHashSet(), cancellationToken: RemovalCancellation.Token, progressCallback: (batch, totalBatches) => Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.RemovalPICSScanProgressReport, batch, totalBatches))).ConfigureAwait(false);
 					if (productInfos == null) {
 						statusReporter.Report(Bot, Strings.ProductInfoFetchFailed);
 
 						return;
 					}
 
-					List<FilterablePackage>? packages = await FilterablePackage.GetFilterables(productInfos, cancellationToken: RemovalCancellation.Token, onNonFreePackage: x => !removeAll, progressCallback: (batch, totalBatches) => Bot.ArchiLogger.LogGenericInfo(String.Format("FreePackages removal scan: app product info batch {0}/{1}", batch, totalBatches))).ConfigureAwait(false);
+					List<FilterablePackage>? packages = await FilterablePackage.GetFilterables(productInfos, cancellationToken: RemovalCancellation.Token, onNonFreePackage: x => !removeAll, progressCallback: (batch, totalBatches) => Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.RemovalPICSScanProgressReport, batch, totalBatches))).ConfigureAwait(false);
 					if (packages == null) {
 						statusReporter.Report(Bot, Strings.ProductInfoFetchFailed);
 

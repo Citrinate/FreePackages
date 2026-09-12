@@ -325,4 +325,25 @@ To remove items from the list above before continuing, use: {4}</value>
     <comment>
 </comment>
   </data>
+  <data name="LicenseScanWaitMessage" xml:space="preserve">
+    <value>Scanning account licenses pages, this scan will take ~{0} minutes. Cancel at any time using: {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced with a command</comment>
+  </data>
+  <data name="LicenseScanPartialSuccess" xml:space="preserve">
+    <value>Licenses scan failed after {0} page(s), continuing with {1} removable packages found"</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="LicenseScanProgressReport" xml:space="preserve">
+    <value>{0} license pages scanned, {1} removable packages found so far     </value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="RemovalPICSScanProgressReport" xml:space="preserve">
+    <value>Fetching product info for removable packages: {0}/{1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="RemovalScanStarting" xml:space="preserve">
+    <value>Beginning unwanted free packages removal process...</value>
+    <comment>
+</comment>
+  </data>
 </root>
