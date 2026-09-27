@@ -192,7 +192,7 @@
     <comment>{0} will be replaced by a time</comment>
   </data>
   <data name="QueueDiscoveryStatus" xml:space="preserve">
-    <value>Обнаружены, но ещё не обработаны приложения в количестве "{0}" и пакеты в количестве "{1}".</value>
+    <value>Обнаружены, но ещё не обработаны приложения в количестве: "{0}" и пакеты числом: "{1}".</value>
     <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
   </data>
   <data name="PICSRestart" xml:space="preserve">
@@ -260,7 +260,7 @@
     <comment>{0} will be replaced by a number</comment>
   </data>
   <data name="RemovalWaitMessage" xml:space="preserve">
-    <value>Поиск бесплатных пакетов для удаления, сканирование займёт минут примерно: {0}. Можно отменить в любой момент командой: {1}</value>
+    <value>Поиск бесплатных пакетов для удаления, займёт минут примерно: {0}. Можно отменить в любой момент командой: {1}</value>
     <comment>{0} will be replaced by a number, {1} will be replaced with a command</comment>
   </data>
   <data name="RemovablePackagesFound" xml:space="preserve">
@@ -303,6 +303,9 @@
     <value>Сначала надо просканировать нежелательные бесплатные пакеты командой: {0}</value>
     <comment>{0} will be replaced by a command</comment>
   </data>
+  <data name="RemovalScanInProgress" xml:space="preserve">
+    <value>Сканирование ещё продолжается, дождитесь его окончания перед подтверждением удаления</value>
+  </data>
   <data name="RemovalsPaused" xml:space="preserve">
     <value>Удаление пакетов приостановлено до {0}</value>
     <comment>{0} will be replaced by a time</comment>
@@ -319,6 +322,27 @@
   </data>
   <data name="QueuePausedWhileFarming" xml:space="preserve">
     <value>Активации приостановлены - бот фармит карточки.</value>
+    <comment>
+</comment>
+  </data>
+  <data name="LicenseScanWaitMessage" xml:space="preserve">
+    <value>Сканирование страниц лицензий аккаунта, займёт минут примерно: {0}. Можно отменить в любой момент командой: {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced with a command</comment>
+  </data>
+  <data name="LicenseScanPartialSuccess" xml:space="preserve">
+    <value>Сканирование лицензий провалено после данного числа страниц: {0}, продолжение с найденными удаляемыми пакетами в количестве: {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="LicenseScanProgressReport" xml:space="preserve">
+    <value>Просканировано страниц лицензий: {0}, удаляемых пакетов найдено пока что: {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="RemovalPICSScanProgressReport" xml:space="preserve">
+    <value>Получение товарной информации для удаляемых пакетов: {0}/{1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="RemovalScanStarting" xml:space="preserve">
+    <value>Начинается процесс удаления нежелательных бесплатных пакетов...</value>
     <comment>
 </comment>
   </data>
