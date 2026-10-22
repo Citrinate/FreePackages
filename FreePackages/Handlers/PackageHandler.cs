@@ -36,6 +36,7 @@ namespace FreePackages {
 
 		public void Dispose() {
 			ActivationQueue.Dispose();
+			RemovalQueue.Dispose();
 			UserDataRefreshTimer.Dispose();
 		}
 
