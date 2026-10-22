@@ -1,0 +1,10 @@
+<div class="search_result_row ds_collapse_flag" data-ds-appid="1873120" data-ds-item-key="1873120" data-ds-tagids="[19,122]" style="background-image: url('https://cdn.akamai.steamstatic.com/steam/apps/1873120/capsule_236x166.jpg');">
+	<div class="col search_capsule"><img src="https://cdn.akamai.steamstatic.com/steam/apps/1873120/capsule_236x166.jpg" class="search_capsule"></div>
+</div>
+<a class="search_result_row ds_collapse_flag" data-ds-appid="2385860" data-ds-tagids="[3859,3859]" href="https://store.steampowered.com/app/2385860/Tekken_8_Open_Beta_Test/?snr=1_7_7_230_150_1">
+	<div class="col search_capsule"><img src="https://cdn.akamai.steamstatic.com/steam/apps/2385860/capsule_236x166.jpg"></div>
+</a>
+<a class="search_result_row" data-ds-appid="1873120" data-ds-tagids="[19]" href="https://store.steampowered.com/app/1873120">duplicate of the first row, must not double-count</a>
+<a class="search_result_row" data-ds-appid="0" href="https://store.steampowered.com/app/0">id 0 is not a real app, must be ignored</a>
+<a class="search_result_row" data-ds-appid="16792" href="https://store.steampowered.com/app/16792">third real playtest</a>
+<div class="search_pagination"></div>
