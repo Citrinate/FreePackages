@@ -22,6 +22,9 @@ namespace FreePackages {
 		internal static ConcurrentDictionary<string, PackageHandler> Handlers = new();
 
 		private readonly Timer UserDataRefreshTimer;
+		private readonly SemaphoreSlim FetchUserDataSemaphore = new(1, 1);
+		private DateTime LastUserDataAttempt = DateTime.MinValue;
+		private DateTime LastUserDataSuccess = DateTime.MinValue;
 		private static SemaphoreSlim AddHandlerSemaphore = new SemaphoreSlim(1, 1);
 		private static SemaphoreSlim ProcessChangesSemaphore = new SemaphoreSlim(1, 1);
 
@@ -38,6 +41,7 @@ namespace FreePackages {
 			ActivationQueue.Dispose();
 			RemovalQueue.Dispose();
 			UserDataRefreshTimer.Dispose();
+			FetchUserDataSemaphore.Dispose();
 		}
 
 		internal static async Task AddHandler(Bot bot, List<FilterConfig> filterConfigs, uint? packageLimit, bool pauseWhilePlaying, bool pauseWhileFarming) {
@@ -89,35 +93,58 @@ namespace FreePackages {
 		}
 
 		private void UpdateUserData() {
-			UserDataRefreshTimer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(15));
+			UserDataRefreshTimer.Change(TimeSpan.FromSeconds(5), TimeSpan.FromMinutes(15));
 		}
 
 		private async Task FetchUserData() {
-			if (!Bot.IsConnectedAndLoggedOn) {
-				UserDataRefreshTimer.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(15));
-
+			if (!await FetchUserDataSemaphore.WaitAsync(0).ConfigureAwait(false)) {
 				return;
 			}
 
-			Steam.UserData? userData = await WebRequest.GetUserData(Bot).ConfigureAwait(false);
-			if (userData == null) {
-				UserDataRefreshTimer.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(15));
-				Bot.ArchiLogger.LogGenericError(String.Format(ArchiSteamFarm.Localization.Strings.ErrorObjectIsNull, nameof(userData)));
+			try {
+				if (!Bot.IsConnectedAndLoggedOn) {
+					UserDataRefreshTimer.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(15));
 
-				return;
+					return;
+				}
+
+				if (PackageFilter.Ready && (DateTime.UtcNow - LastUserDataSuccess < TimeSpan.FromMinutes(10))) {
+					UserDataRefreshTimer.Change(TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(15));
+
+					return;
+				}
+
+				if ((DateTime.UtcNow - LastUserDataAttempt < TimeSpan.FromMinutes(2)) && !PackageFilter.Ready) {
+					UserDataRefreshTimer.Change(TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(15));
+
+					return;
+				}
+
+				LastUserDataAttempt = DateTime.UtcNow;
+
+				Steam.UserData? userData = await WebRequest.GetUserData(Bot).ConfigureAwait(false);
+				if (userData == null) {
+					UserDataRefreshTimer.Change(TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(15));
+					Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.ErrorObjectIsNull, nameof(userData)));
+
+					return;
+				}
+
+				Steam.UserInfo? userInfo = WebRequest.GetUserInfo(Bot);
+				if (userInfo == null) {
+					UserDataRefreshTimer.Change(TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(15));
+					Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.ErrorObjectIsNull, nameof(userInfo)));
+
+					return;
+				}
+
+				PackageFilter.UpdateUserDetails(userData, userInfo);
+				LastUserDataSuccess = DateTime.UtcNow;
+
+				UserDataRefreshTimer.Change(TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(15));
+			} finally {
+				FetchUserDataSemaphore.Release();
 			}
-
-			Steam.UserInfo? userInfo = await WebRequest.GetUserInfo(Bot).ConfigureAwait(false);
-			if (userInfo == null) {
-				UserDataRefreshTimer.Change(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(15));
-				Bot.ArchiLogger.LogGenericError(String.Format(ArchiSteamFarm.Localization.Strings.ErrorObjectIsNull, nameof(userInfo)));
-
-				return;
-			}
-
-			PackageFilter.UpdateUserDetails(userData, userInfo);
-
-			UserDataRefreshTimer.Change(TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(15));
 		}
 
 		internal static void AddChanges(IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> appChanges, IReadOnlyDictionary<uint, SteamApps.PICSChangesCallback.PICSChangeData> packageChanges) {
@@ -149,37 +176,69 @@ namespace FreePackages {
 			return false;
 		}
 
-		internal async static Task HandleChanges() {
+		internal static async Task<bool> WaitForLoggedOnBots(uint maxWaitTimeSeconds = 300) {
+			DateTime timeoutTime = DateTime.Now.AddSeconds(maxWaitTimeSeconds);
+			do {
+				List<PackageHandler> enabledHandlers = Handlers.Values.Where(x => x.Bot.BotConfig.Enabled).ToList();
+				if ((enabledHandlers.Count > 0) && enabledHandlers.All(x => x.Bot.IsConnectedAndLoggedOn && x.PackageFilter.Ready)) {
+					return true;
+				}
+
+				await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
+			} while (DateTime.Now < timeoutTime);
+
+			return Handlers.Values.Any(x => x.Bot.IsConnectedAndLoggedOn && x.PackageFilter.Ready);
+		}
+
+		internal static async Task HandleChanges() {
 			if (!await ProcessChangesSemaphore.WaitAsync(0).ConfigureAwait(false)) {
 				return;
 			}
 
 			try {
-				await IsReady().ConfigureAwait(false);
+				await DrainChanges().ConfigureAwait(false);
+			} finally {
+				ProcessChangesSemaphore.Release();
+			}
+		}
 
+		internal static async Task HandleChangesBlocking() {
+			await ProcessChangesSemaphore.WaitAsync().ConfigureAwait(false);
+
+			try {
+				await DrainChanges().ConfigureAwait(false);
+			} finally {
+				ProcessChangesSemaphore.Release();
+			}
+		}
+
+		private static async Task DrainChanges() {
+			await IsReady().ConfigureAwait(false);
+
+			while (true) {
 				HashSet<uint> appIDs = Handlers.Values.Where(x => x.Bot.IsConnectedAndLoggedOn).SelectMany(x => x.BotCache.ChangedApps).ToHashSet<uint>();
 				HashSet<uint> packageIDs = Handlers.Values.Where(x => x.Bot.IsConnectedAndLoggedOn).SelectMany(x => x.BotCache.ChangedPackages).ToHashSet<uint>();
 				HashSet<uint> newOwnedPackageIDs = Handlers.Values.Where(x => x.Bot.IsConnectedAndLoggedOn).SelectMany(x => x.BotCache.NewOwnedPackages).ToHashSet<uint>();
 				packageIDs.UnionWith(newOwnedPackageIDs);
 
-				if (appIDs.Count == 0 && packageIDs.Count == 0) {
+				if ((appIDs.Count == 0) && (packageIDs.Count == 0)) {
 					return;
 				}
 
 				foreach ((HashSet<uint>? batchedAppIDs, HashSet<uint>? batchedPackageIDs) in ProductInfo.GetProductIDBatches(appIDs, packageIDs)) {
 					var productInfo = await ProductInfo.GetProductInfo(batchedAppIDs, batchedPackageIDs).ConfigureAwait(false);
 					if (productInfo == null) {
-						continue;
+						return;
 					}
 
-					await HandleProductInfo(productInfo).ConfigureAwait(false);
+					if (!await HandleProductInfo(productInfo).ConfigureAwait(false)) {
+						return;
+					}
 				}
-			} finally {
-				ProcessChangesSemaphore.Release();
 			}
 		}
 
-		private async static Task HandleProductInfo(List<SteamApps.PICSProductInfoCallback> productInfos) {
+		private async static Task<bool> HandleProductInfo(List<SteamApps.PICSProductInfoCallback> productInfos) {
 			{ // Add wanted apps to the queue
 				List<FilterableApp>? apps = await FilterableApp.GetFilterables(
 					productInfos,
@@ -193,7 +252,7 @@ namespace FreePackages {
 				if (apps == null) {
 					ASF.ArchiLogger.LogGenericError(Strings.ProductInfoFetchFailed);
 
-					return;
+					return false;
 				}
 
 				if (apps.Count > 0) {
@@ -221,7 +280,7 @@ namespace FreePackages {
 				if (packages == null) {
 					ASF.ArchiLogger.LogGenericError(Strings.ProductInfoFetchFailed);
 
-					return;
+					return false;
 				}
 
 				if (packages.Count > 0) {
@@ -248,6 +307,8 @@ namespace FreePackages {
 
 			// Save changes to the app/package change lists
 			Handlers.Values.ToList().ForEach(x => x.BotCache.SaveChanges());
+
+			return true;
 		}
 
 		private void HandleFreeApp(FilterableApp app) {
@@ -268,7 +329,7 @@ namespace FreePackages {
 					return;
 				}
 
-				BotCache.AddPackage(new Package(EPackageType.App, app.ID, filterHash: PackageFilter.Hash));
+				BotCache.AddPackage(new Package(EPackageType.App, app.ID, filterHash: PackageFilter.Hash, isDemo: app.Type == EAppType.Demo, priority: ActivationPriority.ForApp(app, PackageFilter)));
 			} finally {
 				BotCache.RemoveChange(appID: app.ID);
 			}
@@ -292,7 +353,8 @@ namespace FreePackages {
 					return;
 				}
 
-				if (BotCache.AddPackage(new Package(EPackageType.Sub, package.ID, package.StartTime, filterHash: PackageFilter.Hash))) {
+				bool isDemo = package.PackageContents.Count > 0 && package.PackageContents.All(static app => app.Type == EAppType.Demo);
+				if (BotCache.AddPackage(new Package(EPackageType.Sub, package.ID, package.StartTime, filterHash: PackageFilter.Hash, isDemo: isDemo, priority: ActivationPriority.ForPackage(package, PackageFilter)))) {
 					// Remove duplicates.  
 					// Whenever we're trying to activate an app and also an package for that app, get rid of the app.
 					// This is because the error messages for activating packages are more descriptive and useful.
@@ -325,7 +387,7 @@ namespace FreePackages {
 					return;
 				}
 
-				BotCache.AddPackage(new Package(EPackageType.Playtest, app.Parent.ID, filterHash: PackageFilter.Hash));
+				BotCache.AddPackage(new Package(EPackageType.Playtest, app.Parent.ID, filterHash: PackageFilter.Hash, priority: ActivationPriority.ForPlaytest(app, PackageFilter)));
 			} finally {
 				BotCache.RemoveChange(appID: app.ID);
 			}
@@ -392,8 +454,12 @@ namespace FreePackages {
 			HashSet<string> responses = new HashSet<string>();
 
 			// x packages queued. y activations used
-			int activationsPastPeriod = Math.Min(BotCache.NumActivationsPastPeriod(), (int)ActivationQueue.MaxActivationsPerPeriod);
+			int activationsPastPeriod = Math.Min(BotCache.NumActivationsPastPeriod(), (int)Math.Min(ActivationQueue.MaxActivationsPerPeriod, (uint)int.MaxValue));
 			responses.Add(String.Format(Strings.QueueStatus, ActivationQueue.ActivationsRemaining, activationsPastPeriod, ActivationQueue.ActivationsPerPeriod));
+
+			if (FullScan.ShouldWait) {
+				responses.Add(Strings.QueuePausedWhileFullScan);
+			}
 
 			// activations are paused due to account in use
 			if (ActivationQueue.PauseWhilePlaying && !Bot.IsPlayingPossible) {

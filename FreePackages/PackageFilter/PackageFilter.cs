@@ -291,6 +291,10 @@ namespace FreePackages {
 				// We're already on the waitlist for this playtest
 				return false;
 			}
+
+			if (BotCache.IgnoredApps.Contains(app.ID) || BotCache.IgnoredApps.Contains(app.Parent.ID)) {
+				return false;
+			}
 			
 			return true;
 		}
@@ -374,5 +378,7 @@ namespace FreePackages {
 
 			return UserData.OwnedPackages.Contains(subID);
 		}
+
+		internal HashSet<uint> GetOwnedPackageIDs() => UserData == null ? [] : [..UserData.OwnedPackages];
 	}
 }

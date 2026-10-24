@@ -41,6 +41,9 @@ namespace FreePackages {
 						case "QSTATUS" or "QUEUESTATUS":
 							return ResponseQueueStatus(bot, access);
 
+						case "FULLSCAN":
+							return ResponseFullScan(bot, access);
+
 						case "REMOVEFREEPACKAGES":
 							return await ResponseRemoveFreePackages(bot, access, new StatusReporter(bot, steamID)).ConfigureAwait(false);
 
@@ -277,6 +280,14 @@ namespace FreePackages {
 			Utilities.InBackground(async() => await PackageHandler.HandleChanges().ConfigureAwait(false));
 
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static string? ResponseFullScan(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			return FormatBotResponse(bot, FullScan.RequestNow());
 		}
 
 		private static string? ResponseQueueStatus(Bot bot, EAccess access) {

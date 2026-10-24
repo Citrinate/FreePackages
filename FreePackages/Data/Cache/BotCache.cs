@@ -76,17 +76,17 @@ namespace FreePackages {
 			try {
 				string json = await File.ReadAllTextAsync(filePath).ConfigureAwait(false);
 
-				if (string.IsNullOrEmpty(json)) {
-					ASF.ArchiLogger.LogGenericError(string.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(json)));
+				if (string.IsNullOrWhiteSpace(json) || json.All(static c => c == '\0')) {
+					ASF.ArchiLogger.LogGenericWarning($"FreePackages cache is empty or corrupt, recreating: {Path.GetFileName(filePath)}");
 
-					return null;
+					return new BotCache(filePath);
 				}
 
 				botCache = json.ToJsonObject<BotCache>();
 			} catch (Exception e) {
-				ASF.ArchiLogger.LogGenericException(e);
+				ASF.ArchiLogger.LogGenericWarning($"FreePackages cache is invalid and will be recreated: {Path.GetFileName(filePath)} ({e.GetType().Name})");
 
-				return null;
+				return new BotCache(filePath);
 			}
 
 			if (botCache == null) {
@@ -102,7 +102,23 @@ namespace FreePackages {
 		}
 
 		internal bool AddPackage(Package package) {
-			if (Packages.Contains(package)) {
+			Package? existing = Packages.FirstOrDefault(x => x.Type == package.Type && x.ID == package.ID);
+			if (existing != null) {
+				bool changed = false;
+				if (existing.IsDemo != package.IsDemo) {
+					existing.IsDemo = package.IsDemo;
+					changed = true;
+				}
+
+				if (existing.Priority != package.Priority) {
+					existing.Priority = package.Priority;
+					changed = true;
+				}
+
+				if (changed) {
+					Utilities.InBackground(Save);
+				}
+
 				return false;
 			}
 
@@ -139,14 +155,23 @@ namespace FreePackages {
 		}
 
 		internal Package? GetNextPackage(HashSet<EPackageType> types) {
-			// Return the package which should be activated first, prioritizing first packages which have a start and end date
+			// Games, then content for owned games, then everything else, then demos.
+			// Within each rank, time-limited packages still go first.
 			ulong now = DateUtils.DateTimeToUnixTime(DateTime.UtcNow);
-			Package? package = Packages.FirstOrDefault(x => x.StartTime != null && now > x.StartTime && types.Contains(x.Type));
-			if (package != null) {
-				return package;
+
+			for (byte rank = (byte) EActivationPriority.Game; rank <= (byte) EActivationPriority.Demo; rank++) {
+				Package? timed = Packages.FirstOrDefault(x => types.Contains(x.Type) && ActivationPriority.Rank(x) == rank && x.StartTime != null && now > x.StartTime);
+				if (timed != null) {
+					return timed;
+				}
+
+				Package? next = Packages.FirstOrDefault(x => types.Contains(x.Type) && ActivationPriority.Rank(x) == rank && x.StartTime == null);
+				if (next != null) {
+					return next;
+				}
 			}
 
-			return Packages.FirstOrDefault(x => x.StartTime == null && types.Contains(x.Type));
+			return null;
 		}
 
 		internal void AddActivation(DateTime activation, uint count = 1, IReadOnlyCollection<uint>? packageIDs = null) {
@@ -162,7 +187,8 @@ namespace FreePackages {
 						SeenPackageIDActivations.UnionWith(packageIDs);
 					}
 
-					for (int i = 0; i < Math.Max(count, numUnseenPackageActivations); i++) {
+					int toAdd = (int)Math.Min(Math.Max(count, (uint)numUnseenPackageActivations), 50u);
+					for (int i = 0; i < toAdd; i++) {
 						Activations.Add(activation.AddSeconds(-1 * i));
 					}
 				}
@@ -272,6 +298,12 @@ namespace FreePackages {
 
 		internal void UpdateASFInfoItemCount(uint currentASFInfoItemCount) {
 			LastASFInfoItemCount = currentASFInfoItemCount;
+
+			Utilities.InBackground(Save);
+		}
+
+		internal void ResetASFInfoItemCount() {
+			LastASFInfoItemCount = 0;
 
 			Utilities.InBackground(Save);
 		}
