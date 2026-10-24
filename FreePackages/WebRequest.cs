@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
+using System.Net;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Helpers.Json;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Integration;
+using ArchiSteamFarm.Web;
 using ArchiSteamFarm.Web.Responses;
 
 namespace FreePackages {
@@ -23,10 +26,20 @@ namespace FreePackages {
 		internal static async Task<Steam.PlaytestAccessResponse?> RequestPlaytestAccess(Bot bot, uint appID) {
 			Uri request = new(ArchiWebHandler.SteamStoreURL, String.Format("/ajaxrequestplaytestaccess/{0}", appID));
 			Dictionary<string, string> data = new(1); // Extra entry for sessionID
-			// Returns 401 error error with body "false" if playtest doesn't exist for appID
-			ObjectResponse<Steam.PlaytestAccessResponse>? playtestAccessResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<Steam.PlaytestAccessResponse>(request, data: data, maxTries: 1).ConfigureAwait(false);
+			// Steam returns 401 with body "false" when the playtest does not exist for this appID.
+			// Treat that as a normal negative result instead of a failed HTTP request (which spams WARN).
+			ObjectResponse<Steam.PlaytestAccessResponse>? playtestAccessResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<Steam.PlaytestAccessResponse>(
+				request,
+				data: data,
+				requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors,
+				maxTries: 1
+			).ConfigureAwait(false);
 
-			return playtestAccessResponse?.Content;
+			if (playtestAccessResponse == null || playtestAccessResponse.StatusCode != HttpStatusCode.OK) {
+				return null;
+			}
+
+			return playtestAccessResponse.Content;
 		}
 
 		internal static async Task<AccountLicensesResponse?> GetAccountLicenses(Bot bot, AccountLicensesResponse? previousPage = null) {
@@ -57,28 +70,42 @@ namespace FreePackages {
 			}
 		}
 
-		internal static async Task<Steam.UserInfo?> GetUserInfo(Bot bot) {
-			Uri request = new(ArchiWebHandler.SteamStoreURL, "");
-			HtmlDocumentResponse? storeResponse = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request).ConfigureAwait(false);
+		internal static Steam.UserInfo? GetUserInfo(Bot bot) {
+			string? countryCode = GetStoreCountryCode(bot);
 
-			if (storeResponse == null || storeResponse.Content == null) {
+			if (string.IsNullOrEmpty(countryCode)) {
 				return null;
 			}
 
-			try {
-				Regex pageObjRegex = new Regex("data-userinfo=\"({[\\s\\S]*?})\"", RegexOptions.CultureInvariant);
-				Match match = pageObjRegex.Match(storeResponse.Content.Source.Text);
+			return new Steam.UserInfo {
+				LoggedIn = true,
+				SteamID = bot.SteamID.ToString(),
+				CountryCode = countryCode
+			};
+		}
 
-				if (!match.Success) {
-					throw new Exception(String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(match)));
-				}
+		internal static string? GetStoreCountryCode(Bot bot) {
+			string? cookieCountry = ParseSteamCountryCookie(bot.ArchiWebHandler.WebBrowser.CookieContainer.GetCookieValue(ArchiWebHandler.SteamStoreURL, "steamCountry"))
+				?? ParseSteamCountryCookie(bot.ArchiWebHandler.WebBrowser.CookieContainer.GetCookieValue(ArchiWebHandler.SteamCommunityURL, "steamCountry"));
 
-				return match.Groups[1].Value.Replace("&quot;", "\"").ToJsonObject<Steam.UserInfo>();
-			} catch (Exception e) {
-				bot.ArchiLogger.LogGenericException(e);
+			if (!string.IsNullOrEmpty(cookieCountry)) {
+				return cookieCountry;
+			}
 
+			return typeof(Bot).GetField("IPCountryCode", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(bot) as string;
+		}
+
+		private static string? ParseSteamCountryCookie(string? value) {
+			if (string.IsNullOrEmpty(value)) {
 				return null;
 			}
+
+			string decoded = Uri.UnescapeDataString(value);
+			int separator = decoded.IndexOfAny(['|', '%']);
+			string country = separator >= 0 ? decoded[..separator] : decoded;
+			country = country.Trim();
+
+			return (country.Length == 2) ? country.ToUpperInvariant() : null;
 		}
 	}
 }

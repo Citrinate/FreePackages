@@ -11,9 +11,8 @@ using ArchiSteamFarm.Helpers.Json;
 
 namespace FreePackages {
 	[Export(typeof(IPlugin))]
-	public sealed class FreePackages : IASF, IBotModules, ISteamPICSChanges, IBotSteamClient, IBotConnection, IBotCommand2, IGitHubPluginUpdates {
+	public sealed class FreePackages : IASF, IBotModules, ISteamPICSChanges, IBotSteamClient, IBotConnection, IBotCommand2 {
 		public string Name => nameof(FreePackages);
-		public string RepositoryName => "Citrinate/FreePackages";
 		public Version Version => typeof(FreePackages).Assembly.GetName().Version ?? new Version("0");
 		internal static GlobalCache? GlobalCache;
 
@@ -34,6 +33,7 @@ namespace FreePackages {
 
 			CardApps.Update();
 			ASFInfo.Update();
+			FullScan.OnASFInit(additionalConfigProperties);
 		}
 
 		public async Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
@@ -128,6 +128,7 @@ namespace FreePackages {
 
 		public async Task OnBotLoggedOn(Bot bot) {
 			await PackageHandler.OnBotLoggedOn(bot).ConfigureAwait(false);
+			Utilities.InBackground(async () => await FullScan.TryStart().ConfigureAwait(false));
 		}
 
 		public Task OnBotDisconnected(Bot bot, EResult reason) {

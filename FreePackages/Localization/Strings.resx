@@ -187,6 +187,9 @@
   <data name="QueuePausedWhileIngame" xml:space="preserve">
     <value>Activations are now paused as the account is being used to play a game.</value>
   </data>
+  <data name="QueuePausedWhileFullScan" xml:space="preserve">
+    <value>Activations are paused until the one-shot library/catalog scan finishes.</value>
+  </data>
   <data name="QueueLimitedUntil" xml:space="preserve">
     <value>Activations will resume at {0}.</value>
     <comment>{0} will be replaced by a time</comment>
