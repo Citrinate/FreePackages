@@ -215,15 +215,26 @@ namespace FreePackages {
 		private static async Task DrainChanges() {
 			await IsReady().ConfigureAwait(false);
 
+			int prevAppCount = -1;
+			int prevPackageCount = -1;
+
 			while (true) {
-				HashSet<uint> appIDs = Handlers.Values.Where(x => x.Bot.IsConnectedAndLoggedOn).SelectMany(x => x.BotCache.ChangedApps).ToHashSet<uint>();
-				HashSet<uint> packageIDs = Handlers.Values.Where(x => x.Bot.IsConnectedAndLoggedOn).SelectMany(x => x.BotCache.ChangedPackages).ToHashSet<uint>();
-				HashSet<uint> newOwnedPackageIDs = Handlers.Values.Where(x => x.Bot.IsConnectedAndLoggedOn).SelectMany(x => x.BotCache.NewOwnedPackages).ToHashSet<uint>();
+				List<PackageHandler> readyHandlers = Handlers.Values.Where(x => x.Bot.IsConnectedAndLoggedOn && x.PackageFilter.Ready).ToList();
+				HashSet<uint> appIDs = readyHandlers.SelectMany(x => x.BotCache.ChangedApps).ToHashSet<uint>();
+				HashSet<uint> packageIDs = readyHandlers.SelectMany(x => x.BotCache.ChangedPackages).ToHashSet<uint>();
+				HashSet<uint> newOwnedPackageIDs = readyHandlers.SelectMany(x => x.BotCache.NewOwnedPackages).ToHashSet<uint>();
 				packageIDs.UnionWith(newOwnedPackageIDs);
 
 				if ((appIDs.Count == 0) && (packageIDs.Count == 0)) {
 					return;
 				}
+
+				if ((appIDs.Count == prevAppCount) && (packageIDs.Count == prevPackageCount)) {
+					return;
+				}
+
+				prevAppCount = appIDs.Count;
+				prevPackageCount = packageIDs.Count;
 
 				foreach ((HashSet<uint>? batchedAppIDs, HashSet<uint>? batchedPackageIDs) in ProductInfo.GetProductIDBatches(appIDs, packageIDs)) {
 					var productInfo = await ProductInfo.GetProductInfo(batchedAppIDs, batchedPackageIDs).ConfigureAwait(false);
