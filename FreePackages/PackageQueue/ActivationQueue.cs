@@ -9,9 +9,9 @@ using SteamKit2;
 namespace FreePackages {
 	internal sealed class ActivationQueue : PackageQueue {
 		private const int DelayBetweenActivationsSeconds = 5;
-		internal readonly uint ActivationsPerPeriod = 25;
-		internal const uint MaxActivationsPerPeriod = 30; // Steam's imposed limit
-		internal const uint ActivationPeriodMinutes = 90; // Steam's imposed limit
+		internal readonly uint ActivationsPerPeriod = 30;
+		internal const uint MaxActivationsPerPeriod = 40; // Steam spacing isn't exact.  Leave a bit of room accurately track the limit
+		internal const uint ActivationPeriodMinutes = 90; // 60 minutes plus some extra padding just to be safe
 		internal readonly PackageFilter PackageFilter;
 		internal static readonly HashSet<EPackageType> ActivationTypes = [EPackageType.App, EPackageType.Sub, EPackageType.Playtest];
 		internal int ActivationsRemaining => BotCache.Packages.Where(x => ActivationTypes.Contains(x.Type)).Count();
@@ -65,6 +65,9 @@ namespace FreePackages {
 
 									continue;
 								}
+
+								app.IsDemo = filterableApp.Type == EAppType.Demo;
+								app.Priority = ActivationPriority.ForApp(filterableApp, PackageFilter);
 							} else if (app.Type == EPackageType.Playtest) {
 								if (!PackageFilter.IsWantedPlaytest(filterableApp)) {
 									Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", app.ID), Strings.Unwanted));
@@ -72,6 +75,8 @@ namespace FreePackages {
 
 									continue;
 								}
+
+								app.Priority = ActivationPriority.ForPlaytest(filterableApp, PackageFilter);
 							}
 						}
 
@@ -100,6 +105,9 @@ namespace FreePackages {
 
 								continue;
 							}
+
+							sub.IsDemo = filterablePackage.PackageContents.Count > 0 && filterablePackage.PackageContents.All(static content => content.Type == EAppType.Demo);
+							sub.Priority = ActivationPriority.ForPackage(filterablePackage, PackageFilter);
 						}
 
 						// Sub either passes the current filter, or its info is missing for some reason

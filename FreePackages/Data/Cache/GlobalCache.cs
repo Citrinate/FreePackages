@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
@@ -31,15 +32,15 @@ namespace FreePackages {
 			try {
 				string json = await File.ReadAllTextAsync(SharedFilePath).ConfigureAwait(false);
 
-				if (string.IsNullOrEmpty(json)) {
-					ASF.ArchiLogger.LogGenericError(string.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(json)));
+				if (string.IsNullOrWhiteSpace(json) || json.All(static c => c == '\0')) {
+					ASF.ArchiLogger.LogGenericWarning("FreePackages.cache is empty or corrupt, recreating");
 
 					return new GlobalCache();
 				}
 
 				globalCache = json.ToJsonObject<GlobalCache>();
 			} catch (Exception e) {
-				ASF.ArchiLogger.LogGenericException(e);
+				ASF.ArchiLogger.LogGenericWarning($"FreePackages.cache is invalid and will be recreated ({e.GetType().Name})");
 
 				return new GlobalCache();
 			}

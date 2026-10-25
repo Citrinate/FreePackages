@@ -39,6 +39,12 @@ namespace FreePackages {
 				return;
 			}
 
+			if ((this is ActivationQueue) && FullScan.ShouldWait) {
+				UpdateTimer(DateTime.Now.AddMinutes(1));
+
+				return;
+			}
+
 			// Don't activate anything while the user is playing a game (does not apply to ASF card farming)
 			if (PauseWhilePlaying && !Bot.IsPlayingPossible) {
 				UpdateTimer(DateTime.Now.AddMinutes(1));
@@ -208,13 +214,14 @@ namespace FreePackages {
 
 			if (response == null) {
 				// Playtest does not exist currently
+				BotCache.IgnoreApp(appID);
 				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", appID), Strings.Invalid));
 
 				return EResult.Invalid;
 			}
 
 			if (response.Success != 1) {
-				// Not sure if/when this happens
+				BotCache.IgnoreApp(appID);
 				Bot.ArchiLogger.LogGenericDebug(String.Format(ArchiSteamFarm.Localization.Strings.BotAddLicense, String.Format("playtest/{0}", appID), Strings.Failed));
 
 				return EResult.Invalid;

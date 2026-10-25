@@ -25,7 +25,15 @@ namespace FreePackages {
 			UpdateTimer.Change(TimeSpan.FromMinutes(15), UpdateFrequency);
 		}
 
-		private static async Task DoUpdate() {
+		internal static async Task RefreshCatalog(bool processChanges = true) {
+			foreach (PackageHandler handler in PackageHandler.Handlers.Values) {
+				handler.BotCache.ResetASFInfoItemCount();
+			}
+
+			await DoUpdate(processChanges).ConfigureAwait(false);
+		}
+
+		private static async Task DoUpdate(bool processChanges = true) {
 			ArgumentNullException.ThrowIfNull(ASF.WebBrowser);
 
 			StreamResponse? response = await ASF.WebBrowser.UrlGetToStream(Source).ConfigureAwait(false);
@@ -105,7 +113,7 @@ namespace FreePackages {
 				anyChangesAdded = true;
 			}
 
-			if (anyChangesAdded) {
+			if (anyChangesAdded && processChanges) {
 				Utilities.InBackground(async () => await PackageHandler.HandleChanges().ConfigureAwait(false));
 			}
 		}

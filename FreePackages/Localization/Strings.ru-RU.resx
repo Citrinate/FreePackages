@@ -187,6 +187,9 @@
   <data name="QueuePausedWhileIngame" xml:space="preserve">
     <value>Активации приостановлены - на аккаунте запущена игра.</value>
   </data>
+  <data name="QueuePausedWhileFullScan" xml:space="preserve">
+    <value>Активации приостановлены, пока не закончится одноразовое сканирование библиотеки и каталога.</value>
+  </data>
   <data name="QueueLimitedUntil" xml:space="preserve">
     <value>Активации продолжатся в {0}.</value>
     <comment>{0} will be replaced by a time</comment>

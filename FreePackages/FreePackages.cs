@@ -34,6 +34,7 @@ namespace FreePackages {
 
 			CardApps.Update();
 			ASFInfo.Update();
+			FullScan.OnASFInit(additionalConfigProperties);
 		}
 
 		public async Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
@@ -128,6 +129,7 @@ namespace FreePackages {
 
 		public async Task OnBotLoggedOn(Bot bot) {
 			await PackageHandler.OnBotLoggedOn(bot).ConfigureAwait(false);
+			Utilities.InBackground(async () => await FullScan.TryStart().ConfigureAwait(false));
 		}
 
 		public Task OnBotDisconnected(Bot bot, EResult reason) {
