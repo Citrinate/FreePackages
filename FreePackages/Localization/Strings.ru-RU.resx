@@ -334,7 +334,7 @@
     <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
   </data>
   <data name="LicenseScanProgressReport" xml:space="preserve">
-    <value>Просканировано страниц лицензий: {0}, удаляемых пакетов найдено пока что: {1}</value>
+    <value>Просканировано страниц лицензий: {0}, удаляемых пакетов найдено пока что: {1}     </value>
     <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
   </data>
   <data name="RemovalPICSScanProgressReport" xml:space="preserve">
