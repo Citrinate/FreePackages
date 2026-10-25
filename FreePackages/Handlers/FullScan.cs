@@ -162,7 +162,15 @@ namespace FreePackages {
 
 		private static async Task<HashSet<uint>?> FetchSteamAppIDs() {
 			try {
-				await using Stream stream = await AppListClient.GetStreamAsync("https://api.steampowered.com/ISteamApps/GetAppList/v2/").ConfigureAwait(false);
+				Uri requestUri = new("https://api.steampowered.com/ISteamApps/GetAppList/v2/");
+				if (ASF.WebBrowser != null) {
+					var webResponse = await ASF.WebBrowser.UrlGetToJsonObject<SteamAppListResponse>(requestUri).ConfigureAwait(false);
+					if (webResponse?.Content?.Applist?.Apps != null) {
+						return webResponse.Content.Applist.Apps.Where(static app => app.AppID > 0).Select(static app => app.AppID).ToHashSet();
+					}
+				}
+
+				await using Stream stream = await AppListClient.GetStreamAsync(requestUri).ConfigureAwait(false);
 				SteamAppListResponse? parsed = await JsonSerializer.DeserializeAsync<SteamAppListResponse>(stream).ConfigureAwait(false);
 				if (parsed?.Applist?.Apps == null) {
 					return null;
