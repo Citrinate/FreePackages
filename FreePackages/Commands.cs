@@ -12,9 +12,9 @@ using FreePackages.Localization;
 
 namespace FreePackages {
 	internal static class Commands {
-		internal static async Task<string?> Response(Bot bot, EAccess access, ulong steamID, string message, string[] args) {
+		internal static async Task<string?> Response(Bot bot, EBotUserAccess access, ulong steamID, string message, string[] args) {
 			if (!Enum.IsDefined(access)) {
-				throw new InvalidEnumArgumentException(nameof(access), (int) access, typeof(EAccess));
+				throw new InvalidEnumArgumentException(nameof(access), (int) access, typeof(EBotUserAccess));
 			}
 
 			if (string.IsNullOrEmpty(message)) {
@@ -24,7 +24,7 @@ namespace FreePackages {
 			switch (args.Length) {
 				case 1:
 					switch (args[0].ToUpperInvariant()) {
-						case "FREEPACKAGES" when access >= EAccess.Master:
+						case "FREEPACKAGES" when access >= EBotUserAccess.Master:
 							return String.Format("{0} {1}", nameof(FreePackages), (typeof(FreePackages).Assembly.GetName().Version ?? new Version("0")).ToString());
 
 						case "CANCELREMOVE" or "CANCELREMOVAL":
@@ -103,8 +103,8 @@ namespace FreePackages {
 			}
 		}
 
-		private static string? ResponseCancelRemove(Bot bot, EAccess access) {
-			if (access < EAccess.Master) {
+		private static string? ResponseCancelRemove(Bot bot, EBotUserAccess access) {
+			if (access < EBotUserAccess.Master) {
 				return null;
 			}
 
@@ -119,7 +119,7 @@ namespace FreePackages {
 			return FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].CancelRemoval());
 		}
 
-		private static string? ResponseCancelRemove(EAccess access, ulong steamID, string botNames) {
+		private static string? ResponseCancelRemove(EBotUserAccess access, ulong steamID, string botNames) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -127,7 +127,7 @@ namespace FreePackages {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+				return access >= EBotUserAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IEnumerable<string?> results = bots.Select(bot => ResponseCancelRemove(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)));
@@ -137,8 +137,8 @@ namespace FreePackages {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static string? ResponseConfirmRemove(Bot bot, EAccess access) {
-			if (access < EAccess.Master) {
+		private static string? ResponseConfirmRemove(Bot bot, EBotUserAccess access) {
+			if (access < EBotUserAccess.Master) {
 				return null;
 			}
 
@@ -153,7 +153,7 @@ namespace FreePackages {
 			return FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].ConfirmRemoval());
 		}
 
-		private static string? ResponseConfirmRemove(EAccess access, ulong steamID, string botNames) {
+		private static string? ResponseConfirmRemove(EBotUserAccess access, ulong steamID, string botNames) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -161,7 +161,7 @@ namespace FreePackages {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+				return access >= EBotUserAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IEnumerable<string?> results = bots.Select(bot => ResponseConfirmRemove(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)));
@@ -171,8 +171,8 @@ namespace FreePackages {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static string? ResponseClearQueue(Bot bot, EAccess access) {
-			if (access < EAccess.Master) {
+		private static string? ResponseClearQueue(Bot bot, EBotUserAccess access) {
+			if (access < EBotUserAccess.Master) {
 				return null;
 			}
 
@@ -187,7 +187,7 @@ namespace FreePackages {
 			return FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].ClearQueue());
 		}
 
-		private static string? ResponseClearQueue(EAccess access, ulong steamID, string botNames) {
+		private static string? ResponseClearQueue(EBotUserAccess access, ulong steamID, string botNames) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -195,7 +195,7 @@ namespace FreePackages {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+				return access >= EBotUserAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IEnumerable<string?> results = bots.Select(bot => ResponseClearQueue(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)));
@@ -205,8 +205,8 @@ namespace FreePackages {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static string? ResponseDontRemove(Bot bot, EAccess access, string licenses) {
-			if (access < EAccess.Master) {
+		private static string? ResponseDontRemove(Bot bot, EBotUserAccess access, string licenses) {
+			if (access < EBotUserAccess.Master) {
 				return null;
 			}
 
@@ -259,7 +259,7 @@ namespace FreePackages {
 			return response.Length > 0 ? response.ToString() : null;
 		}
 
-		private static string? ResponseDontRemove(EAccess access, ulong steamID, string botNames, string licenses) {
+		private static string? ResponseDontRemove(EBotUserAccess access, ulong steamID, string botNames, string licenses) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -267,7 +267,7 @@ namespace FreePackages {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+				return access >= EBotUserAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IEnumerable<string?> results = bots.Select(bot => ResponseDontRemove(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), licenses));
@@ -279,8 +279,8 @@ namespace FreePackages {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static string? ResponseQueueStatus(Bot bot, EAccess access) {
-			if (access < EAccess.Master) {
+		private static string? ResponseQueueStatus(Bot bot, EBotUserAccess access) {
+			if (access < EBotUserAccess.Master) {
 				return null;
 			}
 
@@ -295,7 +295,7 @@ namespace FreePackages {
 			return FormatBotResponse(bot, PackageHandler.Handlers[bot.BotName].GetStatus());
 		}
 
-		private static string? ResponseQueueStatus(EAccess access, ulong steamID, string botNames) {
+		private static string? ResponseQueueStatus(EBotUserAccess access, ulong steamID, string botNames) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -303,7 +303,7 @@ namespace FreePackages {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+				return access >= EBotUserAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IEnumerable<string?> results = bots.Select(bot => ResponseQueueStatus(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)));
@@ -313,8 +313,8 @@ namespace FreePackages {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static string? ResponseQueueLicense(Bot bot, EAccess access, string licenses, bool useFilter = false, [CallerMemberName] string? previousMethodName = null) {
-			if (access < EAccess.Master) {
+		private static string? ResponseQueueLicense(Bot bot, EBotUserAccess access, string licenses, bool useFilter = false, [CallerMemberName] string? previousMethodName = null) {
+			if (access < EBotUserAccess.Master) {
 				return null;
 			}
 
@@ -371,7 +371,7 @@ namespace FreePackages {
 			return response.Length > 0 ? response.ToString() : null;
 		}
 
-		private static string? ResponseQueueLicense(EAccess access, ulong steamID, string botNames, string licenses, bool useFilter = false) {
+		private static string? ResponseQueueLicense(EBotUserAccess access, ulong steamID, string botNames, string licenses, bool useFilter = false) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -379,7 +379,7 @@ namespace FreePackages {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+				return access >= EBotUserAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IEnumerable<string?> results = bots.Select(bot => ResponseQueueLicense(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), licenses, useFilter));
@@ -391,8 +391,8 @@ namespace FreePackages {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static async Task<string?> ResponseRemoveFreePackages(Bot bot, EAccess access, StatusReporter statusReporter, bool excludePlayed = false, bool removeAll = false) {
-			if (access < EAccess.Master) {
+		private static async Task<string?> ResponseRemoveFreePackages(Bot bot, EBotUserAccess access, StatusReporter statusReporter, bool excludePlayed = false, bool removeAll = false) {
+			if (access < EBotUserAccess.Master) {
 				return null;
 			}
 
@@ -413,7 +413,7 @@ namespace FreePackages {
 			return FormatBotResponse(bot, Strings.RemovalScanStarting);
 		}
 
-		private static async Task<string?> ResponseRemoveFreePackages(EAccess access, ulong steamID, string botName, StatusReporter statusReporter, bool excludePlayed = false, bool removeAll = false) {
+		private static async Task<string?> ResponseRemoveFreePackages(EBotUserAccess access, ulong steamID, string botName, StatusReporter statusReporter, bool excludePlayed = false, bool removeAll = false) {
 			if (String.IsNullOrEmpty(botName)) {
 				throw new ArgumentNullException(nameof(botName));
 			}
@@ -421,7 +421,7 @@ namespace FreePackages {
 			Bot? bot = Bot.GetBot(botName);
 
 			if (bot == null) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)) : null;
+				return access >= EBotUserAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)) : null;
 			}
 
 			return await ResponseRemoveFreePackages(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), statusReporter, excludePlayed, removeAll).ConfigureAwait(false);

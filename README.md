@@ -10,6 +10,8 @@ This plugin works by listening for [changes](https://steamdb.info/faq/#changenum
 
 ## Installation
 
+This plugin requires ArchiSteamFarm 7.0.0.0 or newer.
+
 - Download the .zip file of the [latest release](https://github.com/Citrinate/FreePackages/releases/latest)
 - Locate the `plugins` folder inside your ASF folder.  Create a new folder here (e.g., `FreePackages`) and unpack the downloaded .zip file to that folder.
 - (Re)start ASF. You should see a message indicating that the plugin loaded successfully.

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Helpers;
@@ -20,7 +21,7 @@ namespace FreePackages {
 			FilePath = SharedFilePath;
 		}
 
-		protected override Task Save() => Save(this);
+		protected override Task Save(CancellationToken cancellationToken = default) => Save(this, cancellationToken);
 
 		internal static async Task<GlobalCache> CreateOrLoad() {
 			if (!File.Exists(SharedFilePath)) {
@@ -56,7 +57,7 @@ namespace FreePackages {
 		internal void UpdateChangeNumber(uint currentChangeNumber) {
 			LastChangeNumber = currentChangeNumber;
 
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 		}
 	}
 }
