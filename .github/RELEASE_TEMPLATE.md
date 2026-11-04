@@ -1,4 +1,4 @@
-This version requires ArchiSteamFarm V7.0.0.0 or newer
+This version requires ArchiSteamFarm V7.0.0.4 or newer
 
 ### Changelog
 
