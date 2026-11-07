@@ -172,14 +172,14 @@ namespace FreePackages {
 						continue;
 					}
 
-					await HandleProductInfo(productInfo).ConfigureAwait(false);
+					await HandleProductInfo(batchedAppIDs, batchedPackageIDs, productInfo).ConfigureAwait(false);
 				}
 			} finally {
 				ProcessChangesSemaphore.Release();
 			}
 		}
 
-		private async static Task HandleProductInfo(List<SteamApps.PICSProductInfoCallback> productInfos) {
+		private async static Task HandleProductInfo(HashSet<uint>? productInfoAppIDs, HashSet<uint>? productInfoPackageIDs, List<SteamApps.PICSProductInfoCallback> productInfos) {
 			{ // Add wanted apps to the queue
 				List<FilterableApp>? apps = await FilterableApp.GetFilterables(
 					productInfos,
@@ -236,14 +236,26 @@ namespace FreePackages {
 			}
 
 			// Remove invalid apps from the app change list
-			foreach (uint unknownAppID in productInfos.SelectMany(static result => result.UnknownApps)) {
-				Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(appID: unknownAppID));
+			// Note: There exists a PICSProductInfoCallback.UnknownApps property, but using this will break support for non-generic ASF
+			if (productInfoAppIDs != null) {
+				HashSet<uint> validAppIDs = productInfos.SelectMany(static result => result.Apps.Keys).ToHashSet();
+				foreach (uint productInfoAppID in productInfoAppIDs) {
+					if (!validAppIDs.Contains(productInfoAppID)) {
+						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(appID: productInfoAppID));
+					}
+				}
 			}
 
 			// Remove invalid packages from the package change list
-			foreach (uint unknownPackageID in productInfos.SelectMany(static result => result.UnknownPackages)) {
-				Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(packageID: unknownPackageID));
-				Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(newOwnedPackageID: unknownPackageID));
+			// Note: There exists a PICSProductInfoCallback.UnknownPackages property, but using this will break support for non-generic ASF
+			if (productInfoPackageIDs != null) {				
+				HashSet<uint> validPackageIDs = productInfos.SelectMany(static result => result.Packages.Keys).ToHashSet();
+				foreach (uint productInfoPackageID in productInfoPackageIDs) {
+					if (!validPackageIDs.Contains(productInfoPackageID)) {
+						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(packageID: productInfoPackageID));
+						Handlers.Values.ToList().ForEach(x => x.BotCache.RemoveChange(newOwnedPackageID: productInfoPackageID));
+					}
+				}
 			}
 
 			// Save changes to the app/package change lists

@@ -33,9 +33,9 @@ namespace FreePackages {
 		internal FilterablePackage(uint id, KeyValue kv) {
 			ID = id;
 			PackageContentIDs = kv["appids"].Children.Select(x => x.AsUnsignedInteger()).ToHashSet();
-			BillingType = (EBillingType) kv["billingtype"].AsInteger();
-			Status = (EPackageStatus) kv["status"].AsInteger();
-			LicenseType = (ELicenseType) kv["licensetype"].AsInteger();
+			BillingType = (EBillingType) (int) kv["billingtype"].AsUnsignedInteger(); // Note: do not use AsInteger, does not exist in non-generic ASF
+			Status = (EPackageStatus) (int) kv["status"].AsUnsignedInteger(); // Note: do not use AsInteger, does not exist in non-generic ASF
+			LicenseType = (ELicenseType) (int) kv["licensetype"].AsUnsignedInteger(); // Note: do not use AsInteger, does not exist in non-generic ASF
 			DeactivatedDemo = kv["extended"]["deactivated_demo"].AsBoolean();
 			ExpiryTime = kv["extended"]["expirytime"].AsUnsignedLong();
 			StartTime = kv["extended"]["starttime"].AsUnsignedLong();
@@ -128,11 +128,9 @@ namespace FreePackages {
 		internal void AddPackageContentParents(IEnumerable<(uint id, KeyValue kv)> parents) {
 			PackageContents.ForEach(app => {
 				if (app.ParentInfoRequired && app.ParentID != null) {
-					try {
-						var parent = parents.First(parent => parent.id == app.ParentID);
+					var parent = parents.FirstOrDefault(parent => parent.id == app.ParentID);
+					if (parent != default) {
 						app.AddParent(parent.id, parent.kv);
-					} catch (Exception) {
-						// Ignore missing parent exception
 					}
 				}
 			});

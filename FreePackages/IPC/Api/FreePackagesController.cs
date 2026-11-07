@@ -84,6 +84,7 @@ namespace FreePackages.IPC {
 				return BadRequest(new GenericResponse(false, e.Message));
 			}
 
+			#if DEBUG
 			if (returnFirstRaw) {
 				var results = productInfos.SelectMany(static result => result.Apps.Values).Concat(productInfos.SelectMany(static result => result.Packages.Values));
 				if (results.Count() == 0) {
@@ -100,6 +101,7 @@ namespace FreePackages.IPC {
 					return BadRequest(new GenericResponse(false, e.Message));
 				}
 			}
+			#endif
 
 			return Ok(new GenericResponse<IEnumerable<SteamApps.PICSProductInfoCallback>>(true, productInfos));
 		}
