@@ -45,7 +45,7 @@ fi
 ## release generic version
 dotnet restore
 sync
-dotnet publish FreePackages -c "Release" -f net10.0 -o "out/generic" "/p:LinkDuringPublish=false"
+dotnet publish FreePackages -c "Release" -o "out/generic" "/p:LinkDuringPublish=false"
 mkdir ./out/$plugin_name
 cp ./out/generic/$plugin_name.dll ./out/$plugin_name
 ( cd ./out/generic ; cp --parents ./*/$plugin_name.resources.dll ../../out/$plugin_name || : )
@@ -56,5 +56,5 @@ if [[ -f "README.md" ]]; then
       pandoc --metadata title="$plugin_name" --standalone --columns 2000 -f markdown -t html --embed-resources --standalone -c ./github-pandoc.css -o ./out/$plugin_name/README.html README.md
    fi
 fi
-7z a -tzip -mx7 ./out/$plugin_name.zip ./out/$plugin_name
+7z a -tzip -mx7 ./out/$plugin_name-V7.zip ./out/$plugin_name
 rm -rf out/$plugin_name

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Collections;
 using ArchiSteamFarm.Core;
@@ -61,7 +62,7 @@ namespace FreePackages {
 			FilePath = filePath;
 		}
 
-		protected override Task Save() => Save(this);
+		protected override Task Save(CancellationToken cancellationToken = default) => Save(this, cancellationToken);
 
 		internal static async Task<BotCache?> CreateOrLoad(string filePath) {
 			if (string.IsNullOrEmpty(filePath)) {
@@ -107,7 +108,7 @@ namespace FreePackages {
 			}
 
 			Packages.Add(package);
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 
 			return true;
 		}
@@ -119,21 +120,21 @@ namespace FreePackages {
 			}
 
 			Packages.UnionWith(packages);
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 
 			return true;
 		}
 
 		internal bool RemovePackage(Package package) {
 			Packages.Remove(package);
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 
 			return true;
 		}
 
 		internal bool RemoveAppPackages(HashSet<uint> appIDsToRemove) {
 			Packages.Where(x => x.Type == EPackageType.App && appIDsToRemove.Contains(x.ID)).ToList().ForEach(x => Packages.Remove(x));
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 
 			return true;
 		}
@@ -168,7 +169,7 @@ namespace FreePackages {
 				}
 			}
 
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 		}
 
 		internal int NumActivationsPastPeriod() {
@@ -204,7 +205,7 @@ namespace FreePackages {
 				NewOwnedPackages.UnionWith(newOwnedPackageIDs);
 			}
 
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 		}
 
 		internal void RemoveChange(uint? appID = null, uint? packageID = null, uint? newOwnedPackageID = null) {
@@ -222,25 +223,25 @@ namespace FreePackages {
 		}
 
 		internal void SaveChanges() {
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 		}
 
 		internal void ClearQueue() {
 			Packages.RemoveWhere(package => ActivationQueue.ActivationTypes.Contains(package.Type));
 			ChangedApps.Clear();
 			ChangedPackages.Clear();
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 		}
 
 		internal void CancelRemoval() {
 			Packages.RemoveWhere(package => RemovalQueue.RemovalTypes.Contains(package.Type));
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 		}
 
 		internal void AddWaitlistedPlaytest(uint appID) {
 			WaitlistedPlaytests.Add(appID);
 			
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 		}
 
 		internal void UpdateSeenPackages(List<SteamApps.LicenseListCallback.License> newLicenses) {
@@ -261,19 +262,19 @@ namespace FreePackages {
 				}
 			}
 
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 		}
 
 		internal void IgnoreApp(uint appID) {
 			IgnoredApps.Add(appID);
 
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 		}
 
 		internal void UpdateASFInfoItemCount(uint currentASFInfoItemCount) {
 			LastASFInfoItemCount = currentASFInfoItemCount;
 
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 		}
 	}
 }

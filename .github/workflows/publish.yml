@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 env:
   PLUGIN_NAME: "FreePackages"
-  DOTNET_SDK_VERSION: 10.0
+  DOTNET_SDK_VERSION: 11.0
 
 jobs:
   publish:
@@ -70,17 +70,17 @@ jobs:
       - name: Create Zip
         run: |
           cd out
-          7z a -tzip -mx7 ${{ env.PLUGIN_NAME }}.zip *
+          7z a -tzip -mx7 ${{ env.PLUGIN_NAME }}-V7.zip *
 
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: 'out/${{ env.PLUGIN_NAME }}.zip'
+          subject-path: 'out/${{ env.PLUGIN_NAME }}-V7.zip'
 
       - name: Create ${{ env.PLUGIN_NAME }} GitHub release
         uses: ncipollo/release-action@v1.13.0
         with:
-          artifacts: out/${{ env.PLUGIN_NAME }}.zip
+          artifacts: out/${{ env.PLUGIN_NAME }}-V7.zip
           artifactContentType: application/zip
           name: ${{ env.PLUGIN_NAME }} V${{ github.ref_name }}
           tag: ${{ github.ref_name }}
