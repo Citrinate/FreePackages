@@ -34,5 +34,5 @@ if ERRORLEVEL 1 (
   pandoc  --metadata title="%CurrDirName%" --standalone --columns 2000 -f markdown -t html --embed-resources --standalone -c .\github-pandoc.css -o .\out\%CurrDirName%\README.html README.md
 )
 :zip
-7z a -tzip -mx7 .\out\%CurrDirName%-V7.zip .\out\%CurrDirName%
+7z a -tzip -mx7 .\out\%CurrDirName%.zip .\out\%CurrDirName%
 rmdir /Q /S out\%CurrDirName%
