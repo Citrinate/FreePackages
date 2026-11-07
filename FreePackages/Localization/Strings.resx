@@ -334,7 +334,7 @@ To remove items from the list above before continuing, use: {4}</value>
     <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
   </data>
   <data name="LicenseScanProgressReport" xml:space="preserve">
-    <value>{0} license pages scanned, {1} removable packages found so far     </value>
+    <value>{0} license pages scanned, {1} removable packages found so far</value>
     <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
   </data>
   <data name="RemovalPICSScanProgressReport" xml:space="preserve">
